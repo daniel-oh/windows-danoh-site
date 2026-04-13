@@ -187,6 +187,7 @@ function StartMenu() {
         <button
           key={entry.label}
           role="menuitem"
+          onClick={entry.cb}
           onMouseDown={entry.cb}
           onTouchStart={entry.cb}
         >

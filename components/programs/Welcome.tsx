@@ -32,6 +32,9 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
             <li
               key={entry.key}
               onClick={() => onSelect(entry.key)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(entry.key); } }}
               className={entry.key === selectedEntry ? styles.selected : ""}
             >
               <span>{entry.title}</span>
@@ -91,17 +94,17 @@ const contentByKey = {
         </div>
         <p>
           Poke around the desktop. My{" "}
-          <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openResume}>Resume</strong> and{" "}
-          <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openBlog}>Blog</strong> are
+          <button onClick={openResume} style={{ cursor: "pointer", color: "#000080", textDecoration: "underline", background: "none", border: "none", font: "inherit", padding: 0, fontWeight: "bold" }}>Resume</button> and{" "}
+          <button onClick={openBlog} style={{ cursor: "pointer", color: "#000080", textDecoration: "underline", background: "none", border: "none", font: "inherit", padding: 0, fontWeight: "bold" }}>Blog</button> are
           both here, or try generating your own app: hit <strong>Start &gt; Run</strong>,
           describe what you want, and the AI builds it in seconds.
         </p>
         <p style={{ fontSize: 11, color: "#555" }}>
           To try the AI, bring your own Anthropic API key in{" "}
-          <strong
-            style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }}
+          <button
+            style={{ cursor: "pointer", color: "#000080", textDecoration: "underline", background: "none", border: "none", font: "inherit", padding: 0, fontWeight: "bold" }}
             onClick={() => createWindow({ title: "Settings", program: { type: "settings" } })}
-          >Settings</strong>,
+          >Settings</button>,
           or{" "}
           <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
             message me on LinkedIn
@@ -148,6 +151,9 @@ const contentByKey = {
                 flexShrink: 0,
               }}
               onClick={openBlog}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && openBlog()}
             >
               <div style={{
                 fontWeight: "bold",
@@ -210,7 +216,7 @@ const contentByKey = {
         <div className={styles.buttonGroup} style={{ marginTop: 12 }}>
           <button onClick={openResume}>View Full Resume</button>
           <a href="/Daniel_Oh_Resume.pdf" download>
-            <button>Download PDF</button>
+            Download PDF
           </a>
         </div>
       </>
