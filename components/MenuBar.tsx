@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 import styles from "./MenuBar.module.css";
 import cx from "classnames";
 
@@ -94,13 +95,16 @@ function MenuBarButton({
       >
         {optionGroup.label}
       </button>
-      {openMenuLabel === optionGroup.label && buttonRef.current && (
-        <MenuBarDropdown
-          optionGroup={optionGroup}
-          closeMenu={closeMenu}
-          anchorRect={buttonRef.current.getBoundingClientRect()}
-        />
-      )}
+      {openMenuLabel === optionGroup.label && buttonRef.current &&
+        createPortal(
+          <MenuBarDropdown
+            optionGroup={optionGroup}
+            closeMenu={closeMenu}
+            anchorRect={buttonRef.current.getBoundingClientRect()}
+          />,
+          document.body
+        )
+      }
     </div>
   );
 }
