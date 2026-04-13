@@ -8,7 +8,7 @@ import done from "./assets/done.png";
 import installer from "./assets/installer.png";
 import notes from "./assets/notes.png";
 import restart from "./assets/restart.png";
-import lootrunners from "../../public/lootrunners.png";
+import danohLogo from "../../public/danoh-logo.png";
 import banner from "./assets/banner.png";
 
 import Image, { StaticImageData } from "next/image";
@@ -94,7 +94,7 @@ export const Landing = () => {
             quit and your computer will return to the previous environment.
           </div>
           <Image
-            src={lootrunners}
+            src={danohLogo}
             className={styles.logo}
             alt="DanOh Logo"
           />

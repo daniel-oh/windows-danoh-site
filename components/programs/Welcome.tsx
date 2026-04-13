@@ -96,6 +96,13 @@ const contentByKey = {
           both here, or try generating your own app: hit <strong>Start &gt; Run</strong>,
           describe what you want, and the AI builds it in seconds.
         </p>
+        <p style={{ fontSize: 11, color: "#555" }}>
+          The AI features require an access code.{" "}
+          <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
+            Message me on LinkedIn
+          </a>{" "}
+          if you&apos;d like to try it out.
+        </p>
         <div className={styles.buttonGroup}>
           <a
             href="https://github.com/daniel-oh/windows-danoh-site"
@@ -304,7 +311,7 @@ export function Welcome({ id: _id }: { id: string }) {
     <div className={styles.welcomeContainer}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/lootrunners_logo.gif"
+        src="/danoh-logo-animated.gif"
         alt="DanOh"
         className={styles.animatedLogo}
       />
