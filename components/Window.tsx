@@ -26,8 +26,12 @@ export function Window({ id }: { id: string }) {
   const windowsDispatch = useSetAtom(windowsListAtom);
   const [focusedWindow, setFocusedWindow] = useAtom(focusedWindowAtom);
   const isResizing = useAtomValue(isResizingAtom);
-  const [mobile] = useState(() => isMobile());
+  const [mobile, setMobileState] = useState(false);
   const [isMinimizing, setIsMinimizing] = useState(false);
+
+  useEffect(() => {
+    setMobileState(isMobile());
+  }, []);
   const prevStatusRef = useRef(state.status);
 
   useEffect(() => {
