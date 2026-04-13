@@ -1,10 +1,34 @@
 import { query } from "@/lib/db";
 import crypto from "crypto";
 
+let failedAttempts = 0;
+let lastFailedAt = 0;
+
 function isAdmin(req: Request): boolean {
   const auth = req.headers.get("authorization");
   if (!auth || !process.env.ACCESS_CODE) return false;
-  return auth === `Bearer ${process.env.ACCESS_CODE}`;
+
+  // Rate limit: block after 5 failed attempts for 15 minutes
+  if (failedAttempts >= 5 && Date.now() - lastFailedAt < 15 * 60 * 1000) {
+    return false;
+  }
+
+  const expected = `Bearer ${process.env.ACCESS_CODE}`;
+  const maxLen = Math.max(auth.length, expected.length);
+  const bufA = Buffer.alloc(maxLen, 0);
+  const bufB = Buffer.alloc(maxLen, 0);
+  bufA.write(auth);
+  bufB.write(expected);
+  const valid = crypto.timingSafeEqual(bufA, bufB) && auth.length === expected.length;
+
+  if (!valid) {
+    failedAttempts++;
+    lastFailedAt = Date.now();
+  } else {
+    failedAttempts = 0;
+  }
+
+  return valid;
 }
 
 // GET /api/invite — list all invite codes
