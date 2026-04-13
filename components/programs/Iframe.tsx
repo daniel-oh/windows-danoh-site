@@ -127,6 +127,16 @@ function IframeInner({ id }: { id: string }) {
           break;
         }
         case "chat": {
+          // Only allow iframe chat if user has their own API key
+          const currentSettings = getSettings();
+          if (!currentSettings.apiKey) {
+            event.source!.postMessage({
+              operation: "result",
+              value: "Chat API is not available. Add your own API key in Settings to enable this feature.",
+              id,
+            });
+            break;
+          }
           // Sanitize messages from iframe — only allow user/assistant roles, limit count
           const iframeMessages = Array.isArray(value)
             ? value
@@ -139,7 +149,7 @@ function IframeInner({ id }: { id: string }) {
             body: JSON.stringify({
               messages: iframeMessages,
               returnJson,
-              settings: getSettings(),
+              settings: currentSettings,
             }),
           });
           event.source!.postMessage({
