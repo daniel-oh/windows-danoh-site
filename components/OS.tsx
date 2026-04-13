@@ -104,7 +104,7 @@ function TaskBar() {
       <div className={styles.taskbarSpacer} />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/danoh-logo.svg"
+        src="/danoh-logo-wide.png"
         alt="danoh.com"
         className={styles.taskbarLogo}
       />
