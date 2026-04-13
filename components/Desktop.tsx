@@ -39,12 +39,15 @@ type IconPosition = { col: number; row: number };
 type IconPositions = Record<string, IconPosition>;
 
 const BLOG_ICON_ID = "__blog__";
+const RESUME_ICON_ID = "__resume__";
 
 function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions): IconPositions {
   const positions = { ...existing };
-  // Reserve (0,0) for Blog icon
   if (!positions[BLOG_ICON_ID]) {
     positions[BLOG_ICON_ID] = { col: 0, row: 0 };
+  }
+  if (!positions[RESUME_ICON_ID]) {
+    positions[RESUME_ICON_ID] = { col: 0, row: 1 };
   }
   const occupied = new Set(
     Object.values(positions).map((p) => `${p.col},${p.row}`)
@@ -119,6 +122,14 @@ export const Desktop = () => {
     });
   }, []);
 
+  const openResume = useCallback(() => {
+    createWindow({
+      title: "Resume — Daniel Oh",
+      program: { type: "resume" },
+      size: { width: 700, height: 550 },
+    });
+  }, []);
+
   return (
     <div className={styles.desktop} role="main" onClick={() => setSelectedIcon(null)}>
       <BuiltInIcon
@@ -129,6 +140,16 @@ export const Desktop = () => {
         onSelect={() => setSelectedIcon(BLOG_ICON_ID)}
         position={iconPositions[BLOG_ICON_ID] || { col: 0, row: 0 }}
         onMove={(col, row) => moveIcon(BLOG_ICON_ID, col, row)}
+        mobile={mobile}
+      />
+      <BuiltInIcon
+        id={RESUME_ICON_ID}
+        name="Resume"
+        onOpen={openResume}
+        isSelected={selectedIcon === RESUME_ICON_ID}
+        onSelect={() => setSelectedIcon(RESUME_ICON_ID)}
+        position={iconPositions[RESUME_ICON_ID] || { col: 0, row: 1 }}
+        onMove={(col, row) => moveIcon(RESUME_ICON_ID, col, row)}
         mobile={mobile}
       />
       {programs.map((program) => (

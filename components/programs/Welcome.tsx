@@ -292,7 +292,6 @@ export function Welcome({ id: _id }: { id: string }) {
     { title: "Updates", key: "updates" },
     { title: "Filesystem", key: "filesystem" },
     { title: "Advanced", key: "advanced" },
-    { title: "Tutorial", key: "tutorial" },
   ];
 
   const [selectedEntry, setSelectedEntry] = useState(() => {

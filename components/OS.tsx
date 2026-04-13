@@ -127,6 +127,16 @@ function StartMenu() {
       },
     },
     {
+      label: "Resume",
+      cb: () => {
+        createWindow({
+          title: "Resume — Daniel Oh",
+          program: { type: "resume" },
+          size: { width: 700, height: 550 },
+        });
+      },
+    },
+    {
       label: "Blog",
       cb: () => {
         createWindow({
