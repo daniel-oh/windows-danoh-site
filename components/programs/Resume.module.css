@@ -20,6 +20,20 @@
   border-bottom: 2px solid #000;
 }
 
+.headshot {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #808080;
+  margin-bottom: 6px;
+
+  @media (max-width: 768px) {
+    width: 56px;
+    height: 56px;
+  }
+}
+
 .name {
   font-size: 22px;
   letter-spacing: 3px;

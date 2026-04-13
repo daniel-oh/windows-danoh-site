@@ -6,6 +6,12 @@ export function Resume() {
   return (
     <div className={styles.resumeContainer}>
       <div className={styles.header}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/headshot-resume.jpg"
+          alt="Daniel Oh"
+          className={styles.headshot}
+        />
         <h1 className={styles.name}>DANIEL OH</h1>
         <div className={styles.contact}>
           Chicago, IL &middot; (312) 527-2058 &middot; flobberg@gmail.com
