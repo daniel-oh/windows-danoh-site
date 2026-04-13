@@ -5,12 +5,41 @@ import { getCodeHash } from "@/lib/accessCode";
 
 const MAX_GENERATIONS_PER_HOUR = 20;
 
+async function checkForOwnApiKey(req: Request): Promise<boolean> {
+  try {
+    const url = new URL(req.url);
+    // Check GET request (program generation)
+    const settingsParam = url.searchParams.get("settings");
+    if (settingsParam) {
+      const parsed = JSON.parse(decodeURIComponent(settingsParam));
+      if (parsed?.apiKey && typeof parsed.apiKey === "string" && parsed.apiKey.length > 10) {
+        return true;
+      }
+    }
+    // Check POST request body (chat, help, name, icon)
+    if (req.method === "POST") {
+      const cloned = req.clone();
+      const body = await cloned.json().catch(() => null);
+      if (body?.settings?.apiKey && typeof body.settings.apiKey === "string" && body.settings.apiKey.length > 10) {
+        return true;
+      }
+    }
+  } catch { /* ignore parse errors */ }
+  return false;
+}
+
 export async function checkAccess(
-  _req: Request,
+  req: Request,
   endpoint: string
 ): Promise<Response | null> {
   // Skip protection entirely if not in local mode or no database configured
   if (!isLocal() || !hasDatabase()) {
+    return null;
+  }
+
+  // Bypass access code if user provides their own API key
+  const hasOwnKey = await checkForOwnApiKey(req);
+  if (hasOwnKey) {
     return null;
   }
 

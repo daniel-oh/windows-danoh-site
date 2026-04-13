@@ -27,8 +27,9 @@ export function Run({ id }: { id: string }) {
   const { data } = trpc.getTokens.useQuery();
 
   useEffect(() => {
-    setAuthenticated(hasSession());
-  }, []);
+    // Bypass access code if user has their own API key
+    setAuthenticated(hasSession() || !!settings.apiKey);
+  }, [settings.apiKey]);
 
   if (!authenticated) {
     return (

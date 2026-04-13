@@ -56,7 +56,7 @@ export function createWindow({
       size,
       pos,
       icon,
-      status: isMobile() && program.type === "iframe" ? "maximized" : "normal",
+      status: isMobile() ? "maximized" : "normal",
     },
   });
   getDefaultStore().set(windowsListAtom, { type: "ADD", payload: id });
