@@ -8,12 +8,12 @@ import { APIProvider } from "@/lib/api/APIProvider";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Daniel Oh | Platform Engineer & Builder",
-  description: "Sr. Platform Engineer at Nike. I build the platforms that engineering teams actually want to use. Michigan Engineering. Azure Expert certified. Five ventures on the side.",
+  title: "Daniel Oh",
+  description: "Engineer, builder, and curious person. Chicago.",
   metadataBase: new URL("https://danoh.com"),
   openGraph: {
-    title: "Daniel Oh | Platform Engineer & Builder",
-    description: "I build the platforms that engineering teams actually want to use. Explore my retro AI-powered desktop, generate apps on the fly, and check out what I'm working on.",
+    title: "Daniel Oh",
+    description: "Engineer, builder, and curious person. Chicago.",
     url: "https://danoh.com",
     siteName: "danoh.com",
     images: [
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Daniel Oh - Sr. Platform Engineer at Nike",
+        alt: "Daniel Oh",
       },
     ],
     locale: "en_US",
@@ -29,8 +29,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Daniel Oh | Platform Engineer & Builder",
-    description: "I build the platforms that engineering teams actually want to use. Explore my retro AI-powered desktop.",
+    title: "Daniel Oh",
+    description: "Engineer, builder, and curious person. Chicago.",
     images: ["/og-image.png"],
   },
   robots: {
