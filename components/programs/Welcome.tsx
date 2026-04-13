@@ -79,7 +79,7 @@ const contentByKey = {
         </p>
         <div className={styles.buttonGroup}>
           <a
-            href="https://github.com/daniel-oh"
+            href="https://github.com/daniel-oh/windows-danoh-site"
             target="_blank"
             rel="noopener noreferrer"
           >
