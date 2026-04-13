@@ -50,7 +50,6 @@
   outline: none;
   border: none;
   background: transparent;
-  mix-blend-mode: multiply;
 
   @media (max-width: 768px) {
     display: none;
