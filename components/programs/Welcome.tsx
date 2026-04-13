@@ -290,6 +290,9 @@ const contentByKey = {
           <strong>Privacy:</strong> All files are stored in your browser&apos;s
           local storage. Nothing is sent to the server. You can optionally mount
           a local directory in Settings, but that stays on your machine too.
+          This site uses cookie-free, privacy-friendly{" "}
+          <a href="https://plausible.io" target="_blank" rel="noopener noreferrer" style={{ color: "#000080" }}>analytics</a>.
+          No personal data is collected.
         </p>
       </>
     );
