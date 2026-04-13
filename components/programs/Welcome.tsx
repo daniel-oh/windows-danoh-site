@@ -83,22 +83,18 @@ const contentByKey = {
           <div style={{ flex: 1, minWidth: 200 }}>
             <h3>Hey, I&apos;m Daniel Oh</h3>
             <p>
-              I&apos;m a Sr. Platform Engineer at Nike and a University of Michigan
-              Computer Engineering grad. I like building things that solve real problems,
-              whether that&apos;s enterprise security platforms or side ventures.
-              Thanks for stopping by.
+              Platform engineer at Nike. Michigan Engineering alum. I build
+              infrastructure that teams ship on, and side projects that keep
+              me learning. Thanks for stopping by.
             </p>
           </div>
         </div>
         <p>
-          This site is a retro AI-powered desktop. You can check out
-          my <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openResume}>Resume</strong>,
-          read the <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openBlog}>Blog</strong>,
-          or explore what I&apos;ve been working on.
-        </p>
-        <p>
-          You can also generate your own apps right here. Hit <strong>Start &gt; Run</strong>,
-          describe what you want, and the AI will build it for you in seconds.
+          Poke around the desktop. My{" "}
+          <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openResume}>Resume</strong> and{" "}
+          <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openBlog}>Blog</strong> are
+          both here, or try generating your own app: hit <strong>Start &gt; Run</strong>,
+          describe what you want, and the AI builds it in seconds.
         </p>
         <div className={styles.buttonGroup}>
           <a
@@ -191,13 +187,13 @@ const contentByKey = {
           </div>
         </div>
         <p>
-          8+ years in platform engineering, cybersecurity, and DevOps across Nike, Capital Markets Gateway,
-          Avanade, and Allstate. University of Michigan Computer Engineering. Three Azure Expert certifications.
+          Platform engineering and cybersecurity at Nike. Previously Capital Markets Gateway,
+          Avanade, and Allstate. Michigan Engineering. Three Azure Expert certifications.
           Five ventures on the side.
         </p>
         <p>
-          <strong>Core expertise:</strong> Kubernetes, Terraform, AWS/Azure/GCP, GitHub Actions, GitOps,
-          security compliance, observability, and building developer platforms that teams actually use.
+          <strong>Core skills:</strong> Kubernetes, Terraform, AWS/Azure/GCP, GitHub Actions, GitOps,
+          security compliance, and developer platforms.
         </p>
         <div className={styles.buttonGroup} style={{ marginTop: 12 }}>
           <button onClick={openResume}>View Full Resume</button>
@@ -246,46 +242,27 @@ const contentByKey = {
       </>
     );
   },
-  filesystem: () => {
-    return (
-      <>
-        <h3>Filesystem</h3>
-        <p>
-          In DanOh everything is a file. Including all of the programs that
-          are running.
-        </p>
-        <p>
-          You can explore the filesystem by opening up the aptly named{" "}
-          <strong>Explorer</strong> program.
-        </p>
-        <p>
-          Generated applications can also open and save files to the filesystem.
-          Try prompting when generating to support file opening and saving
-          operations for applications to define their own file formats. You can
-          even read and write the contents of programs.
-        </p>
-      </>
-    );
-  },
   advanced: () => {
     return (
       <>
         <h3>Advanced</h3>
         <p>
-          There are a few operating system apis that generated programs can use:
+          Everything in this OS is a file. Open <strong>Explorer</strong> from
+          the Start menu to browse the filesystem. Generated apps can read, write,
+          and save files too.
+        </p>
+        <p>
+          Generated programs also have access to a few built-in OS APIs:
         </p>
         <ul>
-          <li>Opening Files</li>
-          <li>Saving Files</li>
-          <li>Reading and Writing from the registry</li>
-          <li>Chatting with an llm</li>
+          <li><strong>Files</strong>: Open and save files to persist app state</li>
+          <li><strong>Registry</strong>: Store settings across programs</li>
+          <li><strong>Chat</strong>: Let your generated app call an LLM directly</li>
         </ul>
         <p>
-          Try asking for these when generating an application to make the
-          generated program use them. Opening and saving files is used for
-          saving state of applications. The registry can be used for storing
-          global configuration for a program (and across programs). And the chat
-          api can make your program directly prompt an LLM.
+          Try mentioning these when describing an app in the Run dialog.
+          For example: &quot;a note-taking app that saves to the filesystem&quot;
+          or &quot;a trivia game that uses chat to generate questions.&quot;
         </p>
       </>
     );
@@ -300,7 +277,6 @@ export function Welcome({ id: _id }: { id: string }) {
     { title: "Blog", key: "blog" },
     { title: "Resume", key: "resume" },
     { title: "Updates", key: "updates" },
-    { title: "Filesystem", key: "filesystem" },
     { title: "Advanced", key: "advanced" },
   ];
 
