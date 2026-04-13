@@ -15,14 +15,62 @@ function constantTimeEqual(a: string, b: string): boolean {
 export async function POST(req: Request) {
   const { code } = await req.json();
 
-  if (!process.env.ACCESS_CODE) {
-    return new Response(JSON.stringify({ error: "Access code not configured" }), {
-      status: 500,
+  if (typeof code !== "string" || code.length === 0) {
+    return new Response(JSON.stringify({ error: "Access code required" }), {
+      status: 403,
     });
   }
 
-  if (typeof code !== "string" || !constantTimeEqual(code, process.env.ACCESS_CODE)) {
-    return new Response(JSON.stringify({ error: "Invalid access code" }), {
+  // Check invite codes first
+  const inviteResult = await query(
+    "SELECT code, total_uses, used, expires_at FROM invite_codes WHERE code = $1",
+    [code]
+  );
+
+  if (inviteResult && inviteResult.rows.length > 0) {
+    const invite = inviteResult.rows[0];
+
+    if (invite.used >= invite.total_uses) {
+      return new Response(
+        JSON.stringify({ error: "This code has been fully used." }),
+        { status: 403 }
+      );
+    }
+
+    if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ error: "This code has expired." }),
+        { status: 403 }
+      );
+    }
+
+    const sessionId = crypto.randomUUID();
+    await query(
+      "INSERT INTO sessions (id, code_hash, invite_code) VALUES ($1, $2, $3)",
+      [sessionId, code, code]
+    );
+
+    const cookieStore = await cookies();
+    cookieStore.set("lr_session", sessionId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  }
+
+  // Fall back to master access code
+  if (!process.env.ACCESS_CODE) {
+    return new Response(JSON.stringify({ error: "Invalid code" }), {
+      status: 403,
+    });
+  }
+
+  if (!constantTimeEqual(code, process.env.ACCESS_CODE)) {
+    return new Response(JSON.stringify({ error: "Invalid code" }), {
       status: 403,
     });
   }
@@ -38,7 +86,7 @@ export async function POST(req: Request) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
-    maxAge: 60 * 60 * 24 * 365, // 1 year
+    maxAge: 60 * 60 * 24 * 365,
   });
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
