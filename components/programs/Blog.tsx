@@ -20,11 +20,9 @@ export function Blog({ id: _id }: { id: string }) {
   );
   const [mobile, setMobile] = useState(false);
   const [showingPost, setShowingPost] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMobile(isMobile());
-    setMounted(true);
   }, []);
 
   const selectedPost = sortedPosts.find((p) => p.slug === selectedSlug);
@@ -40,8 +38,8 @@ export function Blog({ id: _id }: { id: string }) {
 
   // On desktop: always show both sidebar and content
   // On mobile: toggle between post list and post content
-  const showSidebar = !mounted || !mobile || !showingPost;
-  const showContent = !mounted || !mobile || showingPost;
+  const showSidebar = !mobile || !showingPost;
+  const showContent = !mobile || showingPost;
 
   return (
     <div className={styles.blogContainer}>
