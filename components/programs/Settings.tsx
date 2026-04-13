@@ -100,7 +100,7 @@ export function Settings({ id }: { id: string }) {
           />
         </div>
         <div className={cx("field-row")} style={{ gap: 4 }}>
-          <button onClick={() => setShowKey(!showKey)} style={{ minWidth: 60 }}>
+          <button onClick={() => setShowKey(!showKey)} style={{ minWidth: 60 }} aria-label={showKey ? "Hide API key" : "Show API key"}>
             {showKey ? "Hide" : "Show"}
           </button>
           <button onClick={testKey} disabled={!keyInput.trim() || keyStatus === "testing"}>

@@ -26,8 +26,18 @@ export function Resume() {
       </div>
 
       <Section title="PROFILE">
-        <p>
-          I build the platforms that engineering teams actually want to use. Over 8+ years I have gone from deploying my first Jenkins pipeline to designing enterprise security strategy across 50+ AWS accounts at Nike, where 10+ teams now ship on infrastructure I built. Along the way I replaced $150K+ in vendor tooling with in-house platforms, led a monolith-to-microservices migration at Grainger, and architected cloud solutions for Fortune 100 healthcare and financial services clients. I also run five ventures on the side because I like building things that solve real problems. University of Michigan Computer Engineering. Azure Expert certified across DevOps, Architecture, and Network Security.
+        <p style={{ fontStyle: "italic", marginBottom: 8 }}>
+          I build the platforms that engineering teams actually want to use.
+        </p>
+        <ul style={{ paddingLeft: 18, margin: "4px 0" }}>
+          <li><strong>8+ years</strong> in cloud-native infrastructure across enterprise and startup environments</li>
+          <li><strong>10+ engineering teams</strong> shipping on platform infrastructure I designed and maintain at Nike</li>
+          <li><strong>50+ AWS accounts</strong> secured through an enterprise compliance strategy I built from scratch</li>
+          <li><strong>$150K+ saved annually</strong> by replacing vendor tooling with in-house platforms</li>
+          <li><strong>Fortune 100 clients</strong> in healthcare, financial services, and e-commerce</li>
+        </ul>
+        <p style={{ marginTop: 8 }}>
+          University of Michigan Computer Engineering. Azure Expert certified across DevOps, Architecture, and Network Security.
         </p>
       </Section>
 
@@ -112,9 +122,7 @@ export function Resume() {
       </Section>
 
       <div className={styles.downloadSection}>
-        <a href="/Daniel_Oh_Resume.pdf" download>
-          <button className={styles.downloadButton}>Download PDF</button>
-        </a>
+        <a href="/Daniel_Oh_Resume.pdf" download className={styles.downloadButton}>Download PDF</a>
       </div>
 
       <div className={styles.footer}>
