@@ -252,7 +252,7 @@
 .postImage {
   max-width: 100%;
   height: auto;
-  border: 2px solid #808080;
+  border: none;
   margin: 12px 0;
   display: block;
   image-rendering: auto;
