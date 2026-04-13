@@ -5,6 +5,13 @@ import { getCodeHash } from "@/lib/accessCode";
 
 const MAX_GENERATIONS_PER_HOUR = 20;
 
+// Anthropic keys start with sk-ant- and are 90+ chars
+const ANTHROPIC_KEY_PATTERN = /^sk-ant-[A-Za-z0-9_-]{80,}$/;
+
+function isValidApiKey(key: unknown): boolean {
+  return typeof key === "string" && ANTHROPIC_KEY_PATTERN.test(key);
+}
+
 async function checkForOwnApiKey(req: Request): Promise<boolean> {
   try {
     const url = new URL(req.url);
@@ -12,17 +19,13 @@ async function checkForOwnApiKey(req: Request): Promise<boolean> {
     const settingsParam = url.searchParams.get("settings");
     if (settingsParam) {
       const parsed = JSON.parse(decodeURIComponent(settingsParam));
-      if (parsed?.apiKey && typeof parsed.apiKey === "string" && parsed.apiKey.length > 10) {
-        return true;
-      }
+      if (isValidApiKey(parsed?.apiKey)) return true;
     }
     // Check POST request body (chat, help, name, icon)
     if (req.method === "POST") {
       const cloned = req.clone();
       const body = await cloned.json().catch(() => null);
-      if (body?.settings?.apiKey && typeof body.settings.apiKey === "string" && body.settings.apiKey.length > 10) {
-        return true;
-      }
+      if (isValidApiKey(body?.settings?.apiKey)) return true;
     }
   } catch { /* ignore parse errors */ }
   return false;

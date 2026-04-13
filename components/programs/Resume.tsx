@@ -14,10 +14,12 @@ export function Resume() {
         />
         <h1 className={styles.name}>DANIEL OH</h1>
         <div className={styles.contact}>
-          Chicago, IL &middot; (312) 527-2058 &middot; flobberg@gmail.com
+          Chicago, IL
         </div>
         <div className={styles.contact}>
-          <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer">linkedin.com/in/daniel-oh</a>
+          <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+          {" · "}
+          <a href="https://github.com/daniel-oh" target="_blank" rel="noopener noreferrer">GitHub</a>
           {" · "}
           <a href="https://danoh.com" target="_blank" rel="noopener noreferrer">danoh.com</a>
         </div>
