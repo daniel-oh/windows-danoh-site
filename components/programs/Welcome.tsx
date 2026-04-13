@@ -194,13 +194,13 @@ const contentByKey = {
           </div>
         </div>
         <p>
-          Platform engineering and cybersecurity at Nike. Previously Capital Markets Gateway,
-          Avanade, and Allstate. Michigan Engineering. Three Azure Expert certifications.
-          Five ventures on the side.
+          Currently designing enterprise security strategy across 50+ AWS accounts at Nike.
+          Before that, I built private network architectures at a fintech in New York,
+          led cloud migrations for Fortune 100 clients, and deployed production
+          systems at Allstate.
         </p>
         <p>
-          <strong>Core skills:</strong> Kubernetes, Terraform, AWS/Azure/GCP, GitHub Actions, GitOps,
-          security compliance, and developer platforms.
+          I also run five ventures on the side. Michigan Engineering. Three Azure Expert certifications.
         </p>
         <div className={styles.buttonGroup} style={{ marginTop: 12 }}>
           <button onClick={openResume}>View Full Resume</button>
@@ -216,36 +216,41 @@ const contentByKey = {
       <>
         <h3>Updates</h3>
 
-        <h4>April 2026 - Launch</h4>
-        <p>
-          danoh.com is live. Built this personal site as a retro AI-powered desktop
-          because a static portfolio felt too boring. Here&apos;s what shipped:
-        </p>
-        <ul>
-          <li><strong>AI App Generator</strong>: Describe any app in the Run dialog and it gets built on the fly using Claude Sonnet 4.6. Paint apps, calculators, games, whatever you can imagine.</li>
-          <li><strong>Fix &amp; Iterate</strong>: Click the <code>?</code> button on any generated app to chat with the AI. Report bugs, request features. The app updates live.</li>
-          <li><strong>Blog</strong>: Built-in blog reader right on the desktop. Posts are written in TypeScript, no CMS needed.</li>
-          <li><strong>Resume</strong>: Interactive resume with PDF download, viewable right in the OS.</li>
-          <li><strong>Mobile-friendly</strong>: Full touch support: tap to open, drag to rearrange icons, responsive windows.</li>
-          <li><strong>Security hardened</strong>: Access code gate, rate limiting, sandboxed iframes, prompt injection protections, constant-time auth.</li>
-        </ul>
+        <div style={{ borderLeft: "2px solid #808080", paddingLeft: 14, marginTop: 8 }}>
+          <h4 style={{ margin: "0 0 4px" }}>Apr 13, 2026</h4>
+          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>danoh.com goes live</p>
+          <p style={{ margin: "0 0 12px" }}>
+            Launched this site. A static portfolio felt too predictable, so I built a retro
+            desktop that generates real apps with AI. The whole thing runs on Next.js 16,
+            Claude Sonnet 4.6, and a single Docker container.
+          </p>
 
-        <h4>Tech Stack</h4>
-        <ul>
-          <li>Next.js 16 + React 19 + TypeScript</li>
-          <li>Anthropic Claude API (Sonnet 4.6 for generation, Haiku for lightweight tasks)</li>
-          <li>PostgreSQL for session management and program persistence</li>
-          <li>Docker + Traefik + Watchtower for deployment</li>
-          <li>98.css for the authentic Windows 98 aesthetic</li>
-        </ul>
+          <h4 style={{ margin: "0 0 4px" }}>Apr 11, 2026</h4>
+          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Fix and Iterate ships</p>
+          <p style={{ margin: "0 0 12px" }}>
+            Click the <code>?</code> on any generated app to talk to the AI that built it.
+            Describe a bug, request a feature, and the app updates live. No reload, no copy-paste.
+          </p>
 
-        <p>
-          Open source under AGPL-3.0. Built on{" "}
-          <a href="https://github.com/SawyerHood/windows9x" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
-            windows9x
-          </a>{" "}
-          by Sawyer Hood.
-        </p>
+          <h4 style={{ margin: "0 0 4px" }}>Apr 10, 2026</h4>
+          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Mobile, security, and polish</p>
+          <p style={{ margin: "0 0 12px" }}>
+            Full touch support for phones and tablets. Sandboxed iframes, rate limiting,
+            prompt injection protections, and constant-time auth. Desktop icons snap to grid
+            and drag to rearrange.
+          </p>
+
+          <h4 style={{ margin: "0 0 4px" }}>Apr 9, 2026</h4>
+          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>First commit</p>
+          <p style={{ margin: "0 0 4px" }}>
+            Forked{" "}
+            <a href="https://github.com/SawyerHood/windows9x" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
+              windows9x
+            </a>{" "}
+            by Sawyer Hood. Upgraded to Next.js 16, React 19, swapped in the Anthropic SDK,
+            and started building.
+          </p>
+        </div>
       </>
     );
   },
