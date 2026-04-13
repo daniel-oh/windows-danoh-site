@@ -49,6 +49,19 @@ async function ensureTables() {
     );
   `);
   await p.query(`
+    CREATE TABLE IF NOT EXISTS invite_codes (
+      code TEXT PRIMARY KEY,
+      label TEXT,
+      total_uses INT NOT NULL DEFAULT 50,
+      used INT NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(),
+      expires_at TIMESTAMP
+    );
+  `);
+  await p.query(`
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS invite_code TEXT;
+  `);
+  await p.query(`
     CREATE TABLE IF NOT EXISTS programs (
       id TEXT NOT NULL,
       session_id TEXT REFERENCES sessions(id) ON DELETE CASCADE,

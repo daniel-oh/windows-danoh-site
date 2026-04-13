@@ -56,38 +56,13 @@ export async function checkAccess(
     );
   }
 
-  // Single query: validate session + check rate limit + record generation
-  const currentHash = getCodeHash();
-  const result = await query(
-    `WITH valid_session AS (
-      SELECT id FROM sessions WHERE id = $1 AND code_hash = $2
-    ), rate_check AS (
-      SELECT COUNT(*) as count FROM generations
-      WHERE session_id = $1 AND created_at > NOW() - INTERVAL '1 hour'
-    ), insert_gen AS (
-      INSERT INTO generations (session_id, endpoint)
-      SELECT $1, $3
-      WHERE EXISTS (SELECT 1 FROM valid_session)
-        AND (SELECT count FROM rate_check) < $4
-      RETURNING id
-    )
-    SELECT
-      (SELECT COUNT(*) FROM valid_session) as session_valid,
-      (SELECT count FROM rate_check) as gen_count,
-      (SELECT COUNT(*) FROM insert_gen) as inserted`,
-    [sessionId, currentHash, endpoint, MAX_GENERATIONS_PER_HOUR]
+  // Check if session exists and whether it's an invite code session
+  const sessionResult = await query(
+    "SELECT id, code_hash, invite_code FROM sessions WHERE id = $1",
+    [sessionId]
   );
 
-  if (!result || result.rows.length === 0) {
-    return new Response(
-      JSON.stringify({ error: "Access code required" }),
-      { status: 401 }
-    );
-  }
-
-  const { session_valid, gen_count, inserted } = result.rows[0];
-
-  if (parseInt(session_valid, 10) === 0) {
+  if (!sessionResult || sessionResult.rows.length === 0) {
     cookieStore.delete("lr_session");
     return new Response(
       JSON.stringify({ error: "Session expired. Please re-enter access code." }),
@@ -95,7 +70,72 @@ export async function checkAccess(
     );
   }
 
-  if (parseInt(gen_count, 10) >= MAX_GENERATIONS_PER_HOUR || parseInt(inserted, 10) === 0) {
+  const session = sessionResult.rows[0];
+
+  // Invite code session: check total usage against invite limit
+  if (session.invite_code) {
+    const inviteResult = await query(
+      "SELECT total_uses, used, expires_at FROM invite_codes WHERE code = $1",
+      [session.invite_code]
+    );
+
+    if (!inviteResult || inviteResult.rows.length === 0) {
+      cookieStore.delete("lr_session");
+      return new Response(
+        JSON.stringify({ error: "This code is no longer valid." }),
+        { status: 401 }
+      );
+    }
+
+    const invite = inviteResult.rows[0];
+
+    if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ error: "This code has expired." }),
+        { status: 403 }
+      );
+    }
+
+    if (invite.used >= invite.total_uses) {
+      return new Response(
+        JSON.stringify({
+          error: `This code has been fully used (${invite.total_uses}/${invite.total_uses} generations).`,
+        }),
+        { status: 429 }
+      );
+    }
+
+    // Record generation and increment invite usage
+    await query(
+      "INSERT INTO generations (session_id, endpoint) VALUES ($1, $2)",
+      [sessionId, endpoint]
+    );
+    await query(
+      "UPDATE invite_codes SET used = used + 1 WHERE code = $1",
+      [session.invite_code]
+    );
+
+    return null;
+  }
+
+  // Master code session: check hourly rate limit
+  const currentHash = getCodeHash();
+  if (session.code_hash !== currentHash) {
+    cookieStore.delete("lr_session");
+    return new Response(
+      JSON.stringify({ error: "Session expired. Please re-enter access code." }),
+      { status: 401 }
+    );
+  }
+
+  const countResult = await query(
+    "SELECT COUNT(*) as count FROM generations WHERE session_id = $1 AND created_at > NOW() - INTERVAL '1 hour'",
+    [sessionId]
+  );
+
+  const count = countResult ? parseInt(countResult.rows[0].count, 10) : 0;
+
+  if (count >= MAX_GENERATIONS_PER_HOUR) {
     return new Response(
       JSON.stringify({
         error: `You've reached the limit of ${MAX_GENERATIONS_PER_HOUR} generations per hour. Take a break and try again soon.`,
@@ -103,6 +143,11 @@ export async function checkAccess(
       { status: 429 }
     );
   }
+
+  await query(
+    "INSERT INTO generations (session_id, endpoint) VALUES ($1, $2)",
+    [sessionId, endpoint]
+  );
 
   return null;
 }
