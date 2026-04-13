@@ -42,24 +42,16 @@ export function Settings({ id }: { id: string }) {
         </div>
         <div className={cx("field-row")}>
           <p className={styles.note}>
-            You can use either an{" "}
+            Enter your{" "}
             <a
-              href="https://openrouter.ai/"
+              href="https://console.anthropic.com/settings/keys"
               target="_blank"
               rel="noopener noreferrer"
             >
-              OpenRouter
+              Anthropic API key
             </a>{" "}
-            or{" "}
-            <a
-              href="https://www.anthropic.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Anthropic
-            </a>{" "}
-            API key. Sonnet 3.5 is the default model. Using an API key bypasses
-            the rate limit.
+            to generate apps and use Fix &amp; Iterate with no access code or rate limit.
+            Your key is stored locally in your browser and never sent to our server.
           </p>
         </div>
       </fieldset>
