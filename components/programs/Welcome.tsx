@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "./Welcome.module.css";
 import check from "@/components/assets/check.png";
-import { SettingsLink } from "../SettingsLink";
-import history from "./updateAssets/history.png";
-import mount from "./updateAssets/mount.png";
 import { sortedPosts } from "@/content/blog/posts";
 import { createWindow } from "@/lib/createWindow";
 
@@ -214,67 +211,37 @@ const contentByKey = {
     return (
       <>
         <h3>Updates</h3>
-        <h4>August 5th, 2024</h4>
+
+        <h4>April 2026 — Launch</h4>
         <p>
-          I&apos;m back from vacation and with some small quality of life
-          improvements.
+          danoh.com is live. Built this personal site as a retro AI-powered desktop —
+          because a static portfolio felt too boring. Here&apos;s what shipped:
         </p>
         <ul>
-          <li>
-            When your program uses the <code>chat</code> api, it no longer
-            counts against your quality tokens. I&apos;m working on new metering
-            methods for that.
-          </li>
-          <li>You can now double click to run programs in Explorer.</li>
-          <li>Show an error when you run out of tokens.</li>
+          <li><strong>AI App Generator</strong> — describe any app in the Run dialog and it gets built on the fly using Claude Sonnet 4.6. Paint apps, calculators, games, whatever you can imagine.</li>
+          <li><strong>Fix &amp; Iterate</strong> — click the <code>?</code> button on any generated app to chat with the AI. Report bugs, request features — the app updates live.</li>
+          <li><strong>Blog</strong> — built-in blog reader right on the desktop. Posts are written in TypeScript, no CMS needed.</li>
+          <li><strong>Resume</strong> — interactive resume with PDF download, viewable right in the OS.</li>
+          <li><strong>Mobile-friendly</strong> — full touch support: tap to open, drag to rearrange icons, responsive windows.</li>
+          <li><strong>Security hardened</strong> — access code gate, rate limiting, sandboxed iframes, prompt injection protections, constant-time auth.</li>
         </ul>
-        <h4>July 23rd, 2024</h4>
+
+        <h4>Tech Stack</h4>
+        <ul>
+          <li>Next.js 16 + React 19 + TypeScript</li>
+          <li>Anthropic Claude API (Sonnet 4.6 for generation, Haiku for lightweight tasks)</li>
+          <li>PostgreSQL for session management and program persistence</li>
+          <li>Docker + Traefik + Watchtower for deployment</li>
+          <li>98.css for the authentic Windows 98 aesthetic</li>
+        </ul>
+
         <p>
-          Introducing mounted file systems. You can now access a directory on
-          your computer inside of DanOh. Generate programs inside of
-          Lootrunners and use them to edit files on your actual file system.
+          Open source under AGPL-3.0. Built on{" "}
+          <a href="https://github.com/SawyerHood/windows9x" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
+            windows9x
+          </a>{" "}
+          by Sawyer Hood.
         </p>
-        <Image src={mount} alt="Image of mounted filesystem" width={400} />
-        <h4>July 19th, 2024</h4>
-        We now have the ability to sync your DanOh filesystem to your
-        actual file system! Open up Settings and choose a directory to set as
-        your system directory. This will mount your filesystem to that directory
-        and any files you make in DanOh will be saved to that directory.
-        You can also directly edit those files from your real operating system
-        and they will magically update in DanOh.
-        <hr />
-        <h4>July 15th, 2024</h4>
-        <p>
-          Added version history to generated programs. You can now go back to
-          previous versions of a program and undo changes. To get started press{" "}
-          <code>File &gt; History</code> in a program that is open. This is a
-          first pass at this feature, expect it to be improved in the future!
-        </p>
-        <Image src={history} alt="History" />
-        <p>
-          Quality programs can now be twice as long. You should be able to
-          generate more complex programs.
-        </p>
-        <p>
-          We are upgrading our database tonight to support more traffic! There
-          will be a few minutes of downtime around 8pm PT tonight.
-        </p>
-        <hr />
-        <h4>July 14th, 2024</h4>
-        <p>
-          We are getting more traffic than expected! I&apos;ve temporarily
-          scaled back the number of Quality Tokens that free users start with to
-          5. You can purchase more tokens in the <SettingsLink />.
-        </p>
-        <p>
-          Icon generation has also been disabled unless you are generating with
-          the Quality model.
-        </p>
-        <p>
-          I&apos;ve also added a quick overview video that shows off some of the
-          things you can do in DanOh:
-        </p>
-        <Video />
       </>
     );
   },
@@ -322,33 +289,7 @@ const contentByKey = {
       </>
     );
   },
-  tutorial: () => {
-    return (
-      <>
-        <Video />
-        <p>
-          Here is a quick video overview that shows off some of the things you
-          can do in DanOh.
-        </p>
-      </>
-    );
-  },
 };
-
-function Video() {
-  return (
-    <iframe
-      width="430"
-      height="240"
-      src="https://www.youtube.com/embed/v-ryqn2x35Q?si=Tn7C_pZtCNIAbmfk"
-      title="YouTube video player"
-      frameBorder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      referrerPolicy="strict-origin-when-cross-origin"
-      allowFullScreen
-    ></iframe>
-  );
-}
 
 export const WIDTH = 700;
 
