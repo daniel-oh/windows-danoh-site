@@ -2,6 +2,8 @@ import { useAtomValue, useSetAtom } from "jotai";
 import styles from "./Desktop.module.css";
 import { ProgramEntry, programsAtom } from "@/state/programs";
 import defaultIcon from "./assets/window.png";
+import blogIcon from "./assets/blog-icon.png";
+import resumeIcon from "./assets/resume-icon.png";
 import Image from "next/image";
 import { createWindow } from "@/lib/createWindow";
 import { useCreateContextMenu } from "@/state/contextMenu";
@@ -135,6 +137,7 @@ export const Desktop = () => {
       <BuiltInIcon
         id={BLOG_ICON_ID}
         name="Blog"
+        icon={blogIcon}
         onOpen={openBlog}
         isSelected={selectedIcon === BLOG_ICON_ID}
         onSelect={() => setSelectedIcon(BLOG_ICON_ID)}
@@ -145,6 +148,7 @@ export const Desktop = () => {
       <BuiltInIcon
         id={RESUME_ICON_ID}
         name="Resume"
+        icon={resumeIcon}
         onOpen={openResume}
         isSelected={selectedIcon === RESUME_ICON_ID}
         onSelect={() => setSelectedIcon(RESUME_ICON_ID)}
@@ -360,6 +364,7 @@ function ProgramIcon({
 function BuiltInIcon({
   id: _id,
   name,
+  icon,
   onOpen,
   isSelected,
   onSelect,
@@ -369,6 +374,7 @@ function BuiltInIcon({
 }: {
   id: string;
   name: string;
+  icon?: typeof defaultIcon;
   onOpen: () => void;
   isSelected: boolean;
   onSelect: () => void;
@@ -487,7 +493,7 @@ function BuiltInIcon({
     >
       <Image
         unoptimized
-        src={defaultIcon}
+        src={icon || defaultIcon}
         alt={name}
         width={24}
         height={24}

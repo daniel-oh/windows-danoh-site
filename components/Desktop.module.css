@@ -26,9 +26,10 @@
   }
 
   & img {
-    image-rendering: pixelated;
+    image-rendering: auto;
     width: 64px;
     height: 64px;
+    border-radius: 4px;
   }
 }
 
