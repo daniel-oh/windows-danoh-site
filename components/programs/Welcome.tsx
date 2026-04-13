@@ -57,25 +57,50 @@ const openBlog = () => {
   });
 };
 
+const openResume = () => {
+  createWindow({
+    title: "Resume — Daniel Oh",
+    program: { type: "resume" },
+    size: { width: 700, height: 550 },
+  });
+};
+
 const contentByKey = {
   welcome: () => {
     return (
       <>
-        <h3>Welcome</h3>
-
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/headshot.jpg"
+            alt="Daniel Oh"
+            style={{
+              width: 90,
+              height: 90,
+              borderRadius: "50%",
+              border: "2px solid #808080",
+              objectFit: "cover",
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <h3>Hey, I&apos;m Daniel Oh</h3>
+            <p>
+              Sr. Platform Engineer at Nike, University of Michigan Computer Engineering grad,
+              and builder of things. Welcome to my personal corner of the internet —
+              a retro AI-powered desktop where you can explore my work, read my blog,
+              and even generate your own apps.
+            </p>
+          </div>
+        </div>
         <p>
-          Welcome to the exciting new world of DanOh, where your computer
-          desktop meets Artificial Intelligence.
+          Check out my <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openResume}>Resume</strong> to
+          see my experience, or browse the <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openBlog}>Blog</strong> for
+          what I&apos;m working on.
         </p>
         <p>
-          Sit back and relax as you take a brief tour of the options available.
-        </p>
-        <p>
-          To get started, press <strong>Start &gt; Run</strong> and type the
-          description of the app you want to run. DanOh will create it for
-          you. On any generated application you can also press the{" "}
-          <strong>?</strong> button to chat with the developer and make changes
-          to the program.
+          Want to try the AI? Press <strong>Start &gt; Run</strong> and describe any app —
+          DanOh will create it for you on the fly.
         </p>
         <div className={styles.buttonGroup}>
           <a
@@ -92,6 +117,7 @@ const contentByKey = {
           >
             <button>LinkedIn</button>
           </a>
+          <button onClick={openResume}>Resume</button>
         </div>
       </>
     );
@@ -140,6 +166,47 @@ const contentByKey = {
         <button onClick={openBlog}>
           Open Blog
         </button>
+      </>
+    );
+  },
+  resume: () => {
+    return (
+      <>
+        <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/headshot-resume.jpg"
+            alt="Daniel Oh"
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: "50%",
+              border: "2px solid #808080",
+              objectFit: "cover",
+            }}
+          />
+          <div>
+            <h3 style={{ margin: 0 }}>Daniel Oh</h3>
+            <div style={{ fontSize: 11, color: "#555" }}>
+              Sr. Platform Engineer at Nike &middot; Chicago, IL
+            </div>
+          </div>
+        </div>
+        <p>
+          8+ years in platform engineering, cybersecurity, and DevOps across Nike, Capital Markets Gateway,
+          Avanade, and Allstate. University of Michigan Computer Engineering. Three Azure Expert certifications.
+          Five ventures on the side.
+        </p>
+        <p>
+          <strong>Core expertise:</strong> Kubernetes, Terraform, AWS/Azure/GCP, GitHub Actions, GitOps,
+          security compliance, observability, and building developer platforms that teams actually use.
+        </p>
+        <div className={styles.buttonGroup} style={{ marginTop: 12 }}>
+          <button onClick={openResume}>View Full Resume</button>
+          <a href="/Daniel_Oh_Resume.pdf" download>
+            <button>Download PDF</button>
+          </a>
+        </div>
       </>
     );
   },
@@ -289,6 +356,7 @@ export function Welcome({ id: _id }: { id: string }) {
   const tableOfContentsEntries: TableOfContentsEntry[] = [
     { title: "Welcome", key: "welcome" },
     { title: "Blog", key: "blog" },
+    { title: "Resume", key: "resume" },
     { title: "Updates", key: "updates" },
     { title: "Filesystem", key: "filesystem" },
     { title: "Advanced", key: "advanced" },
