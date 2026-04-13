@@ -1,0 +1,43 @@
+.menuBar {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.menuBarButton {
+  border: none;
+  box-shadow: none !important;
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+
+  &.isOpen {
+    background-color: darkblue;
+    color: #fff;
+  }
+}
+
+.menuBarButtonContainer {
+  position: relative;
+}
+
+.menuBarDropdown {
+  z-index: 9999;
+  min-width: 120px;
+
+  & > button {
+    box-shadow: none !important;
+    text-align: left;
+    display: block;
+    width: 100%;
+    padding: 4px 16px;
+  }
+
+  & > button:hover {
+    background-color: darkblue;
+    color: white;
+  }
+}

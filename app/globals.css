@@ -1,0 +1,79 @@
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  user-select: none;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  touch-action: manipulation;
+  animation: bodyFadeIn 300ms ease-out both;
+
+  & .title-bar,
+  & .window,
+  & button,
+  & input,
+  & label,
+  & option,
+  & select,
+  & table,
+  & textarea,
+  & ul.tree-view {
+    -webkit-font-smoothing: inherit !important;
+  }
+}
+
+@keyframes bodyFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+a {
+  /* color: inherit; */
+  text-decoration: none;
+}
+
+:root {
+  --taskbar-height: 32px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --taskbar-height: 48px;
+  }
+}
+
+::-webkit-scrollbar-button:vertical:start:increment,
+::-webkit-scrollbar-button:vertical:end:decrement,
+::-webkit-scrollbar-button:horizontal:start:increment,
+::-webkit-scrollbar-button:horizontal:end:decrement {
+  display: none;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+h4 {
+  font-size: 1rem;
+}
+
+h5 {
+  font-size: 0.75rem;
+}
