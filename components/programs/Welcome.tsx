@@ -264,22 +264,23 @@ const contentByKey = {
       <>
         <h3>Advanced</h3>
         <p>
-          Everything in this OS is a file. Open <strong>Explorer</strong> from
-          the Start menu to browse the filesystem. Generated apps can read, write,
-          and save files too.
+          Everything here is a file. Open <strong>Explorer</strong> to browse.
+          Generated apps can read, write, and save files too.
         </p>
-        <p>
-          Generated programs also have access to a few built-in OS APIs:
-        </p>
+        <p><strong>OS APIs for generated apps:</strong></p>
         <ul>
-          <li><strong>Files</strong>: Open and save files to persist app state</li>
-          <li><strong>Registry</strong>: Store settings across programs</li>
-          <li><strong>Chat</strong>: Let your generated app call an LLM directly</li>
+          <li><strong>Files</strong>: Persist app state across sessions</li>
+          <li><strong>Registry</strong>: Shared settings across programs</li>
+          <li><strong>Chat</strong>: Call an LLM from inside your app</li>
         </ul>
         <p>
-          Try mentioning these when describing an app in the Run dialog.
-          For example: &quot;a note-taking app that saves to the filesystem&quot;
-          or &quot;a trivia game that uses chat to generate questions.&quot;
+          Mention these when generating: &quot;a notes app that saves files&quot;
+          or &quot;a trivia game that generates questions with chat.&quot;
+        </p>
+        <p style={{ fontSize: 11, color: "#555", marginTop: 8, borderTop: "1px solid #ccc", paddingTop: 8 }}>
+          <strong>Privacy:</strong> All files are stored in your browser&apos;s
+          local storage. Nothing is sent to the server. You can optionally mount
+          a local directory in Settings, but that stays on your machine too.
         </p>
       </>
     );
