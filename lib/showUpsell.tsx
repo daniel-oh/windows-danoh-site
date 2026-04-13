@@ -11,7 +11,7 @@ export function showUpsell() {
           You&apos;ve used all your available tokens for high-quality
           generations with Claude 3.5 Sonnet.
         </p>
-        <p>To continue using DanOh, you have two options:</p>
+        <p>To continue using danoh.com, you have two options:</p>
         <ul style={{ paddingLeft: "20px", marginTop: "4px" }}>
           <li>Purchase additional quality tokens</li>
           <li>Switch to our free model (with reduced capabilities)</li>

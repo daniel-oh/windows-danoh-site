@@ -103,7 +103,7 @@ export function Run({ id }: { id: string }) {
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <p>
-          Type the description of the program you want to run and DanOh
+          Type the description of the program you want to run and the AI
           will create it for you.
         </p>
         {flags.tokens && (

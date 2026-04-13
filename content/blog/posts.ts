@@ -11,15 +11,15 @@ export type BlogPost = {
 export const posts: BlogPost[] = [
   {
     slug: "welcome-to-danoh",
-    title: "Welcome to DanOh",
+    title: "Welcome to danoh.com",
     date: "2026-04-09",
     author: "Daniel Oh",
-    summary: "Introducing DanOh — an AI-powered retro OS that generates apps on the fly.",
+    summary: "Introducing danoh.com — an AI-powered retro OS that generates apps on the fly.",
     tags: ["announcement", "launch"],
     content: `
-DanOh is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly — right inside a Windows 98-style desktop.
+danoh.com is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly — right inside a Windows 98-style desktop.
 
-![DanOh Desktop](/danoh-logo-wide.png)
+![danoh.com Desktop](/danoh-logo-wide.png)
 
 ## How it works
 
@@ -46,7 +46,7 @@ The only limit is your imagination.
 
 ## The tech behind it
 
-DanOh is built with:
+danoh.com is built with:
 
 - **Next.js 16** + **React 19** for the frontend
 - **Anthropic Claude** for AI-powered app generation
@@ -64,7 +64,7 @@ Stay tuned for updates. We're just getting started.
     title: "How AI App Generation Works",
     date: "2026-04-10",
     author: "Daniel Oh",
-    summary: "A look under the hood at how DanOh generates applications from text descriptions.",
+    summary: "A look under the hood at how danoh.com generates applications from text descriptions.",
     tags: ["engineering", "ai"],
     content: `
 Ever wondered how typing "paint app" into a text box creates a fully functional painting application? Here's what happens behind the scenes.
@@ -104,7 +104,7 @@ Generated apps run in sandboxed iframes with restricted permissions. They can ex
 
 ---
 
-*Have questions about how DanOh works? Open a **Run** dialog and ask the AI to build you something.*
+*Have questions about how danoh.com works? Open a **Run** dialog and ask the AI to build you something.*
     `,
   },
 ];

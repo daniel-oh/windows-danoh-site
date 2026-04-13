@@ -105,7 +105,7 @@ function TaskBar() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/danoh-logo-wide.png"
-        alt="DanOh"
+        alt="danoh.com"
         className={styles.taskbarLogo}
       />
     </div>
@@ -120,7 +120,7 @@ function StartMenu() {
       label: "Welcome",
       cb: () => {
         createWindow({
-          title: "Welcome to DanOh",
+          title: "Welcome to danoh.com",
           program: { type: "welcome" },
           size: { width: WIDTH, height: "auto" },
         });

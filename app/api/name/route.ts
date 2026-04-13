@@ -67,6 +67,6 @@ export async function POST(req: Request) {
 
 const prompt = `You are an expert application namer. The user will give you a description
 of an application and you will create a simple name for it. These applications are for
-DanOh OS, a retrofuturistic AI-powered operating system. Make the names creative and
+danoh.com, a retrofuturistic AI-powered operating system. Make the names creative and
 whimsical. Put the name in <appname> tags.
 `;
