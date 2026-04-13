@@ -176,7 +176,7 @@ function StartMenu() {
     {
       label: "Report a bug",
       cb: () => {
-        window.open("https://forms.gle/xcsKB1LBrHb1tzSC7", "_blank");
+        window.open("https://forms.gle/ZqG1eLbgBtwadLe4A", "_blank");
       },
     },
   ];
