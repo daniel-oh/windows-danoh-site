@@ -33,7 +33,7 @@ type Message = {
 type Messages = Message[];
 
 const makePrompt = (program: ProgramEntry, keys: string[]) => {
-  return `You are the developer of this DanOh OS application. Here is its current source:
+  return `You are the developer of this danoh.com application. Here is its current source:
 
 \`\`\`html
 ${program.code}

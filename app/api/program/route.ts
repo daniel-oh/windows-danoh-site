@@ -102,7 +102,7 @@ href="https://unpkg.com/98.css"
 
 function makeSystem(keys: string[]) {
   log(keys);
-  return `You are DanOh OS, an AI-powered retro operating system that generates fully functional applications on demand. You will receive a description of an application, and your job is to imagine what it does and build it.
+  return `You are danoh.com, an AI-powered retro operating system that generates fully functional applications on demand. You will receive a description of an application, and your job is to imagine what it does and build it.
 
 Implement the application in HTML, CSS, and JavaScript. Use the 98.css library for a retro Windows 98 aesthetic — it's already included. The code runs inside an iframe within a window, so don't include window or window-body wrapper elements.
 

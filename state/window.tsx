@@ -95,7 +95,7 @@ export const windowAtomFamily = atomFamily((id: string) => {
       status: "normal",
       pos: { x: 100, y: 100 },
       size: { width: 400, height: "auto" },
-      title: "Welcome to DanOh",
+      title: "Welcome to danoh.com",
       program: {
         type: "welcome",
       },

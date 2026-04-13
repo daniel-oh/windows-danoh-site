@@ -36,11 +36,11 @@ export default function GlobalError({
               fontSize: 14,
             }}
           >
-            DanOh - Error
+            danoh.com - Error
           </div>
           <div style={{ padding: 16 }}>
             <p style={{ marginBottom: 12 }}>
-              DanOh encountered an error and needs to restart.
+              danoh.com encountered an error and needs to restart.
             </p>
             <p style={{ fontSize: 11, color: "#666", marginBottom: 16 }}>
               Try clearing your browser cache if this keeps happening.

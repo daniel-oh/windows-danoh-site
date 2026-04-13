@@ -329,7 +329,7 @@ export function Welcome({ id: _id }: { id: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/danoh-logo-animated.gif"
-        alt="DanOh"
+        alt="danoh.com"
         className={styles.animatedLogo}
       />
       <div className={styles.contentWrapper}>
