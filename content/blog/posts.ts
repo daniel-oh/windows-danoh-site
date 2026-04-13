@@ -14,33 +14,31 @@ export const posts: BlogPost[] = [
     title: "Welcome to danoh.com",
     date: "2026-04-09",
     author: "Daniel Oh",
-    summary: "Introducing danoh.com — an AI-powered retro OS that generates apps on the fly.",
+    summary: "Introducing danoh.com: an AI-powered retro OS that generates apps on the fly.",
     tags: ["announcement", "launch"],
     content: `
-danoh.com is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly — right inside a Windows 98-style desktop.
-
-![danoh.com](/danoh-logo.svg)
+danoh.com is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly, right inside a Windows 98-style desktop.
 
 ## How it works
 
 1. Click **Start > Run**
-2. Describe the app you want — "paint app", "calculator", "snake game", anything
+2. Describe the app you want: "paint app", "calculator", "snake game", anything
 3. The AI generates a fully functional HTML/CSS/JS application in seconds
 4. It opens in a draggable, resizable window on your desktop
 
 ## Fix & Iterate
 
-Found a bug in a generated app? Click the **?** button on any app window to open the **Fix & Iterate** chat. Describe what's wrong, and the AI developer fixes the code and updates the app live — no reload needed.
+Found a bug in a generated app? Click the **?** button on any app window to open the **Fix & Iterate** chat. Describe what's wrong, and the AI developer fixes the code and updates the app live: no reload needed.
 
 ## What can you build?
 
 Anything that runs in a browser:
 
-- **Games** — chess, snake, tetris, minesweeper
-- **Productivity** — calculators, timers, todo lists, note-taking
-- **Creative tools** — paint apps, pixel editors, music sequencers
-- **Data tools** — charts, unit converters, JSON formatters
-- **Fun stuff** — quote generators, fortune tellers, trivia games
+- **Games**: chess, snake, tetris, minesweeper
+- **Productivity**: calculators, timers, todo lists, note-taking
+- **Creative tools**: paint apps, pixel editors, music sequencers
+- **Data tools**: charts, unit converters, JSON formatters
+- **Fun stuff**: quote generators, fortune tellers, trivia games
 
 The only limit is your imagination.
 
@@ -54,7 +52,7 @@ danoh.com is built with:
 - **Docker** + **Traefik** for deployment
 - **PostgreSQL** for session management
 
-> "The future of yesterday" — every app you generate feels like discovering a lost program from an alternate reality 1998.
+> "The future of yesterday": every app you generate feels like discovering a lost program from an alternate reality 1998.
 
 Stay tuned for updates. We're just getting started.
     `,
@@ -82,11 +80,11 @@ Your description gets wrapped in a carefully crafted system prompt that instruct
 
 ### 2. Streaming Generation
 
-The AI response streams directly into an iframe — you literally watch the app build itself in real-time as HTML chunks arrive over the network. No loading spinner, no waiting for the full response. The app appears piece by piece.
+The AI response streams directly into an iframe: you literally watch the app build itself in real-time as HTML chunks arrive over the network. No loading spinner, no waiting for the full response. The app appears piece by piece.
 
 ### 3. Code Capture & Caching
 
-Once streaming completes, the generated HTML is captured from the iframe's DOM and cached. The next time you open that app, it loads instantly — no AI call needed.
+Once streaming completes, the generated HTML is captured from the iframe's DOM and cached. The next time you open that app, it loads instantly: no AI call needed.
 
 ### 4. Live Iteration
 
@@ -96,7 +94,7 @@ The **?** button on any app window opens a chat where the AI has full context of
 - Request features: *"Add a color picker"*
 - Ask questions: *"How does the undo system work?"*
 
-The AI responds with updated code that's applied live — the app changes in front of your eyes.
+The AI responds with updated code that's applied live: the app changes in front of your eyes.
 
 ## Security & Safety
 

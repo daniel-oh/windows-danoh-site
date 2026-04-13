@@ -131,7 +131,7 @@ function PostView({
                 src={src}
                 alt={alt || ""}
                 className={styles.postImage}
-                loading="lazy"
+                loading="eager"
               />
             ),
           }}
