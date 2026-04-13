@@ -10,16 +10,16 @@ export type BlogPost = {
 
 export const posts: BlogPost[] = [
   {
-    slug: "welcome-to-lootrunners",
-    title: "Welcome to Lootrunners",
+    slug: "welcome-to-danoh",
+    title: "Welcome to DanOh",
     date: "2026-04-09",
-    author: "Lootrunners Team",
-    summary: "Introducing Lootrunners — an AI-powered retro OS that generates apps on the fly.",
+    author: "Daniel Oh",
+    summary: "Introducing DanOh — an AI-powered retro OS that generates apps on the fly.",
     tags: ["announcement", "launch"],
     content: `
-Lootrunners is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly — right inside a Windows 98-style desktop.
+DanOh is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly — right inside a Windows 98-style desktop.
 
-![Lootrunners Desktop](/lootrunners-website.png?v=1)
+![DanOh Desktop](/lootrunners-website.png?v=1)
 
 ## How it works
 
@@ -46,7 +46,7 @@ The only limit is your imagination.
 
 ## The tech behind it
 
-Lootrunners is built with:
+DanOh is built with:
 
 - **Next.js 16** + **React 19** for the frontend
 - **Anthropic Claude** for AI-powered app generation
@@ -63,8 +63,8 @@ Stay tuned for updates. We're just getting started.
     slug: "ai-app-generation",
     title: "How AI App Generation Works",
     date: "2026-04-10",
-    author: "Lootrunners Team",
-    summary: "A look under the hood at how Lootrunners generates applications from text descriptions.",
+    author: "Daniel Oh",
+    summary: "A look under the hood at how DanOh generates applications from text descriptions.",
     tags: ["engineering", "ai"],
     content: `
 Ever wondered how typing "paint app" into a text box creates a fully functional painting application? Here's what happens behind the scenes.
@@ -104,7 +104,7 @@ Generated apps run in sandboxed iframes with restricted permissions. They can ex
 
 ---
 
-*Have questions about how Lootrunners works? Open a **Run** dialog and ask the AI to build you something.*
+*Have questions about how DanOh works? Open a **Run** dialog and ask the AI to build you something.*
     `,
   },
 ];

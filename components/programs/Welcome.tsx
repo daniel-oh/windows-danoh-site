@@ -64,7 +64,7 @@ const contentByKey = {
         <h3>Welcome</h3>
 
         <p>
-          Welcome to the exciting new world of Lootrunners, where your computer
+          Welcome to the exciting new world of DanOh, where your computer
           desktop meets Artificial Intelligence.
         </p>
         <p>
@@ -72,21 +72,21 @@ const contentByKey = {
         </p>
         <p>
           To get started, press <strong>Start &gt; Run</strong> and type the
-          description of the app you want to run. Lootrunners will create it for
+          description of the app you want to run. DanOh will create it for
           you. On any generated application you can also press the{" "}
           <strong>?</strong> button to chat with the developer and make changes
           to the program.
         </p>
         <div className={styles.buttonGroup}>
           <a
-            href="https://github.com/intelliyap/lootrunners.com"
+            href="https://github.com/daniel-oh/windows-danoh-site"
             target="_blank"
             rel="noopener noreferrer"
           >
             <button>GitHub</button>
           </a>
           <a
-            href="https://lootrunners.com"
+            href="https://danoh.com"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -102,7 +102,7 @@ const contentByKey = {
       <>
         <h3>Blog</h3>
         <p>
-          Read the latest from the Lootrunners team.
+          Read the latest from Daniel Oh.
         </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "12px 0", maxHeight: 300, overflowY: "auto" }}>
           {recentPosts.map((post) => (
@@ -164,17 +164,17 @@ const contentByKey = {
         <h4>July 23rd, 2024</h4>
         <p>
           Introducing mounted file systems. You can now access a directory on
-          your computer inside of Lootrunners. Generate programs inside of
+          your computer inside of DanOh. Generate programs inside of
           Lootrunners and use them to edit files on your actual file system.
         </p>
         <Image src={mount} alt="Image of mounted filesystem" width={400} />
         <h4>July 19th, 2024</h4>
-        We now have the ability to sync your Lootrunners filesystem to your
+        We now have the ability to sync your DanOh filesystem to your
         actual file system! Open up Settings and choose a directory to set as
         your system directory. This will mount your filesystem to that directory
-        and any files you make in Lootrunners will be saved to that directory.
+        and any files you make in DanOh will be saved to that directory.
         You can also directly edit those files from your real operating system
-        and they will magically update in Lootrunners.
+        and they will magically update in DanOh.
         <hr />
         <h4>July 15th, 2024</h4>
         <p>
@@ -205,7 +205,7 @@ const contentByKey = {
         </p>
         <p>
           I&apos;ve also added a quick overview video that shows off some of the
-          things you can do in Lootrunners:
+          things you can do in DanOh:
         </p>
         <Video />
       </>
@@ -216,7 +216,7 @@ const contentByKey = {
       <>
         <h3>Filesystem</h3>
         <p>
-          In Lootrunners everything is a file. Including all of the programs that
+          In DanOh everything is a file. Including all of the programs that
           are running.
         </p>
         <p>
@@ -261,7 +261,7 @@ const contentByKey = {
         <Video />
         <p>
           Here is a quick video overview that shows off some of the things you
-          can do in Lootrunners.
+          can do in DanOh.
         </p>
       </>
     );
@@ -320,7 +320,7 @@ export function Welcome({ id: _id }: { id: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/lootrunners_logo.gif"
-        alt="Lootrunners"
+        alt="DanOh"
         className={styles.animatedLogo}
       />
       <div className={styles.contentWrapper}>

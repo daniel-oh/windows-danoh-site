@@ -1,6 +1,6 @@
-# Lootrunners
+# danoh.com
 
-An AI-powered retro OS experience. Describe any application you want and it gets generated on the fly.
+Personal website of Daniel Oh — an AI-powered retro OS experience.
 
 Built on [windows9x](https://github.com/SawyerHood/windows9x) by Sawyer Hood.
 
