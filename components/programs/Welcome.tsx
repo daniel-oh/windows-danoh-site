@@ -100,17 +100,14 @@ const contentByKey = {
         </div>
         <p>
           Poke around the desktop. My{" "}
-          <button onClick={openResume} style={{ cursor: "pointer", color: "#000080", textDecoration: "underline", background: "none", border: "none", font: "inherit", padding: 0, fontWeight: "bold" }}>Resume</button> and{" "}
-          <button onClick={openBlog} style={{ cursor: "pointer", color: "#000080", textDecoration: "underline", background: "none", border: "none", font: "inherit", padding: 0, fontWeight: "bold" }}>Blog</button> are
+          <a href="#" onClick={(e) => { e.preventDefault(); openResume(); }} style={{ color: "#000080" }}><strong>Resume</strong></a> and{" "}
+          <a href="#" onClick={(e) => { e.preventDefault(); openBlog(); }} style={{ color: "#000080" }}><strong>Blog</strong></a> are
           both here, or try generating your own app: hit <strong>Start &gt; Run</strong>,
           describe what you want, and the AI builds it in seconds.
         </p>
         <p style={{ fontSize: 11, color: "#555" }}>
           To try the AI, bring your own Anthropic API key in{" "}
-          <button
-            style={{ cursor: "pointer", color: "#000080", textDecoration: "underline", background: "none", border: "none", font: "inherit", padding: 0, fontWeight: "bold" }}
-            onClick={() => createWindow({ title: "Settings", program: { type: "settings" } })}
-          >Settings</button>,
+          <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" } }); }} style={{ color: "#000080" }}><strong>Settings</strong></a>,
           or{" "}
           <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
             message me on LinkedIn
