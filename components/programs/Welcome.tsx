@@ -56,7 +56,7 @@ const openBlog = () => {
 
 const openResume = () => {
   createWindow({
-    title: "Resume — Daniel Oh",
+    title: "Resume - Daniel Oh",
     program: { type: "resume" },
     size: { width: 700, height: 550 },
   });
@@ -83,21 +83,22 @@ const contentByKey = {
           <div style={{ flex: 1, minWidth: 200 }}>
             <h3>Hey, I&apos;m Daniel Oh</h3>
             <p>
-              Sr. Platform Engineer at Nike, University of Michigan Computer Engineering grad,
-              and builder of things. Welcome to my personal corner of the internet —
-              a retro AI-powered desktop where you can explore my work, read my blog,
-              and even generate your own apps.
+              I&apos;m a Sr. Platform Engineer at Nike and a University of Michigan
+              Computer Engineering grad. I like building things that solve real problems,
+              whether that&apos;s enterprise security platforms or side ventures.
+              Thanks for stopping by.
             </p>
           </div>
         </div>
         <p>
-          Check out my <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openResume}>Resume</strong> to
-          see my experience, or browse the <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openBlog}>Blog</strong> for
-          what I&apos;m working on.
+          This site is a retro AI-powered desktop. You can check out
+          my <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openResume}>Resume</strong>,
+          read the <strong style={{ cursor: "pointer", color: "#000080", textDecoration: "underline" }} onClick={openBlog}>Blog</strong>,
+          or explore what I&apos;ve been working on.
         </p>
         <p>
-          Want to try the AI? Press <strong>Start &gt; Run</strong> and describe any app —
-          DanOh will create it for you on the fly.
+          You can also generate your own apps right here. Hit <strong>Start &gt; Run</strong>,
+          describe what you want, and the AI will build it for you in seconds.
         </p>
         <div className={styles.buttonGroup}>
           <a
@@ -212,18 +213,18 @@ const contentByKey = {
       <>
         <h3>Updates</h3>
 
-        <h4>April 2026 — Launch</h4>
+        <h4>April 2026 - Launch</h4>
         <p>
-          danoh.com is live. Built this personal site as a retro AI-powered desktop —
+          danoh.com is live. Built this personal site as a retro AI-powered desktop
           because a static portfolio felt too boring. Here&apos;s what shipped:
         </p>
         <ul>
-          <li><strong>AI App Generator</strong> — describe any app in the Run dialog and it gets built on the fly using Claude Sonnet 4.6. Paint apps, calculators, games, whatever you can imagine.</li>
-          <li><strong>Fix &amp; Iterate</strong> — click the <code>?</code> button on any generated app to chat with the AI. Report bugs, request features — the app updates live.</li>
-          <li><strong>Blog</strong> — built-in blog reader right on the desktop. Posts are written in TypeScript, no CMS needed.</li>
-          <li><strong>Resume</strong> — interactive resume with PDF download, viewable right in the OS.</li>
-          <li><strong>Mobile-friendly</strong> — full touch support: tap to open, drag to rearrange icons, responsive windows.</li>
-          <li><strong>Security hardened</strong> — access code gate, rate limiting, sandboxed iframes, prompt injection protections, constant-time auth.</li>
+          <li><strong>AI App Generator</strong>: Describe any app in the Run dialog and it gets built on the fly using Claude Sonnet 4.6. Paint apps, calculators, games, whatever you can imagine.</li>
+          <li><strong>Fix &amp; Iterate</strong>: Click the <code>?</code> button on any generated app to chat with the AI. Report bugs, request features. The app updates live.</li>
+          <li><strong>Blog</strong>: Built-in blog reader right on the desktop. Posts are written in TypeScript, no CMS needed.</li>
+          <li><strong>Resume</strong>: Interactive resume with PDF download, viewable right in the OS.</li>
+          <li><strong>Mobile-friendly</strong>: Full touch support: tap to open, drag to rearrange icons, responsive windows.</li>
+          <li><strong>Security hardened</strong>: Access code gate, rate limiting, sandboxed iframes, prompt injection protections, constant-time auth.</li>
         </ul>
 
         <h4>Tech Stack</h4>
