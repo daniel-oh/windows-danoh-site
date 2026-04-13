@@ -79,18 +79,18 @@ const contentByKey = {
         </p>
         <div className={styles.buttonGroup}>
           <a
-            href="https://github.com/daniel-oh/windows-danoh-site"
+            href="https://github.com/daniel-oh"
             target="_blank"
             rel="noopener noreferrer"
           >
             <button>GitHub</button>
           </a>
           <a
-            href="https://danoh.com"
+            href="https://www.linkedin.com/in/daniel-oh/"
             target="_blank"
             rel="noopener noreferrer"
           >
-            <button>Twitter</button>
+            <button>LinkedIn</button>
           </a>
         </div>
       </>
