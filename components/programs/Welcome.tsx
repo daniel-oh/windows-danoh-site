@@ -206,7 +206,7 @@ const contentByKey = {
         </div>
         <p>
           Currently designing enterprise security strategy across 50+ AWS accounts at Nike.
-          Before that, I built private network architectures at a fintech in New York,
+          Before that, I built private network architectures at a fintech startup in New York,
           led cloud migrations for Fortune 100 clients, and deployed production
           systems at Allstate.
         </p>
@@ -215,8 +215,8 @@ const contentByKey = {
         </p>
         <div className={styles.buttonGroup} style={{ marginTop: 12 }}>
           <button onClick={openResume}>View Full Resume</button>
-          <a href="/Daniel_Oh_Resume.pdf" download>
-            Download PDF
+          <a href="/Daniel_Oh_Resume.pdf" download style={{ textDecoration: "none" }}>
+            <button type="button">Download PDF</button>
           </a>
         </div>
       </>
