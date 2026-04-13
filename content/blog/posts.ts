@@ -19,7 +19,7 @@ export const posts: BlogPost[] = [
     content: `
 danoh.com is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly — right inside a Windows 98-style desktop.
 
-![danoh.com Desktop](/danoh-logo-wide.png)
+![danoh.com](/danoh-logo.svg)
 
 ## How it works
 
