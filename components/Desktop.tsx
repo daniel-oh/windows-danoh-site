@@ -82,7 +82,11 @@ export const Desktop = () => {
   const didSync = useRef(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [iconPositions, setIconPositions] = useState<IconPositions>({});
-  const [mobile] = useState(() => isMobile());
+  const [mobile, setMobile] = useState(false);
+
+  useEffect(() => {
+    setMobile(isMobile());
+  }, []);
 
   useEffect(() => {
     if (didSync.current) return;
