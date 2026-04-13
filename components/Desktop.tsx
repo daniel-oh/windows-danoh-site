@@ -498,6 +498,7 @@ function BuiltInIcon({
         width={24}
         height={24}
         draggable={false}
+        style={icon ? { imageRendering: "auto", borderRadius: 4 } : undefined}
       />
       <div className={styles.programName}>{name}</div>
     </button>
