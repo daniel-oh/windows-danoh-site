@@ -77,7 +77,13 @@ h5 {
   font-size: 0.75rem;
 }
 
-*:focus-visible {
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
   outline: 2px solid #000080;
   outline-offset: 2px;
 }

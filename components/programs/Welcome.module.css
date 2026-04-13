@@ -47,6 +47,8 @@
   object-fit: contain;
   margin: 16px auto 12px;
   display: block;
+  outline: none;
+  border: none;
 
   @media (max-width: 768px) {
     display: none;
