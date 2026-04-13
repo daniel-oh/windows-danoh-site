@@ -56,7 +56,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 60 * 60 * 24 * 365,
+      maxAge: 60 * 60 * 24, // 24 hours
     });
 
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     path: "/",
-    maxAge: 60 * 60 * 24 * 365,
+    maxAge: 60 * 60 * 24, // 24 hours
   });
 
   return new Response(JSON.stringify({ ok: true }), { status: 200 });
