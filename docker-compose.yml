@@ -1,0 +1,47 @@
+services:
+  web:
+    image: dddd4444/danoh-site:latest
+    container_name: danoh-site
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://danoh:${POSTGRES_PASSWORD}@danoh-db:5432/danoh
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NEXT_PUBLIC_LOCAL_MODE=true
+      - ACCESS_CODE=${ACCESS_CODE}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.danoh.rule=Host(`danoh.com`) || Host(`www.danoh.com`)"
+      - "traefik.http.routers.danoh.entrypoints=websecure"
+      - "traefik.http.routers.danoh.tls.certresolver=letsencrypt"
+      - "traefik.http.services.danoh.loadbalancer.server.port=3000"
+      - "com.centurylinklabs.watchtower.enable=true"
+    networks:
+      - proxy
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: danoh-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=danoh
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=danoh
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - proxy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U danoh"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  proxy:
+    external: true

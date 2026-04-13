@@ -1,0 +1,103 @@
+.welcomeContainer {
+  position: relative;
+  padding: 20px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  flex: 1;
+  background: #c0c0c0;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
+}
+
+.contentWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  align-self: stretch;
+  gap: 20px;
+  min-height: 0;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+.sidebar {
+  width: 200px;
+  overflow-y: auto;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    border-right: none;
+  }
+}
+
+.sidebarTitle {
+  font-size: 1rem;
+  background-color: black;
+  color: white;
+  padding: 4px;
+}
+
+.sidebarList {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+
+  & li {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    border-left: 4px solid transparent;
+    padding: 4px;
+    border: 1px solid grey;
+    cursor: pointer;
+  }
+}
+
+.selected {
+  font-weight: bold;
+}
+
+.mainContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  font-size: 1.2rem;
+  gap: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  & ul {
+    padding-left: 20px;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 1rem;
+  }
+}
+
+.animatedLogo {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    width: 100px;
+  }
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+}
