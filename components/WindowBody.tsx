@@ -12,6 +12,7 @@ import { Settings } from "./programs/Settings";
 import { History } from "./programs/History";
 import { Alert } from "./programs/Alert";
 import { Blog } from "./programs/Blog";
+import { Resume } from "./programs/Resume";
 
 export function WindowBody({ state }: { state: WindowState }) {
   const dispatch = useSetAtom(windowAtomFamily(state.id));
@@ -60,6 +61,8 @@ export function WindowBody({ state }: { state: WindowState }) {
       return <Alert id={state.id} />;
     case "blog":
       return <Blog id={state.id} />;
+    case "resume":
+      return <Resume />;
     default:
       assertNever(state.program);
   }

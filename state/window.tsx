@@ -25,7 +25,8 @@ export type Program =
       icon?: "x";
       actions?: AlertAction[];
     }
-  | { type: "blog" };
+  | { type: "blog" }
+  | { type: "resume" };
 
 export type AlertAction = {
   label: string;
