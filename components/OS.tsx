@@ -105,7 +105,7 @@ function TaskBar() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/lootrunners-website.png"
-        alt="Lootrunners"
+        alt="DanOh"
         className={styles.taskbarLogo}
       />
     </div>
@@ -120,7 +120,7 @@ function StartMenu() {
       label: "Welcome",
       cb: () => {
         createWindow({
-          title: "Welcome to Lootrunners",
+          title: "Welcome to DanOh",
           program: { type: "welcome" },
           size: { width: WIDTH, height: "auto" },
         });

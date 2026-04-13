@@ -57,17 +57,17 @@ export const Landing = () => {
   return (
     <div className={styles.container}>
       <div className={styles.headingBar}>
-        <h1>Lootrunners Setup</h1>
+        <h1>DanOh Setup</h1>
       </div>
       <div className={styles.columns}>
         <div className={cx(styles.column, styles.sidebar)}>
           <div className={styles.steps}>
-            <Step iconSrc={installer}>Preparing to run Lootrunners Setup</Step>
+            <Step iconSrc={installer}>Preparing to run DanOh Setup</Step>
             <Step iconSrc={notes} isHighlighted>
               Collecting information about your computer
             </Step>
             <Step iconSrc={copy}>
-              Copying Lootrunners files to your computer
+              Copying DanOh files to your computer
             </Step>
             <Step iconSrc={restart}>Restarting your computer</Step>
             <Step iconSrc={done}>
@@ -90,13 +90,13 @@ export const Landing = () => {
             </div>
           </div>
           <div className="info-box">
-            If you decide not to accept the Agreement, Lootrunners Setup will
+            If you decide not to accept the Agreement, DanOh Setup will
             quit and your computer will return to the previous environment.
           </div>
           <Image
             src={lootrunners}
             className={styles.logo}
-            alt="Lootrunners Logo"
+            alt="DanOh Logo"
           />
         </div>
         <div className={styles.main}>{isLive ? <Login /> : <WaitList />}</div>
@@ -141,17 +141,17 @@ function Login() {
       </div>
       <div className="window-body">
         <div className={styles.imgContainer}>
-          <Image src={banner} alt="Lootrunners" />
+          <Image src={banner} alt="DanOh" />
         </div>
         <div className={styles.copy}>
-          <h2>Welcome to Lootrunners</h2>
+          <h2>Welcome to DanOh</h2>
           <p>
-            Lootrunners is a simulacrum of an OS from the 90s but all
+            DanOh is a simulacrum of an OS from the 90s but all
             applications are generated using <b>AI</b>.
           </p>
           <p>
-            Lootrunners leverages cutting-edge artificial intelligence
-            technology, <b>Lootrunners AI Engine™</b>, to optimize user
+            DanOh leverages cutting-edge artificial intelligence
+            technology, <b>DanOh AI Engine™</b>, to optimize user
             experience and drive unparalleled operational efficiency.
           </p>
           <p>
@@ -171,7 +171,7 @@ function WaitList() {
   return (
     <div className="window">
       <div className="title-bar">
-        <div className="title-bar-text">Lootrunners Waitlist</div>
+        <div className="title-bar-text">DanOh Waitlist</div>
         <div className="title-bar-controls">
           <button aria-label="Minimize"></button>
           <button aria-label="Maximize"></button>
@@ -180,17 +180,17 @@ function WaitList() {
       </div>
       <div className="window-body">
         <div className={styles.imgContainer}>
-          <Image src={banner} alt="Lootrunners" />
+          <Image src={banner} alt="DanOh" />
         </div>
         <div className={styles.copy}>
-          <h2>Coming Soon: Lootrunners</h2>
+          <h2>Coming Soon: DanOh</h2>
           <p>
-            Lootrunners is a simulacrum of an OS from the 90s but all
+            DanOh is a simulacrum of an OS from the 90s but all
             applications are generated using <b>AI</b>.
           </p>
           <p>
-            Lootrunners leverages cutting-edge artificial intelligence
-            technology, <b>Lootrunners AI Engine™</b>, to optimize user
+            DanOh leverages cutting-edge artificial intelligence
+            technology, <b>DanOh AI Engine™</b>, to optimize user
             experience and drive unparalleled operational efficiency.
           </p>
           <p>
@@ -199,10 +199,10 @@ function WaitList() {
           </p>
           <p>
             You can follow development progress{" "}
-            <a href="https://lootrunners.com">here</a>.
+            <a href="https://danoh.com">here</a>.
           </p>
           <p>
-            Sign up to be notified when <b>Lootrunners</b> is available:
+            Sign up to be notified when <b>DanOh</b> is available:
           </p>
           <Form action={signUp}></Form>
         </div>

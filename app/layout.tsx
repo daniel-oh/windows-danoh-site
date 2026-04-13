@@ -8,8 +8,8 @@ import { APIProvider } from "@/lib/api/APIProvider";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Lootrunners",
-  description: "Run the loot",
+  title: "Daniel Oh",
+  description: "Personal website of Daniel Oh",
 };
 
 export default function RootLayout({
