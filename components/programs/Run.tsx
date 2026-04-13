@@ -6,9 +6,6 @@ import { ProgramEntry, programsAtom } from "@/state/programs";
 import { useEffect, useState } from "react";
 import { getSettings } from "@/lib/getSettings";
 import { settingsAtom } from "@/state/settings";
-import { useFlags } from "@/flags/context";
-import { trpc } from "@/lib/api/client";
-import { SettingsLink } from "../SettingsLink";
 import wrappedFetch from "@/lib/wrappedFetch";
 
 import { AccessCodePrompt } from "../AccessCodePrompt";
@@ -23,9 +20,6 @@ export function Run({ id }: { id: string }) {
   const settings = useAtomValue(settingsAtom);
   const [isLoading, setIsLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const flags = useFlags();
-  const { data } = trpc.getTokens.useQuery();
-
   useEffect(() => {
     // Bypass access code if user has their own API key
     setAuthenticated(hasSession() || !!settings.apiKey);
@@ -103,21 +97,16 @@ export function Run({ id }: { id: string }) {
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
         <p>
-          Type the description of the program you want to run and the AI
-          will create it for you.
+          Describe any app you can imagine. The AI will generate a fully
+          functional program for you in seconds.
         </p>
-        {flags.tokens && (
-          <>
-            <p>
-              You are currently using the{" "}
-              <strong>{settings.model === "best" ? "Quality" : "Fast"}</strong>{" "}
-              model. You currently have{" "}
-              <strong style={{ color: "green" }}>{data?.tokens}</strong> Quality
-              Tokens left. You can enter your own API key in the{" "}
-              <SettingsLink />.
-            </p>
-          </>
-        )}
+        <p style={{ fontSize: 11, color: "#555" }}>
+          You can bring your own{" "}
+          <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" } }); }} style={{ color: "#000080" }}>
+            Anthropic API key
+          </a>{" "}
+          in Settings, or use an access code.
+        </p>
       </div>
       <div className="field-row">
         <textarea
