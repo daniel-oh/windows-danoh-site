@@ -130,7 +130,7 @@ function StartMenu() {
       label: "Resume",
       cb: () => {
         createWindow({
-          title: "Resume — Daniel Oh",
+          title: "Resume - Daniel Oh",
           program: { type: "resume" },
           size: { width: 700, height: 550 },
         });
