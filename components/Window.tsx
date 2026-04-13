@@ -104,6 +104,10 @@ export function Window({ id }: { id: string }) {
           inactive: focusedWindow !== id,
         })}
         {...createResizeEvent((_e, delta) => {
+          // Auto-restore maximized windows when dragging starts
+          if (state.status === "maximized" && (Math.abs(delta.x) > 2 || Math.abs(delta.y) > 2)) {
+            dispatch({ type: "TOGGLE_MAXIMIZE" });
+          }
           dispatch({
             type: "MOVE",
             payload: { dx: delta.x, dy: delta.y },
@@ -350,6 +354,32 @@ export function Window({ id }: { id: string }) {
             })}
           ></div>
         </>
+      )}
+      {mobile && state.status !== "maximized" && (
+        <div
+          style={{
+            bottom: 0,
+            right: 0,
+            position: "absolute",
+            width: 24,
+            height: 24,
+            cursor: "nwse-resize",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 10,
+            color: "#808080",
+            userSelect: "none",
+          }}
+          {...createResizeEvent((_e, delta) => {
+            dispatch({
+              type: "RESIZE",
+              payload: { side: "bottom-right", dx: delta.x, dy: delta.y },
+            });
+          })}
+        >
+          ⟋
+        </div>
       )}
     </div>
   );
