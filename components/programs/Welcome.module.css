@@ -32,10 +32,24 @@
   width: 200px;
   overflow-y: auto;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 
   @media (max-width: 768px) {
     width: 100%;
     border-right: none;
+  }
+}
+
+.sidebarLogo {
+  width: 80px;
+  height: auto;
+  object-fit: contain;
+  margin: auto auto 8px 8px;
+  opacity: 0.85;
+
+  @media (max-width: 768px) {
+    display: none;
   }
 }
 
@@ -83,17 +97,6 @@
 
   @media (max-width: 768px) {
     font-size: 1rem;
-  }
-}
-
-.animatedLogo {
-  width: 120px;
-  height: auto;
-  object-fit: contain;
-  margin-bottom: 8px;
-
-  @media (max-width: 768px) {
-    width: 100px;
   }
 }
 

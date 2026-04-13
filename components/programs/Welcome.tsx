@@ -45,6 +45,12 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
           );
         })}
       </ul>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/danoh-logo-animated.gif"
+        alt="danoh.com"
+        className={styles.sidebarLogo}
+      />
     </div>
   );
 };
@@ -326,12 +332,6 @@ export function Welcome({ id: _id }: { id: string }) {
 
   return (
     <div className={styles.welcomeContainer}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/danoh-logo-animated.gif"
-        alt="danoh.com"
-        className={styles.animatedLogo}
-      />
       <div className={styles.contentWrapper}>
         <TableOfContents
           entries={tableOfContentsEntries}
