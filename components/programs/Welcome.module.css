@@ -42,13 +42,11 @@
 }
 
 .sidebarLogo {
-  width: 90px;
+  width: 100px;
   height: auto;
   object-fit: contain;
   margin: 16px auto 12px;
   display: block;
-  border-radius: 50%;
-  border: 2px solid #808080;
 
   @media (max-width: 768px) {
     display: none;
