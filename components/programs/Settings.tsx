@@ -9,8 +9,6 @@ import {
 } from "@/lib/filesystem/directoryMapping";
 import styles from "./Settings.module.css";
 import cx from "classnames";
-import { ModelSection } from "../ModelSection";
-import { useFlags } from "@/flags/context";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
 import { useState } from "react";
 
@@ -19,7 +17,6 @@ type KeyStatus = "idle" | "testing" | "valid" | "invalid" | "saved" | "cleared";
 export function Settings({ id }: { id: string }) {
   const [settings, setSettings] = useAtom(settingsAtom);
   const windowsDispatch = useSetAtom(windowsListAtom);
-  const flags = useFlags();
   const [keyInput, setKeyInput] = useState(settings.apiKey || "");
   const [keyStatus, setKeyStatus] = useState<KeyStatus>("idle");
   const [showKey, setShowKey] = useState(false);
@@ -135,8 +132,6 @@ export function Settings({ id }: { id: string }) {
           </p>
         </div>
       </fieldset>
-
-      {flags.tokens && <ModelSection />}
 
       <DirectorySection />
 
