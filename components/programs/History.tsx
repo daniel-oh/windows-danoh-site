@@ -34,25 +34,31 @@ export function History({ id }: { id: string }) {
   return (
     <div className={styles.historyContainer}>
       <h4>Version History</h4>
-      <div className={styles.versionList}>
-        {versions.map((version) => (
-          <div
-            key={version}
-            className={`${styles.versionItem} ${
-              version === program.currentVersion ? styles.current : ""
-            }`}
-            onClick={() => handleVersionChange(version)}
-            {...handleContextMenu(version)}
-          >
-            <span className={styles.versionDate}>
-              {new Date(version).toLocaleString()}
-            </span>
-            {version === program.currentVersion && (
-              <span className={styles.currentLabel}>(Current)</span>
-            )}
-          </div>
-        ))}
-      </div>
+      {versions.length === 0 ? (
+        <p style={{ padding: 8, fontSize: 12, color: "#555" }}>
+          No version history available yet. Versions are saved when you use Fix &amp; Iterate to update the app.
+        </p>
+      ) : (
+        <div className={styles.versionList}>
+          {versions.map((version) => (
+            <div
+              key={version}
+              className={`${styles.versionItem} ${
+                version === program.currentVersion ? styles.current : ""
+              }`}
+              onClick={() => handleVersionChange(version)}
+              {...handleContextMenu(version)}
+            >
+              <span className={styles.versionDate}>
+                {new Date(version).toLocaleString()}
+              </span>
+              {version === program.currentVersion && (
+                <span className={styles.currentLabel}>(Current)</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
