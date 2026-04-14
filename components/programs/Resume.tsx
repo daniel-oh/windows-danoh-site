@@ -94,9 +94,7 @@ export function Resume() {
       <Section title="VENTURES">
         <p className={styles.ventureSubtitle}>Founder — Building with Swift/SwiftUI, Supabase, Cloudflare, Stripe, and Claude API</p>
         <ul className={styles.ventureList}>
-          <li><strong>KAY-OS</strong> – AI-powered iOS app for consciousness and awareness training. Native Swift/SwiftUI with Claude API, ElevenLabs voice synthesis, and Stripe subscriptions.</li>
           <li><strong>AM Training Hall</strong> – Fitness coaching marketplace connecting trainers and clients. Stripe Connect payments, multi-role architecture.</li>
-          <li><strong>Kayrage</strong> – Elevated streetwear brand with hybrid print-on-demand fulfillment.</li>
           <li><strong>312eats / 312 Built</strong> – Chicago directory platforms: 3,700+ restaurant listings and 1,600+ vetted contractors across 15 categories.</li>
         </ul>
       </Section>
