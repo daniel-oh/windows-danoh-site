@@ -214,7 +214,7 @@ const contentByKey = {
           systems at Allstate.
         </p>
         <p>
-          I also run five ventures on the side. Michigan Engineering. Three Azure Expert certifications.
+          I also build things on the side. Michigan Engineering. Three Azure Expert certifications.
         </p>
         <div className={styles.buttonGroup} style={{ marginTop: 12 }}>
           <button onClick={openResume}>View Full Resume</button>
