@@ -234,7 +234,6 @@ export function Minesweeper() {
   const minesLeft = Math.max(0, difficulty.mines - flagCount);
 
   const seconds = Math.min(999, Math.floor(elapsedMs / 1000));
-  const face = status === "won" ? "😎" : status === "lost" ? "😵" : "🙂";
 
   // Bigger cells on touch-sized viewports so they're reachable by a
   // thumb without repeated mis-taps.
@@ -311,10 +310,32 @@ export function Minesweeper() {
         </div>
         <button
           onClick={() => reset()}
-          style={{ fontSize: 20, width: 36, height: 36 }}
+          style={{
+            fontSize: 22,
+            width: 40,
+            height: 40,
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            lineHeight: 1,
+          }}
           aria-label="New game"
         >
-          {face}
+          {status === "won" ? (
+            "🏴‍☠️"
+          ) : status === "lost" ? (
+            "💀"
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src="/icons/pirate-smiley.png"
+              alt=""
+              width={30}
+              height={30}
+              style={{ imageRendering: "pixelated" }}
+            />
+          )}
         </button>
         <div
           style={{
@@ -339,9 +360,9 @@ export function Minesweeper() {
           onClick={() => setFlagMode((v) => !v)}
           aria-pressed={flagMode}
           style={{ fontSize: 12 }}
-          title="Toggle flag mode (useful on touch devices)"
+          title="Raise the Jolly Roger (useful on touch devices)"
         >
-          {flagMode ? "🚩 Flag mode ON" : "🚩 Flag mode"}
+          {flagMode ? "🏴‍☠️ Flag mode ON" : "🏴‍☠️ Flag mode"}
         </button>
       </div>
 
@@ -375,12 +396,12 @@ export function Minesweeper() {
 
       {status === "won" && (
         <div style={{ fontWeight: "bold" }}>
-          🎉 You won in {seconds}s — new game?
+          🏴‍☠️ Avast! You cleared the deck in {seconds}s.
         </div>
       )}
       {status === "lost" && (
         <div style={{ fontWeight: "bold", color: "#800000" }}>
-          💥 Boom. Try again?
+          💀 Walked the plank. Try again?
         </div>
       )}
     </div>
@@ -410,12 +431,12 @@ function CellButton({
   const border = cell.revealed ? "1px solid #808080" : "2px outset #fff";
   const content = cell.revealed
     ? cell.mine
-      ? "💣"
+      ? "💀"
       : cell.adjacent > 0
       ? String(cell.adjacent)
       : ""
     : cell.flagged
-    ? "🚩"
+    ? "🏴‍☠️"
     : "";
   const numberColor =
     cell.revealed && !cell.mine && cell.adjacent > 0
