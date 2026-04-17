@@ -90,7 +90,20 @@ const contentByKey = {
             }}
           />
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h3>Hey, I&apos;m Daniel Oh</h3>
+            <h3 style={{ marginBottom: 2 }}>Hey, I&apos;m Daniel Oh</h3>
+            <p
+              style={{
+                margin: "0 0 6px 0",
+                fontSize: 13,
+                lineHeight: 1.35,
+              }}
+            >
+              <strong>Engineer who designs. Operator who writes.</strong>
+              <br />
+              <span style={{ color: "#555", fontStyle: "italic" }}>
+                AI, craft, and the work of building things that last.
+              </span>
+            </p>
             <p>
               Platform engineer at Nike. Michigan Engineering alum. I build
               infrastructure that teams ship on, and side projects that keep

@@ -124,6 +124,7 @@ Rules:
 - Make the app genuinely functional and interactive, not just a mockup.
 - Use modern JavaScript (ES2020+). Add event listeners, state management, and real logic.
 - Be creative — build something that actually works and is fun to use.
+- THEME: at startup, read \`await registry.get("public_theme")\`. If it returns "dark", apply a dark palette (dark backgrounds, high-contrast light text, softer accent colors). If "light" or undefined, use the default 98.css light look. This keeps generated programs visually consistent with the rest of the OS.
 
 The OS provides these APIs on the window object:
 

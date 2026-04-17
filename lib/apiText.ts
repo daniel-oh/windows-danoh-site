@@ -31,7 +31,17 @@ declare global {
 // - To store user state
 // - Interact with the operating system.
 //
-// If the key can be written by other apps, it should be prefixed with "public_"
+// Keys prefixed "public_" are shared across programs and OS.
+// Keys without the prefix are private to this program.
+//
+// Known OS keys (readable by every program):
+// - public_theme: "light" | "dark" — current OS theme. If "dark",
+//   your program should use a dark palette (dark backgrounds, light
+//   text). Read once at startup and also listen to changes if you
+//   want to respond to theme switches. Example:
+//     const theme = await registry.get("public_theme");
+//     if (theme === "dark") document.body.classList.add("dark");
+// - public_desktop_url: current desktop wallpaper URL.
 //
 // You can define your own registry keys or use one of these known keys:
 ${keys.map((key) => `// ${key}`).join("\n")}

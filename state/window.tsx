@@ -29,7 +29,8 @@ export type Program =
   | { type: "resume" }
   | { type: "shortcuts" }
   | { type: "now" }
-  | { type: "display" };
+  | { type: "display" }
+  | { type: "mail" };
 
 export type AlertAction = {
   label: string;
