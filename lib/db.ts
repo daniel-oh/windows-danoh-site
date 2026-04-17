@@ -73,6 +73,17 @@ async function ensureTables() {
       PRIMARY KEY (id, session_id)
     );
   `);
+  // Anonymous blog post reactions. visitor_id is a client-generated UUID
+  // stored in localStorage; no account required. PK prevents double-voting.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS post_reactions (
+      post_slug TEXT NOT NULL,
+      reaction TEXT NOT NULL,
+      visitor_id TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      PRIMARY KEY (post_slug, reaction, visitor_id)
+    );
+  `);
 
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at);
@@ -85,6 +96,9 @@ async function ensureTables() {
   `);
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_sessions_code_hash ON sessions(code_hash);
+  `);
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_reactions_slug ON post_reactions(post_slug);
   `);
 
   initialized = true;

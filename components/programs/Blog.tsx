@@ -5,6 +5,7 @@ import Markdown from "react-markdown";
 import { sortedPosts, BlogPost } from "@/content/blog/posts";
 import styles from "./Blog.module.css";
 import { isMobile } from "@/lib/isMobile";
+import { REACTIONS, useReactions } from "@/lib/useReactions";
 
 export const BLOG_WIDTH = 700;
 
@@ -67,7 +68,18 @@ export function Blog({ id: _id }: { id: string }) {
                     aria-label={`Read post: ${post.title}`}
                     onClick={() => selectPost(post.slug)}
                   >
-                    <div className={styles.postTitle}>{post.title}</div>
+                    <div className={styles.postTitle}>
+                      {post.pinned && (
+                        <span
+                          aria-label="Pinned"
+                          title="Pinned"
+                          style={{ marginRight: 4 }}
+                        >
+                          📌
+                        </span>
+                      )}
+                      {post.title}
+                    </div>
                     <div className={styles.postDate}>
                       {post.date} &middot; {post.author}
                     </div>
@@ -145,6 +157,53 @@ function PostView({
           {post.content}
         </Markdown>
       </div>
+      <ReactionBar slug={post.slug} />
     </article>
+  );
+}
+
+function ReactionBar({ slug }: { slug: string }) {
+  const { counts, mine, toggle } = useReactions(slug);
+  return (
+    <div
+      style={{
+        marginTop: 20,
+        paddingTop: 12,
+        borderTop: "1px solid #808080",
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+      }}
+    >
+      <div style={{ fontSize: 11, color: "#555" }}>
+        How did this land?
+      </div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        {REACTIONS.map((r) => {
+          const active = mine.includes(r.key);
+          const count = counts[r.key] ?? 0;
+          return (
+            <button
+              key={r.key}
+              type="button"
+              aria-pressed={active}
+              aria-label={`${r.label} this post`}
+              onClick={() => toggle(r.key)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "3px 10px",
+                fontSize: 13,
+                fontWeight: active ? 700 : 400,
+              }}
+            >
+              <span style={{ fontSize: 15 }}>{r.emoji}</span>
+              <span style={{ fontVariantNumeric: "tabular-nums" }}>{count}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
