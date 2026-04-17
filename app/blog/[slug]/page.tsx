@@ -7,7 +7,7 @@ import {
   getRelatedPosts,
   type BlogPost,
 } from "@/content/blog/posts";
-import { RichMarkdown } from "@/lib/markdown/RichMarkdown";
+import { getPostComponent } from "@/content/blog/posts-content";
 import styles from "../blog.module.css";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -141,7 +141,7 @@ export default async function Post({ params }: Props) {
             </figure>
           )}
           <div className={styles.markdown}>
-            <RichMarkdown>{post.content}</RichMarkdown>
+            <PostBody slug={post.slug} />
           </div>
           <RelatedAndAdjacent slug={post.slug} />
           <div className={styles.footer}>
@@ -156,6 +156,12 @@ export default async function Post({ params }: Props) {
       </div>
     </div>
   );
+}
+
+function PostBody({ slug }: { slug: string }) {
+  const Component = getPostComponent(slug);
+  if (!Component) return <p>Post content not found.</p>;
+  return <Component />;
 }
 
 function RelatedAndAdjacent({ slug }: { slug: string }) {
