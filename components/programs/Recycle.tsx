@@ -57,9 +57,14 @@ export function Recycle() {
           paddingBottom: 6,
         }}
       >
-        <span style={{ fontSize: 22, lineHeight: 1 }} aria-hidden="true">
-          🗑️
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/icons/recycle-bin.png"
+          alt=""
+          width={24}
+          height={24}
+          style={{ imageRendering: "pixelated", flexShrink: 0 }}
+        />
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: "bold" }}>Recycle Bin</div>
           <div style={{ fontSize: 11, color: "#555" }}>
