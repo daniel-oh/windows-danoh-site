@@ -1,4 +1,5 @@
 import { query, hasDatabase } from "@/lib/db";
+import { getClientIP } from "@/lib/api/clientIP";
 
 // Emoji set. Change here to add/remove reaction types — the UI reads this list.
 export const REACTION_TYPES = ["like", "love", "fire"] as const;
@@ -11,12 +12,6 @@ const RL_MAX = 200;
 const RL_WINDOW_MS = 10 * 60 * 1000;
 type Attempt = { count: number; firstAt: number };
 const attempts = new Map<string, Attempt>();
-
-function getClientIP(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  return req.headers.get("x-real-ip") || "unknown";
-}
 
 function rateLimit(req: Request): Response | null {
   const ip = getClientIP(req);

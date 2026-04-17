@@ -1,4 +1,5 @@
 import { query, hasDatabase } from "@/lib/db";
+import { getClientIP } from "@/lib/api/clientIP";
 
 // Per-IP rate limit to make it harder to inflate the counter by forging
 // visitor_ids client-side.
@@ -6,12 +7,6 @@ const RL_MAX = 30;
 const RL_WINDOW_MS = 10 * 60 * 1000;
 type Attempt = { count: number; firstAt: number };
 const attempts = new Map<string, Attempt>();
-
-function getClientIP(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  return req.headers.get("x-real-ip") || "unknown";
-}
 
 function rateLimit(req: Request): boolean {
   const ip = getClientIP(req);

@@ -1,6 +1,7 @@
 import { query } from "@/lib/db";
 import { cookies } from "next/headers";
 import { getCodeHash } from "@/lib/accessCode";
+import { getClientIP } from "@/lib/api/clientIP";
 import crypto from "crypto";
 
 function constantTimeEqual(a: string, b: string): boolean {
@@ -18,12 +19,6 @@ const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 type Attempt = { count: number; firstAt: number };
 const attempts = new Map<string, Attempt>();
-
-function getClientIP(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  return req.headers.get("x-real-ip") || "unknown";
-}
 
 function rateLimit(req: Request): Response | null {
   const ip = getClientIP(req);
