@@ -27,14 +27,6 @@ export default function BlogIndex() {
             Open the desktop ↗
           </Link>
         </div>
-        <header className={styles.tagline}>
-          <div className={styles.taglineLine1}>
-            Engineer who designs. Operator who writes.
-          </div>
-          <div className={styles.taglineLine2}>
-            AI, craft, and the work of building things that last.
-          </div>
-        </header>
         <div className={styles.body}>
           <h1 className={styles.postHeading} style={{ fontSize: 22 }}>
             Writing

@@ -63,6 +63,20 @@
   padding: 4px;
 }
 
+.sidebarCounter {
+  margin-top: auto;
+  padding: 12px 4px 4px;
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .sidebarCounter {
+    margin-top: 0;
+    padding: 8px 4px;
+  }
+}
+
 .sidebarList {
   list-style-type: none;
   padding: 0;

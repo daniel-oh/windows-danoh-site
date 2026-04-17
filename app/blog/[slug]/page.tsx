@@ -87,14 +87,6 @@ export default async function Post({ params }: Props) {
             Open the desktop ↗
           </Link>
         </div>
-        <header className={styles.tagline}>
-          <div className={styles.taglineLine1}>
-            Engineer who designs. Operator who writes.
-          </div>
-          <div className={styles.taglineLine2}>
-            AI, craft, and the work of building things that last.
-          </div>
-        </header>
         <article className={styles.body}>
           <div className={styles.meta}>
             <span>{post.date}</span>
