@@ -176,7 +176,7 @@ export const Desktop = () => {
       <BuiltInIcon
         id={MINESWEEPER_ICON_ID}
         name="Minesweeper"
-        icon="/icons/pirate-playing.png"
+        icon="/icons/minesweeper-tile.png"
         onOpen={openMinesweeper}
         isSelected={selectedIcon === MINESWEEPER_ICON_ID}
         onSelect={() => setSelectedIcon(MINESWEEPER_ICON_ID)}
