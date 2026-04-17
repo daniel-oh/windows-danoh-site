@@ -8,40 +8,6 @@
   background: #c0c0c0;
 }
 
-.taglineHeader {
-  background: linear-gradient(to bottom, #000080 0%, #0000c0 100%);
-  color: #fff;
-  padding: 10px 14px;
-  border-bottom: 1px solid #000040;
-  flex-shrink: 0;
-}
-
-.taglineLine1 {
-  font-size: 14px;
-  font-weight: bold;
-  letter-spacing: 0.3px;
-  line-height: 1.25;
-}
-
-.taglineLine2 {
-  font-size: 12px;
-  font-style: italic;
-  color: #c0c8ff;
-  margin-top: 3px;
-  line-height: 1.25;
-}
-
-@media (max-width: 768px) {
-  .taglineHeader {
-    padding: 8px 10px;
-  }
-  .taglineLine1 {
-    font-size: 13px;
-  }
-  .taglineLine2 {
-    font-size: 11px;
-  }
-}
 
 .contentWrapper {
   display: flex;

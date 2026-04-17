@@ -52,6 +52,9 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
         alt="danoh.com"
         className={styles.sidebarLogo}
       />
+      <div className={styles.sidebarCounter}>
+        <VisitorBadge />
+      </div>
     </div>
   );
 };
@@ -91,22 +94,8 @@ const contentByKey = {
             }}
           />
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h3 style={{ marginBottom: 2 }}>Hey, I&apos;m Daniel Oh</h3>
-            <p
-              style={{
-                margin: "0 0 6px 0",
-                fontSize: 13,
-                lineHeight: 1.35,
-              }}
-            >
-              <strong>Engineer who designs. Operator who writes.</strong>
-              <br />
-              <span style={{ color: "#555", fontStyle: "italic" }}>
-                AI, craft, and the work of building things that last.
-              </span>
-            </p>
-            <VisitorBadge />
-            <p>
+            <h3 style={{ marginBottom: 4 }}>Hey, I&apos;m Daniel Oh</h3>
+            <p style={{ margin: "0 0 8px 0" }}>
               Platform engineer at Nike. Michigan Engineering alum. I build
               infrastructure that teams ship on, and side projects that keep
               me learning. Thanks for stopping by.
@@ -153,10 +142,37 @@ const contentByKey = {
     const recentPosts = sortedPosts.slice(0, 5);
     return (
       <>
-        <h3>Blog</h3>
-        <p>
-          Read the latest from Daniel Oh.
-        </p>
+        <div
+          style={{
+            padding: "14px 16px 12px",
+            borderLeft: "4px solid #000080",
+            background: "#f2f1eb",
+            marginBottom: 14,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 14,
+              fontWeight: "bold",
+              color: "#000",
+              lineHeight: 1.35,
+            }}
+          >
+            Engineer who designs. Operator who writes.
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              fontStyle: "italic",
+              color: "#555",
+              marginTop: 4,
+              lineHeight: 1.4,
+            }}
+          >
+            AI, craft, and the work of building things that last.
+          </div>
+        </div>
+        <h3 style={{ margin: "0 0 6px" }}>Blog</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "12px 0", maxHeight: 300, overflowY: "auto" }}>
           {recentPosts.map((post) => (
             <div

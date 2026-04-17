@@ -44,14 +44,6 @@ export function Blog({ id: _id }: { id: string }) {
 
   return (
     <div className={styles.blogContainer}>
-      <header className={styles.taglineHeader}>
-        <div className={styles.taglineLine1}>
-          Engineer who designs. Operator who writes.
-        </div>
-        <div className={styles.taglineLine2}>
-          AI, craft, and the work of building things that last.
-        </div>
-      </header>
       <div className={styles.contentWrapper}>
         {showSidebar && (
           <nav className={styles.sidebar} role="navigation" aria-label="Blog posts">
