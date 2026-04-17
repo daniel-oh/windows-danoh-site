@@ -87,3 +87,50 @@ select:focus-visible,
   outline: 2px solid #000080;
   outline-offset: 2px;
 }
+
+/* ---------- Dark mode ----------
+ * Scoped, minimal overrides. The 98.css window chrome stays classic so the
+ * retro look survives; only the desktop backdrop and the content inside
+ * the window body change. `public_theme` in the registry drives this.
+ */
+html[data-theme="dark"] body {
+  background: #0b1028;
+}
+
+html[data-theme="dark"] .window-body,
+html[data-theme="dark"] .window .window-body {
+  background: #1f2030;
+  color: #e6e6e6;
+}
+
+html[data-theme="dark"] .window-body a {
+  color: #8ac8ff;
+}
+
+html[data-theme="dark"] .window-body code,
+html[data-theme="dark"] .window-body pre,
+html[data-theme="dark"] .window-body kbd {
+  background: #0e0f1b;
+  color: #e6e6e6;
+}
+
+html[data-theme="dark"] .window-body input,
+html[data-theme="dark"] .window-body textarea,
+html[data-theme="dark"] .window-body select {
+  background: #2a2b3c;
+  color: #e6e6e6;
+}
+
+html[data-theme="dark"] .window-body hr {
+  border-color: #4a4b5c;
+}
+
+html[data-theme="dark"] a:focus-visible,
+html[data-theme="dark"] button:focus-visible,
+html[data-theme="dark"] input:focus-visible,
+html[data-theme="dark"] textarea:focus-visible,
+html[data-theme="dark"] select:focus-visible,
+html[data-theme="dark"] [role="button"]:focus-visible,
+html[data-theme="dark"] [tabindex]:focus-visible {
+  outline-color: #8ac8ff;
+}

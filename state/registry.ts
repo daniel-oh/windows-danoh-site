@@ -24,5 +24,9 @@ export const registryAtom = atom(
 );
 
 export const DESKTOP_URL_KEY = "public_desktop_url";
+export const THEME_KEY = "public_theme";
 
-export const BUILTIN_REGISTRY_KEYS = [DESKTOP_URL_KEY];
+export type Theme = "light" | "dark";
+export const DEFAULT_THEME: Theme = "light";
+
+export const BUILTIN_REGISTRY_KEYS = [DESKTOP_URL_KEY, THEME_KEY];
