@@ -20,6 +20,7 @@ import { Display } from "./programs/Display";
 import { Mail } from "./programs/Mail";
 import { Minesweeper } from "./programs/Minesweeper";
 import { Guestbook } from "./programs/Guestbook";
+import { Recycle } from "./programs/Recycle";
 
 // Memoised so window-drag pos updates don't re-render the program
 // tree. Props are sliced primitives — React.memo's shallow compare
@@ -93,6 +94,8 @@ export const WindowBody = memo(function WindowBody({
       return <Minesweeper />;
     case "guestbook":
       return <Guestbook />;
+    case "recycle":
+      return <Recycle />;
     default:
       assertNever(program);
   }
