@@ -142,37 +142,18 @@ const contentByKey = {
     const recentPosts = sortedPosts.slice(0, 5);
     return (
       <>
-        <div
+        <h3 style={{ margin: "0 0 4px" }}>Blog</h3>
+        <p
           style={{
-            padding: "14px 16px 12px",
-            borderLeft: "4px solid #000080",
-            background: "#f2f1eb",
-            marginBottom: 14,
+            margin: "0 0 14px",
+            fontSize: 13,
+            fontStyle: "italic",
+            color: "#555",
+            lineHeight: 1.45,
           }}
         >
-          <div
-            style={{
-              fontSize: 14,
-              fontWeight: "bold",
-              color: "#000",
-              lineHeight: 1.35,
-            }}
-          >
-            Engineer who designs. Operator who writes.
-          </div>
-          <div
-            style={{
-              fontSize: 12,
-              fontStyle: "italic",
-              color: "#555",
-              marginTop: 4,
-              lineHeight: 1.4,
-            }}
-          >
-            AI, craft, and the work of building things that last.
-          </div>
-        </div>
-        <h3 style={{ margin: "0 0 6px" }}>Blog</h3>
+          AI, craft, and the work of building things that last.
+        </p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "12px 0", maxHeight: 300, overflowY: "auto" }}>
           {recentPosts.map((post) => (
             <div
