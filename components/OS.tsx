@@ -162,6 +162,16 @@ function StartMenu() {
       },
     },
     {
+      label: "Now",
+      cb: () => {
+        createWindow({
+          title: "Now",
+          program: { type: "now" },
+          size: { width: 520, height: 520 },
+        });
+      },
+    },
+    {
       label: "Run",
       cb: () => {
         createWindow({
