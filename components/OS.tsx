@@ -184,6 +184,16 @@ function StartMenu() {
       },
     },
     {
+      label: "Mail",
+      cb: () => {
+        createWindow({
+          title: "New Message",
+          program: { type: "mail" },
+          size: { width: 460, height: 400 },
+        });
+      },
+    },
+    {
       label: "Run",
       cb: () => {
         createWindow({
