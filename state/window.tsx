@@ -118,25 +118,24 @@ function clampSize(size: WindowState["size"]): WindowState["size"] {
   };
 }
 
+// Keep at least this much of the title bar on-screen so the user can always
+// grab it and drag the window back.
+const MIN_TITLE_BAR_VISIBLE = 80;
+
 function enforceInvariants(state: WindowState): WindowState {
   const windowWidth =
     typeof window !== "undefined" ? window.innerWidth : Infinity;
   const windowHeight =
     typeof window !== "undefined" ? window.innerHeight : Infinity;
 
-  const halfWindowWidth = state.size.width / 2;
+  const minX = MIN_TITLE_BAR_VISIBLE - state.size.width;
+  const maxX = windowWidth - MIN_TITLE_BAR_VISIBLE;
 
   return {
     ...state,
     pos: {
-      x: Math.min(
-        Math.max(state.pos.x, -halfWindowWidth),
-        windowWidth - halfWindowWidth
-      ),
-      y: Math.min(
-        Math.max(state.pos.y, 0),
-        windowHeight - 40
-      ),
+      x: Math.min(Math.max(state.pos.x, minX), maxX),
+      y: Math.min(Math.max(state.pos.y, 0), windowHeight - 40),
     },
   };
 }

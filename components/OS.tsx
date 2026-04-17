@@ -4,7 +4,7 @@ import { memo } from "react";
 import styles from "./OS.module.css";
 import cx from "classnames";
 import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { focusedWindowAtom } from "@/state/focusedWindow";
 import { windowsListAtom } from "@/state/windowsList";
 import { windowAtomFamily } from "@/state/window";
@@ -29,27 +29,42 @@ export function OS() {
 
   const publicDesktopUrl = registry[DESKTOP_URL_KEY] ?? "/bg.jpg";
 
+  // Keep latest windows in a ref so listeners don't need to resubscribe
+  const windowsRef = useRef(windows);
+  windowsRef.current = windows;
+
   useEffect(() => {
-    const onMouseDown = (e: MouseEvent | TouchEvent) => {
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
       getDefaultStore().set(startMenuOpenAtom, false);
-      const windowID = windows.find((windowId) => {
+      const windowID = windowsRef.current.find((windowId) => {
         const windowElement = document.getElementById(windowId);
         return windowElement && windowElement.contains(target);
       });
-      if (windowID) {
-        setFocusedWindow(windowID);
-      } else {
-        setFocusedWindow(null);
-      }
+      setFocusedWindow(windowID ?? null);
     };
-    window.addEventListener("mousedown", onMouseDown);
-    window.addEventListener("touchstart", onMouseDown); // Add touch event listener for moving windows
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      // Don't steal Escape from inputs/textareas or iframes
+      const active = document.activeElement;
+      const tag = active?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "IFRAME") return;
+      const focusedId = getDefaultStore().get(focusedWindowAtom);
+      if (!focusedId) return;
+      getDefaultStore().set(windowsListAtom, {
+        type: "REMOVE",
+        payload: focusedId,
+      });
+    };
+    window.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("touchstart", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
     return () => {
-      window.removeEventListener("mousedown", onMouseDown);
-      window.removeEventListener("touchstart", onMouseDown); // Remove touch event listener for moving windows
+      window.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("touchstart", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
     };
-  }, [windows, setFocusedWindow]);
+  }, [setFocusedWindow]);
 
   useEffect(() => {
     initState();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import { sortedPosts, BlogPost } from "@/content/blog/posts";
 import styles from "./Blog.module.css";
@@ -20,10 +20,16 @@ export function Blog({ id: _id }: { id: string }) {
   );
   const [mobile, setMobile] = useState(false);
   const [showingPost, setShowingPost] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMobile(isMobile());
   }, []);
+
+  // Scroll back to the top when the selected post changes.
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [selectedSlug]);
 
   const selectedPost = sortedPosts.find((p) => p.slug === selectedSlug);
 
@@ -72,7 +78,7 @@ export function Blog({ id: _id }: { id: string }) {
           </nav>
         )}
         {showContent && (
-          <div className={styles.mainContent} role="main">
+          <div className={styles.mainContent} role="main" ref={contentRef}>
             {selectedPost ? (
               <PostView
                 post={selectedPost}
