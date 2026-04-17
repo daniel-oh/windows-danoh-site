@@ -231,7 +231,7 @@ function WindowInner({ id }: { id: string }) {
           </div>
         )}
         <div style={{ flex: 1, display: state.loading ? "none" : "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
-          <WindowBody state={state} />
+          <WindowBody id={id} program={state.program} error={state.error} />
         </div>
       </div>
       {!mobile && (

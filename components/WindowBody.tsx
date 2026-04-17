@@ -1,7 +1,8 @@
 "use client";
 
+import { memo } from "react";
 import { assertNever } from "@/lib/assertNever";
-import { WindowState, windowAtomFamily } from "@/state/window";
+import { Program, windowAtomFamily } from "@/state/window";
 import { useSetAtom } from "jotai";
 import { Iframe } from "./programs/Iframe";
 import { Welcome } from "./programs/Welcome";
@@ -20,10 +21,21 @@ import { Mail } from "./programs/Mail";
 import { Minesweeper } from "./programs/Minesweeper";
 import { Guestbook } from "./programs/Guestbook";
 
-export function WindowBody({ state }: { state: WindowState }) {
-  const dispatch = useSetAtom(windowAtomFamily(state.id));
+// Memoised so window-drag pos updates don't re-render the program
+// tree. Props are sliced primitives — React.memo's shallow compare
+// can skip renders cleanly when only pos or size changed upstream.
+export const WindowBody = memo(function WindowBody({
+  id,
+  program,
+  error,
+}: {
+  id: string;
+  program: Program;
+  error: string | undefined;
+}) {
+  const dispatch = useSetAtom(windowAtomFamily(id));
 
-  if (state.error) {
+  if (error) {
     return (
       <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
@@ -34,7 +46,7 @@ export function WindowBody({ state }: { state: WindowState }) {
             height={32}
             style={{ imageRendering: "pixelated" }}
           />
-          <p style={{ margin: 0, fontSize: 14 }}>{state.error}</p>
+          <p style={{ margin: 0, fontSize: 14 }}>{error}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <button
@@ -48,25 +60,25 @@ export function WindowBody({ state }: { state: WindowState }) {
     );
   }
 
-  switch (state.program.type) {
+  switch (program.type) {
     case "welcome":
-      return <Welcome id={state.id} />;
+      return <Welcome id={id} />;
     case "run":
-      return <Run id={state.id} />;
+      return <Run id={id} />;
     case "iframe":
-      return <Iframe id={state.id} />;
+      return <Iframe id={id} />;
     case "help":
-      return <Help id={state.id} />;
+      return <Help id={id} />;
     case "explorer":
-      return <Explorer id={state.id} />;
+      return <Explorer id={id} />;
     case "settings":
-      return <Settings id={state.id} />;
+      return <Settings id={id} />;
     case "history":
-      return <History id={state.program.programID} />;
+      return <History id={program.programID} />;
     case "alert":
-      return <Alert id={state.id} />;
+      return <Alert id={id} />;
     case "blog":
-      return <Blog id={state.id} />;
+      return <Blog id={id} />;
     case "resume":
       return <Resume />;
     case "shortcuts":
@@ -76,12 +88,12 @@ export function WindowBody({ state }: { state: WindowState }) {
     case "display":
       return <Display />;
     case "mail":
-      return <Mail id={state.id} />;
+      return <Mail id={id} />;
     case "minesweeper":
       return <Minesweeper />;
     case "guestbook":
       return <Guestbook />;
     default:
-      assertNever(state.program);
+      assertNever(program);
   }
-}
+});
