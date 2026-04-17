@@ -36,16 +36,21 @@ export function createWindow({
   }
 
   const isCentering = !pos;
-  pos = pos || {
-    x: Math.max(0, Math.floor(window.innerWidth / 2 - size.width / 2)),
-    y: Math.max(
-      0,
-      Math.floor(
-        window.innerHeight / 2 -
-          (size.height === "auto" ? MIN_WINDOW_SIZE.height : size.height) / 2
-      )
-    ),
-  };
+  if (!pos) {
+    // Cascade new windows so two Start-menu opens of the same program
+    // don't land at identical coordinates and disappear on top of each other.
+    const openCount = getDefaultStore().get(windowsListAtom).length;
+    const cascadeOffset = (openCount % 10) * 24;
+    const centerX = Math.floor(window.innerWidth / 2 - size.width / 2);
+    const centerY = Math.floor(
+      window.innerHeight / 2 -
+        (size.height === "auto" ? MIN_WINDOW_SIZE.height : size.height) / 2
+    );
+    pos = {
+      x: Math.max(0, centerX + cascadeOffset),
+      y: Math.max(0, centerY + cascadeOffset),
+    };
+  }
   getDefaultStore().set(windowAtomFamily(id), {
     type: "INIT",
     payload: {

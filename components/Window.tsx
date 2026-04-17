@@ -8,12 +8,12 @@ import {
   useAtomValue,
   useSetAtom,
 } from "jotai";
-import { focusedWindowAtom } from "@/state/focusedWindow";
+import { focusedWindowAtom, zOrderAtom } from "@/state/focusedWindow";
 import { windowsListAtom } from "@/state/windowsList";
 import { MIN_WINDOW_SIZE, windowAtomFamily } from "@/state/window";
 import { WindowBody } from "./WindowBody";
 import styles from "./Window.module.css";
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { isMobile } from "@/lib/isMobile";
 import Image from "next/image";
 import { createWindow } from "@/lib/createWindow";
@@ -21,10 +21,13 @@ import { WindowMenuBar } from "./WindowMenuBar";
 
 const isResizingAtom = atom(false);
 
-export function Window({ id }: { id: string }) {
+export const Window = memo(WindowInner);
+
+function WindowInner({ id }: { id: string }) {
   const [state, dispatch] = useAtom(windowAtomFamily(id));
   const windowsDispatch = useSetAtom(windowsListAtom);
   const [focusedWindow, setFocusedWindow] = useAtom(focusedWindowAtom);
+  const zOrder = useAtomValue(zOrderAtom);
   const isResizing = useAtomValue(isResizingAtom);
   const [mobile, setMobileState] = useState(false);
   const [isMinimizing, setIsMinimizing] = useState(false);
@@ -45,6 +48,21 @@ export function Window({ id }: { id: string }) {
 
   const isHidden = state.status === "minimized" && !isMinimizing;
   const windowRef = useRef<HTMLDivElement>(null);
+
+  // Move focus into newly opened windows so keyboard users can immediately
+  // act on them (Tab into controls, Esc to close).
+  useEffect(() => {
+    if (isHidden) return;
+    const el = windowRef.current;
+    if (!el) return;
+    const focusTarget =
+      el.querySelector<HTMLElement>(
+        "input, textarea, [autofocus], button:not([aria-label='Close'])"
+      ) ?? el;
+    focusTarget.focus({ preventScroll: true });
+    // Run only once on mount (and when restoring from minimized).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Detect when an iframe inside this window gets focus (click into iframe)
   useEffect(() => {
@@ -74,6 +92,7 @@ export function Window({ id }: { id: string }) {
       aria-label={state.title}
       ref={windowRef}
       id={id}
+      tabIndex={-1}
       onMouseDown={() => setFocusedWindow(id)}
       onTouchStart={() => setFocusedWindow(id)}
       style={{
@@ -97,7 +116,7 @@ export function Window({ id }: { id: string }) {
         flexDirection: "column",
         overflow: "hidden",
         opacity: isResizing && focusedWindow === id ? 0.85 : 1,
-        zIndex: focusedWindow === id ? 1 : 0,
+        zIndex: zOrder[id] ?? 0,
         isolation: "isolate",
         minWidth: MIN_WINDOW_SIZE.width,
         minHeight: MIN_WINDOW_SIZE.height,
@@ -401,22 +420,36 @@ function createResizeEvent<T>(
       last = { x: touch.clientX, y: touch.clientY };
     }
 
-    const handleMove = (e: MouseEvent | TouchEvent) => {
+    // rAF-coalesce move events so we dispatch at most once per frame
+    let rafId: number | null = null;
+    let pending: MouseEvent | TouchEvent | null = null;
+    const flush = () => {
+      rafId = null;
+      const ev = pending;
+      if (!ev) return;
+      pending = null;
       let delta = { x: 0, y: 0 };
-      if ("clientX" in e) {
-        delta = { x: e.clientX - last.x, y: e.clientY - last.y };
-        last = { x: e.clientX, y: e.clientY };
-      } else if ("touches" in e) {
-        const touch = e.touches[0];
+      if ("clientX" in ev) {
+        delta = { x: ev.clientX - last.x, y: ev.clientY - last.y };
+        last = { x: ev.clientX, y: ev.clientY };
+      } else if ("touches" in ev) {
+        const touch = ev.touches[0];
         delta = { x: touch.clientX - last.x, y: touch.clientY - last.y };
         last = { x: touch.clientX, y: touch.clientY };
       }
-      cb(e, delta);
+      cb(ev, delta);
+    };
+    const handleMove = (ev: MouseEvent | TouchEvent) => {
+      pending = ev;
+      if (rafId == null) rafId = requestAnimationFrame(flush);
     };
 
     getDefaultStore().set(isResizingAtom, true);
 
     const handleEnd = () => {
+      if (rafId != null) cancelAnimationFrame(rafId);
+      rafId = null;
+      pending = null;
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("mouseup", handleEnd);
       window.removeEventListener("blur", handleEnd);
@@ -428,7 +461,7 @@ function createResizeEvent<T>(
     window.addEventListener("mousemove", handleMove);
     window.addEventListener("mouseup", handleEnd);
     window.addEventListener("blur", handleEnd);
-    window.addEventListener("touchmove", handleMove);
+    window.addEventListener("touchmove", handleMove, { passive: true });
     window.addEventListener("touchend", handleEnd);
   };
 

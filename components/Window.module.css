@@ -28,6 +28,13 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .windowOpen,
+  .windowMinimize {
+    animation: none;
+  }
+}
+
 .loadingOverlay {
   display: flex;
   flex-direction: column;

@@ -9,7 +9,7 @@ export function initState() {
   if (initialized) return;
   initialized = true;
   const id = createWindow({
-    title: "Welcome",
+    title: "Welcome to danoh.com",
     program: { type: "welcome" },
 
     size: { width: WIDTH, height: "auto" },
