@@ -42,15 +42,15 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), payment=()",
           },
-          // Report-Only: browsers log violations to the DevTools console
-          // without enforcing the policy. This lets us see what legit
-          // third-party code we missed (PostHog, Plausible, Stripe,
-          // unpkg inside iframes) before flipping to the enforced header.
-          // Flip key → "Content-Security-Policy" when the violation
-          // feed is clean in production.
+          // Enforced CSP. Constraints are the third-party origins we
+          // actually use (PostHog / Plausible / Stripe / unpkg) plus
+          // 'unsafe-inline' + 'unsafe-eval' which Next.js's runtime
+          // requires. If a new integration needs a host, widen the
+          // allowlist in CSP below. Flip back to "…-Report-Only" to
+          // observe-only if something breaks in production.
           {
-            key: "Content-Security-Policy-Report-Only",
-            value: CSP_REPORT_ONLY,
+            key: "Content-Security-Policy",
+            value: CSP,
           },
         ],
       },
@@ -66,7 +66,7 @@ const nextConfig = {
 // unpkg: 98.css loaded from the iframe program page.
 // frame-src blob:/data:/self: srcDoc iframes and same-origin program frames.
 // frame-ancestors 'self': modern equivalent of X-Frame-Options SAMEORIGIN.
-const CSP_REPORT_ONLY = [
+const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.i.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com https://analytics.wuxiamaxxing.com https://js.stripe.com https://unpkg.com",
   "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
