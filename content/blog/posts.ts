@@ -25,6 +25,16 @@ export type BlogPost = {
 
 export const posts: BlogPost[] = [
   {
+    slug: "mdx-rive-demo",
+    title: "Rive in MDX — live React components in a blog post",
+    date: "2026-04-17",
+    author: "Daniel Oh",
+    summary:
+      "Proof of the MDX pipeline: a Rive animation running inside a blog post as a real React component.",
+    tags: ["engineering", "mdx", "rive"],
+    readingTime: "3 min",
+  },
+  {
     slug: "welcome-to-danoh",
     title: "Welcome to danoh.com",
     date: "2026-04-09",
