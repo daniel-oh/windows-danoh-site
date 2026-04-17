@@ -61,13 +61,5 @@
   gap: 4px;
 }
 
-@media (max-width: 768px) {
-  .window :global(.title-bar-controls) button {
-    min-width: 32px;
-    min-height: 32px;
-  }
-  .window :global(.title-bar) {
-    min-height: 44px;
-    padding: 0 4px;
-  }
-}
+/* Mobile title-bar sizing lives in globals.css — it targets 98.css's
+ * unscoped .window / .title-bar classes, which CSS modules won't match. */

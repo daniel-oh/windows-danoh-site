@@ -236,7 +236,17 @@ export function Minesweeper() {
   const seconds = Math.min(999, Math.floor(elapsedMs / 1000));
   const face = status === "won" ? "😎" : status === "lost" ? "😵" : "🙂";
 
-  const cellSize = difficulty.cols >= 16 ? 20 : 24;
+  // Bigger cells on touch-sized viewports so they're reachable by a
+  // thumb without repeated mis-taps.
+  const isNarrow =
+    typeof window !== "undefined" && window.innerWidth <= 480;
+  const cellSize = isNarrow
+    ? difficulty.cols >= 16
+      ? 22
+      : 30
+    : difficulty.cols >= 16
+    ? 20
+    : 24;
 
   return (
     <div
