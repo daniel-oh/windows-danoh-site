@@ -194,6 +194,16 @@ function StartMenu() {
       },
     },
     {
+      label: "Minesweeper",
+      cb: () => {
+        createWindow({
+          title: "Minesweeper",
+          program: { type: "minesweeper" },
+          size: { width: 280, height: 360 },
+        });
+      },
+    },
+    {
       label: "Run",
       cb: () => {
         createWindow({
