@@ -188,6 +188,50 @@ html[data-theme="dark"] figcaption {
   color: #aaa;
 }
 
+/* ---------- Mobile tap targets ----------
+ * 98.css ships with desktop-sized controls. On touch viewports we enlarge
+ * the tap hit-area of the most-tapped controls (window title-bar buttons
+ * and form action buttons) without changing the retro visual language. */
+@media (max-width: 768px) {
+  /* Title-bar: the row holding × − □ buttons. 98.css's default ~17px
+   * height is unreachable on thumbs. Selectors are :global via the
+   * global CSS file — they match 98.css's bare classes. */
+  .window .title-bar {
+    min-height: 44px !important;
+    padding: 2px 4px !important;
+  }
+  .window .title-bar-controls button {
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+  /* Form action buttons inside window bodies (Submit, OK, Cancel, Copy
+   * link, etc.) get a taller touch area. Buttons inside field-rows stay
+   * as-is since those are inline with inputs and tapping the input is
+   * the primary affordance. */
+  .window .window-body form button,
+  .window .window-body .field-row > button,
+  .window-body > div > button {
+    min-height: 40px;
+    padding: 6px 14px;
+  }
+  /* Text inputs get a taller touch area too. */
+  .window .window-body input[type="text"],
+  .window .window-body input[type="password"],
+  .window .window-body input[type="email"],
+  .window .window-body textarea {
+    min-height: 36px;
+    padding: 6px 8px;
+    font-size: 16px; /* prevents iOS Safari zoom-on-focus */
+  }
+  /* Radios + their labels: expand the clickable area so the whole
+   * label reads as the tap target. */
+  .window .window-body label:has(> input[type="radio"]),
+  .window .window-body label:has(> input[type="checkbox"]) {
+    min-height: 40px;
+    padding: 6px 8px;
+  }
+}
+
 /* Tables from remark-gfm. */
 table {
   border-collapse: collapse;

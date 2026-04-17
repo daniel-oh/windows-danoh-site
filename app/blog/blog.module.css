@@ -382,15 +382,29 @@
     font-size: 22px;
   }
   .markdown {
-    font-size: 14px;
+    font-size: 16px;
+    line-height: 1.65;
   }
   .markdown h2 {
-    font-size: 16px;
+    font-size: 17px;
+  }
+  .summary {
+    font-size: 14px;
   }
   .adjacent {
     grid-template-columns: 1fr;
   }
   .relatedList {
     grid-template-columns: 1fr;
+  }
+  .titleBarText {
+    font-size: 12px;
+  }
+  .footerLink {
+    font-size: 14px;
+    padding: 6px 0;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
   }
 }
