@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import Markdown from "react-markdown";
 import { sortedPosts, type BlogPost } from "@/content/blog/posts";
+import { RichMarkdown } from "@/lib/markdown/RichMarkdown";
 import styles from "../blog.module.css";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -20,6 +20,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getPost(slug);
   if (!post) return { title: "Post not found — Daniel Oh" };
   const url = `https://danoh.com/blog/${post.slug}`;
+  const ogImages = post.image
+    ? [{ url: post.image, alt: post.imageAlt || post.title }]
+    : undefined;
   return {
     title: `${post.title} — Daniel Oh`,
     description: post.summary,
@@ -33,11 +36,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.date,
       authors: [post.author],
       tags: post.tags,
+      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.summary,
+      images: post.image ? [post.image] : undefined,
     },
   };
 }
@@ -102,8 +107,36 @@ export default async function Post({ params }: Props) {
               ))}
             </div>
           )}
+          {post.image && (
+            <figure style={{ margin: "16px 0" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={post.image}
+                alt={post.imageAlt || post.title}
+                style={{
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  border: "1px solid #808080",
+                }}
+              />
+              {post.imageCaption && (
+                <figcaption
+                  style={{
+                    fontSize: 12,
+                    color: "#555",
+                    textAlign: "center",
+                    marginTop: 6,
+                    fontStyle: "italic",
+                  }}
+                >
+                  {post.imageCaption}
+                </figcaption>
+              )}
+            </figure>
+          )}
           <div className={styles.markdown}>
-            <Markdown>{post.content}</Markdown>
+            <RichMarkdown>{post.content}</RichMarkdown>
           </div>
           <div className={styles.footer}>
             <Link href="/blog" className={styles.footerLink}>

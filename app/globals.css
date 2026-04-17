@@ -134,3 +134,81 @@ html[data-theme="dark"] [role="button"]:focus-visible,
 html[data-theme="dark"] [tabindex]:focus-visible {
   outline-color: #8ac8ff;
 }
+
+/* Dark-mode overrides for highlight.js github theme tokens. */
+html[data-theme="dark"] .hljs {
+  background: #0e0f1b;
+  color: #e6e6e6;
+}
+html[data-theme="dark"] .hljs-keyword,
+html[data-theme="dark"] .hljs-selector-tag,
+html[data-theme="dark"] .hljs-literal,
+html[data-theme="dark"] .hljs-section,
+html[data-theme="dark"] .hljs-link {
+  color: #ff7a9c;
+}
+html[data-theme="dark"] .hljs-string,
+html[data-theme="dark"] .hljs-attr {
+  color: #a6e3a1;
+}
+html[data-theme="dark"] .hljs-number,
+html[data-theme="dark"] .hljs-built_in,
+html[data-theme="dark"] .hljs-type,
+html[data-theme="dark"] .hljs-class .hljs-title {
+  color: #89dceb;
+}
+html[data-theme="dark"] .hljs-comment,
+html[data-theme="dark"] .hljs-quote {
+  color: #7b7f8f;
+  font-style: italic;
+}
+html[data-theme="dark"] .hljs-function .hljs-title,
+html[data-theme="dark"] .hljs-title.function_ {
+  color: #f5c16c;
+}
+
+/* Figures / captions — used by RichMarkdown's <img> override. */
+figure {
+  margin: 16px 0;
+}
+figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+figcaption {
+  font-size: 11px;
+  color: #555;
+  text-align: center;
+  margin-top: 4px;
+  font-style: italic;
+}
+html[data-theme="dark"] figcaption {
+  color: #aaa;
+}
+
+/* Tables from remark-gfm. */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+  font-size: inherit;
+}
+th,
+td {
+  border: 1px solid #808080;
+  padding: 6px 10px;
+  text-align: left;
+}
+th {
+  background: #dfdfdf;
+  font-weight: bold;
+}
+html[data-theme="dark"] th {
+  background: #2a2b3c;
+}
+html[data-theme="dark"] th,
+html[data-theme="dark"] td {
+  border-color: #4a4b5c;
+}

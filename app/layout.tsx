@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "98.css";
+import "highlight.js/styles/github.css";
 import "./globals.css";
 import { CSPostHogProvider } from "@/lib/CSPosthogProvider";
 import { APIProvider } from "@/lib/api/APIProvider";

@@ -23,6 +23,7 @@
     "classnames": "^2.5.1",
     "file-system-access": "^1.0.4",
     "fs-extra": "^11.2.0",
+    "highlight.js": "^11.11.1",
     "idb": "^8.0.0",
     "jotai": "^2.9.2",
     "next": "^16.2.3",
@@ -32,6 +33,9 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-markdown": "^9.0.1",
+    "rehype-highlight": "^7.0.2",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
     "replicate": "^0.30.2",
     "sharp": "^0.33.4",
     "stripe": "^16.2.0"

@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Markdown from "react-markdown";
 import { sortedPosts, BlogPost } from "@/content/blog/posts";
 import styles from "./Blog.module.css";
 import { isMobile } from "@/lib/isMobile";
 import { REACTIONS, useReactions } from "@/lib/useReactions";
+import { RichMarkdown } from "@/lib/markdown/RichMarkdown";
 
 export const BLOG_WIDTH = 700;
 
@@ -148,25 +148,69 @@ function PostView({
           ))}
         </div>
       )}
+      {post.image && (
+        <figure className={styles.hero}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={post.image}
+            alt={post.imageAlt || post.title}
+            className={styles.postImage}
+            loading="eager"
+          />
+          {post.imageCaption && (
+            <figcaption className={styles.heroCaption}>
+              {post.imageCaption}
+            </figcaption>
+          )}
+        </figure>
+      )}
       <div className={styles.markdown}>
-        <Markdown
-          components={{
-            img: ({ src, alt }) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={src}
-                alt={alt || ""}
-                className={styles.postImage}
-                loading="eager"
-              />
-            ),
-          }}
-        >
-          {post.content}
-        </Markdown>
+        <RichMarkdown>{post.content}</RichMarkdown>
       </div>
+      <PostActions slug={post.slug} />
       <ReactionBar slug={post.slug} />
     </article>
+  );
+}
+
+function PostActions({ slug }: { slug: string }) {
+  const [copied, setCopied] = useState(false);
+  const onCopy = async () => {
+    const url = `https://danoh.com/blog/${slug}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // Older browsers: manual fallback
+      const el = document.createElement("textarea");
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      try { document.execCommand("copy"); } catch { /* give up */ }
+      el.remove();
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  return (
+    <div
+      style={{
+        marginTop: 18,
+        display: "flex",
+        gap: 8,
+        justifyContent: "flex-end",
+      }}
+    >
+      <button type="button" onClick={onCopy}>
+        {copied ? "Copied!" : "Copy link"}
+      </button>
+      <a
+        href={`/blog/${slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <button type="button">Open full page ↗</button>
+      </a>
+    </div>
   );
 }
 
