@@ -8,6 +8,10 @@ export type BlogPost = {
   content: string;
   /** Set true to surface this post at the top of the Blog regardless of date. */
   pinned?: boolean;
+  /** Optional hero image shown at the top of the post + used as OG preview. */
+  image?: string;
+  imageAlt?: string;
+  imageCaption?: string;
 };
 
 export const posts: BlogPost[] = [

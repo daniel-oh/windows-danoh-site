@@ -293,6 +293,21 @@
   image-rendering: auto;
 }
 
+.hero {
+  margin: 0 0 16px 0;
+}
+.hero .postImage {
+  margin: 0;
+  border: 1px solid #808080;
+}
+.heroCaption {
+  font-size: 11px;
+  color: #555;
+  text-align: center;
+  margin-top: 4px;
+  font-style: italic;
+}
+
 /* Video embeds — use markdown image syntax with .mp4 or iframe in content */
 
 .markdown iframe {
