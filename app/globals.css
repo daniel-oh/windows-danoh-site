@@ -200,9 +200,27 @@ html[data-theme="dark"] figcaption {
     min-height: 44px !important;
     padding: 2px 4px !important;
   }
+  .window .title-bar .title-bar-text {
+    font-size: 13px;
+  }
   .window .title-bar-controls button {
     min-width: 36px !important;
     min-height: 36px !important;
+    /* 98.css anchors its icon SVGs to top-left with fixed pixel offsets,
+     * which made them float in the corner of oversized mobile buttons.
+     * Force-center + scale the background image so each glyph reads at
+     * the larger touch-target size. */
+    background-position: center center !important;
+  }
+  .window .title-bar-controls button[aria-label="Minimize"] {
+    background-size: 14px 5px !important;
+  }
+  .window .title-bar-controls button[aria-label="Maximize"],
+  .window .title-bar-controls button[aria-label="Restore"] {
+    background-size: 13px 13px !important;
+  }
+  .window .title-bar-controls button[aria-label="Close"] {
+    background-size: 12px 11px !important;
   }
   /* Form action buttons inside window bodies (Submit, OK, Cancel, Copy
    * link, etc.) get a taller touch area. Buttons inside field-rows stay

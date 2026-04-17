@@ -236,13 +236,15 @@ export function Minesweeper() {
   const seconds = Math.min(999, Math.floor(elapsedMs / 1000));
 
   // Bigger cells on touch-sized viewports so they're reachable by a
-  // thumb without repeated mis-taps.
+  // thumb without repeated mis-taps. 30px previously caused "random
+  // squares get triggered" because a fingertip covers ~40px of screen
+  // and the tap coordinate ambiguously sat between neighbouring cells.
   const isNarrow =
     typeof window !== "undefined" && window.innerWidth <= 480;
   const cellSize = isNarrow
     ? difficulty.cols >= 16
-      ? 22
-      : 30
+      ? 26
+      : 36
     : difficulty.cols >= 16
     ? 20
     : 24;
@@ -371,10 +373,16 @@ export function Minesweeper() {
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${difficulty.cols}, ${cellSize}px)`,
+          gridAutoRows: `${cellSize}px`,
           gap: 0,
           border: "2px inset #fff",
           background: "#808080",
           userSelect: "none",
+          // Prevents iOS from interpreting rapid taps as a double-tap
+          // zoom and swallowing the second tap — without this, clicks
+          // on adjacent cells can miss or hit wrong cells.
+          touchAction: "manipulation",
+          WebkitTouchCallout: "none",
         }}
         onContextMenu={(e) => e.preventDefault()}
       >
@@ -464,9 +472,15 @@ function CellButton({
       onContextMenu={handleContextMenu}
       disabled={disabled && !cell.revealed}
       style={{
+        // Overriding 98.css's global button min-width:75 / min-height:23
+        // so CSS Grid's fixed cell track is respected on every row and
+        // taps don't overflow into neighbouring cells.
         width: size,
         height: size,
+        minWidth: 0,
+        minHeight: 0,
         padding: 0,
+        boxSizing: "border-box",
         fontSize: Math.max(11, Math.floor(size * 0.55)),
         fontWeight: "bold",
         background: bg,
@@ -474,6 +488,9 @@ function CellButton({
         color: numberColor,
         lineHeight: 1,
         cursor: disabled ? "default" : "pointer",
+        touchAction: "manipulation",
+        WebkitUserSelect: "none",
+        WebkitTouchCallout: "none",
       }}
     >
       {content}
