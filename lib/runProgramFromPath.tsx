@@ -25,8 +25,6 @@ export async function runProgramFromPath(exePath: string): Promise<void> {
       },
       icon: config.icon ?? undefined,
     });
-
-    console.log("Running program:", parentFolderName);
   } catch (error) {
     console.error("Error running program:", error);
     throw error;

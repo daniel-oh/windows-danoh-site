@@ -12,6 +12,7 @@ import { insertGeneration } from "@/server/usage/insertGeneration";
 import { createPaymentRequiredResponse } from "@/server/paymentRequiredResponse";
 import { checkAccess } from "@/lib/apiGuard";
 import { sanitizeWithSystem } from "@/lib/sanitizeMessages";
+import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "help");
@@ -61,15 +62,20 @@ export async function POST(req: Request) {
     req
   );
 
-  const response = await createCompletion({
-    settings,
-    label: "help",
-    user,
-    body: {
-      messages: [...messages],
-      max_tokens: getMaxTokens(settings),
-    },
-  });
+  let response;
+  try {
+    response = await createCompletion({
+      settings,
+      label: "help",
+      user,
+      body: {
+        messages: [...messages],
+        max_tokens: getMaxTokens(settings),
+      },
+    });
+  } catch (err) {
+    return upstreamErrorResponse("help", err);
+  }
 
   log(response);
 

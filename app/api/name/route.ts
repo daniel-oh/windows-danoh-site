@@ -8,6 +8,7 @@ import { isLocal } from "@/lib/isLocal";
 
 import { log } from "@/lib/log";
 import { checkAccess } from "@/lib/apiGuard";
+import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "name");
@@ -36,25 +37,30 @@ export async function POST(req: Request) {
     req
   );
 
-  const response = await createCompletion({
-    settings,
-    label: "name",
-    user,
-    forceModel: "cheap",
-    body: {
-      messages: [
-        {
-          role: "system",
-          content: prompt,
-        },
-        {
-          role: "user",
-          content: desc,
-        },
-      ],
-      max_tokens: 4000,
-    },
-  });
+  let response;
+  try {
+    response = await createCompletion({
+      settings,
+      label: "name",
+      user,
+      forceModel: "cheap",
+      body: {
+        messages: [
+          {
+            role: "system",
+            content: prompt,
+          },
+          {
+            role: "user",
+            content: desc,
+          },
+        ],
+        max_tokens: 4000,
+      },
+    });
+  } catch (err) {
+    return upstreamErrorResponse("name", err);
+  }
 
   log(response);
 

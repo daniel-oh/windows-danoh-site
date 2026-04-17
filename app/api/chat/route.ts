@@ -8,6 +8,7 @@ import { isLocal } from "@/lib/isLocal";
 import { log } from "@/lib/log";
 import { checkAccess } from "@/lib/apiGuard";
 import { sanitizeUserMessages } from "@/lib/sanitizeMessages";
+import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "chat");
@@ -44,15 +45,20 @@ export async function POST(req: Request) {
     req
   );
 
-  const response = await createCompletion({
-    settings,
-    label: "chat",
-    user,
-    body: {
-      messages: [...messages],
-      max_tokens: getMaxTokens(settings),
-    },
-  });
+  let response;
+  try {
+    response = await createCompletion({
+      settings,
+      label: "chat",
+      user,
+      body: {
+        messages: [...messages],
+        max_tokens: getMaxTokens(settings),
+      },
+    });
+  } catch (err) {
+    return upstreamErrorResponse("chat", err);
+  }
 
   log(response);
 
