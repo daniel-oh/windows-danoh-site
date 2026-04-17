@@ -311,9 +311,8 @@ export function Minesweeper() {
         <button
           onClick={() => reset()}
           style={{
-            fontSize: 22,
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             padding: 0,
             display: "flex",
             alignItems: "center",
@@ -322,20 +321,20 @@ export function Minesweeper() {
           }}
           aria-label="New game"
         >
-          {status === "won" ? (
-            "🏴‍☠️"
-          ) : status === "lost" ? (
-            "💀"
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src="/icons/pirate-smiley.png"
-              alt=""
-              width={30}
-              height={30}
-              style={{ imageRendering: "pixelated" }}
-            />
-          )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={
+              status === "won"
+                ? "/icons/pirate-won.png"
+                : status === "lost"
+                ? "/icons/pirate-lost.png"
+                : "/icons/pirate-playing.png"
+            }
+            alt=""
+            width={32}
+            height={32}
+            style={{ imageRendering: "pixelated" }}
+          />
         </button>
         <div
           style={{
