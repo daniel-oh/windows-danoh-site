@@ -93,10 +93,24 @@ function IframeInner({ id }: { id: string }) {
       // Validate operation is a known string
       if (typeof operation !== "string") return;
 
-      // Validate key to prevent prototype pollution
-      if (typeof key === "string" && (key === "__proto__" || key === "constructor" || key === "prototype")) {
+      // Validate key shape (allowlist): alphanumeric + `_` + `-`.
+      // Colon is reserved as the per-program namespace separator.
+      if (key !== undefined && (typeof key !== "string" || !/^[a-zA-Z0-9_-]+$/.test(key))) {
         return;
       }
+
+      // Per-program namespacing: keys prefixed `public_` stay shared across
+      // programs (legacy convention documented in iframe/api.ts). Every other
+      // key is rewritten to `${programID}:${key}` so Program A cannot read or
+      // overwrite Program B's registry entries.
+      const PROGRAM_PREFIX = `${programID}:`;
+      const namespaceKey = (k: string) =>
+        k.startsWith("public_") ? k : `${PROGRAM_PREFIX}${k}`;
+      const denamespaceKey = (k: string): string | null => {
+        if (k.startsWith("public_")) return k;
+        if (k.startsWith(PROGRAM_PREFIX)) return k.slice(PROGRAM_PREFIX.length);
+        return null;
+      };
 
       const store = getDefaultStore();
       const registry = await store.get(registryAtom);
@@ -106,23 +120,32 @@ function IframeInner({ id }: { id: string }) {
           event.source!.postMessage({
             operation: "result",
             id,
-            value: registry[key],
+            value: registry[namespaceKey(key)],
           });
           break;
         }
         case "set": {
-          store.set(registryAtom, { ...registry, [key]: value });
+          store.set(registryAtom, {
+            ...registry,
+            [namespaceKey(key)]: value,
+          });
           break;
         }
         case "delete": {
-          store.set(registryAtom, { ...registry, [key]: undefined });
+          store.set(registryAtom, {
+            ...registry,
+            [namespaceKey(key)]: undefined,
+          });
           break;
         }
         case "listKeys": {
+          const visible = Object.keys(registry)
+            .map(denamespaceKey)
+            .filter((k): k is string => k !== null);
           event.source!.postMessage({
             operation: "result",
             id,
-            value: Object.keys(registry),
+            value: visible,
           });
           break;
         }

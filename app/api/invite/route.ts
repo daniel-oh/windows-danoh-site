@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
   const body = await req.json();
   const {
-    code = crypto.randomBytes(4).toString("hex"),
+    code = crypto.randomBytes(12).toString("hex"),
     label = "",
     total_uses = 50,
     expires_days,

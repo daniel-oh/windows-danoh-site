@@ -1,6 +1,6 @@
 // iframe/api.ts
 var currId = 0;
-var _parentOrigin = window.location.origin;
+var _parentOrigin = window.__PARENT_ORIGIN__ || window.location.origin;
 
 class Registry {
   async get(key) {
