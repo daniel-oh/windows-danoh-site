@@ -42,10 +42,42 @@ const nextConfig = {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=(), payment=()",
           },
+          // Report-Only: browsers log violations to the DevTools console
+          // without enforcing the policy. This lets us see what legit
+          // third-party code we missed (PostHog, Plausible, Stripe,
+          // unpkg inside iframes) before flipping to the enforced header.
+          // Flip key → "Content-Security-Policy" when the violation
+          // feed is clean in production.
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: CSP_REPORT_ONLY,
+          },
         ],
       },
     ];
   },
 };
+
+// unsafe-inline + unsafe-eval are required by Next.js's bootstrap +
+// webpack runtime + inline React styles + 98.css inline style props.
+// PostHog: api hosts are *.i.posthog.com, assets are us/eu-assets.
+// Plausible: custom self-hosted domain.
+// Stripe: script bundle + REST API.
+// unpkg: 98.css loaded from the iframe program page.
+// frame-src blob:/data:/self: srcDoc iframes and same-origin program frames.
+// frame-ancestors 'self': modern equivalent of X-Frame-Options SAMEORIGIN.
+const CSP_REPORT_ONLY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.i.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com https://analytics.wuxiamaxxing.com https://js.stripe.com https://unpkg.com",
+  "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "connect-src 'self' https://*.i.posthog.com https://us.i.posthog.com https://eu.i.posthog.com https://api.stripe.com https://analytics.wuxiamaxxing.com",
+  "frame-src 'self' blob: data:",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
+].join("; ");
 
 export default withMDX(nextConfig);
