@@ -1,0 +1,46 @@
+---
+title: How AI App Generation Works
+date: 2026-04-10
+author: Daniel Oh
+summary: A look under the hood at how danoh.com generates applications from text descriptions.
+tags: [engineering, ai]
+---
+
+Ever wondered how typing "paint app" into a text box creates a fully functional painting application? Here's what happens behind the scenes.
+
+## The Pipeline
+
+### 1. Prompt Engineering
+
+Your description gets wrapped in a carefully crafted system prompt that instructs Claude to generate a complete, standalone HTML application. The prompt includes:
+
+- Rules for responsive design (relative units, overflow handling)
+- The 98.css library for Windows 98 styling
+- OS APIs for file access, registry, and chat capabilities
+- Guidelines for making apps genuinely functional, not just mockups
+
+### 2. Streaming Generation
+
+The AI response streams directly into an iframe: you literally watch the app build itself in real-time as HTML chunks arrive over the network. No loading spinner, no waiting for the full response. The app appears piece by piece.
+
+### 3. Code Capture & Caching
+
+Once streaming completes, the generated HTML is captured from the iframe's DOM and cached. The next time you open that app, it loads instantly: no AI call needed.
+
+### 4. Live Iteration
+
+The **?** button on any app window opens a chat where the AI has full context of your app's source code. You can:
+
+- Report bugs: *"The canvas doesn't respond to touch"*
+- Request features: *"Add a color picker"*
+- Ask questions: *"How does the undo system work?"*
+
+The AI responds with updated code that's applied live: the app changes in front of your eyes.
+
+## Security & Safety
+
+Generated apps run in sandboxed iframes with restricted permissions. They can execute JavaScript but can't access the parent page, make cross-origin requests, or access your data outside the provided OS APIs.
+
+---
+
+*Have questions about how danoh.com works? Open a **Run** dialog and ask the AI to build you something.*

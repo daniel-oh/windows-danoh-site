@@ -57,6 +57,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <link
+          rel="alternate"
+          type="application/rss+xml"
+          title="Daniel Oh — Blog"
+          href="/feed.xml"
+        />
         <script
           defer
           data-domain="danoh.com"

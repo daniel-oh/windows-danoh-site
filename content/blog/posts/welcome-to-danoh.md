@@ -1,0 +1,46 @@
+---
+title: Welcome to danoh.com
+date: 2026-04-09
+author: Daniel Oh
+summary: "Introducing danoh.com: an AI-powered retro OS that generates apps on the fly."
+tags: [announcement, launch]
+---
+
+danoh.com is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly, right inside a Windows 98-style desktop.
+
+## How it works
+
+1. Click **Start > Run**
+2. Describe the app you want: "paint app", "calculator", "snake game", anything
+3. The AI generates a fully functional HTML/CSS/JS application in seconds
+4. It opens in a draggable, resizable window on your desktop
+
+## Fix & Iterate
+
+Found a bug in a generated app? Click the **?** button on any app window to open the **Fix & Iterate** chat. Describe what's wrong, and the AI developer fixes the code and updates the app live: no reload needed.
+
+## What can you build?
+
+Anything that runs in a browser:
+
+- **Games**: chess, snake, tetris, minesweeper
+- **Productivity**: calculators, timers, todo lists, note-taking
+- **Creative tools**: paint apps, pixel editors, music sequencers
+- **Data tools**: charts, unit converters, JSON formatters
+- **Fun stuff**: quote generators, fortune tellers, trivia games
+
+The only limit is your imagination.
+
+## The tech behind it
+
+danoh.com is built with:
+
+- **Next.js 16** + **React 19** for the frontend
+- **Anthropic Claude** for AI-powered app generation
+- **98.css** for the authentic Windows 98 aesthetic
+- **Docker** + **Traefik** for deployment
+- **PostgreSQL** for session management
+
+> "The future of yesterday": every app you generate feels like discovering a lost program from an alternate reality 1998.
+
+Stay tuned for updates. We're just getting started.

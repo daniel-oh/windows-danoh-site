@@ -10,6 +10,25 @@ const nextConfig = {
     formats: ["image/avif", "image/webp"],
   },
   transpilePackages: ["file-system-access", "fetch-blob"],
+  // Raw .md imports → the string contents of the file. Lets us author each
+  // blog post as a standalone .md with YAML frontmatter and still ship it
+  // as part of the client bundle (we parse frontmatter with gray-matter
+  // at module-eval time — works in both RSC and client).
+  turbopack: {
+    rules: {
+      "*.md": {
+        loaders: ["raw-loader"],
+        as: "*.js",
+      },
+    },
+  },
+  webpack(config) {
+    config.module.rules.push({
+      test: /\.md$/,
+      type: "asset/source",
+    });
+    return config;
+  },
   async headers() {
     return [
       {

@@ -64,6 +64,9 @@ export default function BlogIndex() {
             <Link href="/" className={styles.footerLink}>
               ← Back to the desktop
             </Link>
+            <a href="/feed.xml" className={styles.footerLink}>
+              RSS ↗
+            </a>
           </div>
         </div>
       </div>

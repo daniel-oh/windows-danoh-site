@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { sortedPosts, type BlogPost } from "@/content/blog/posts";
+import {
+  sortedPosts,
+  getAdjacentPosts,
+  getRelatedPosts,
+  type BlogPost,
+} from "@/content/blog/posts";
 import { RichMarkdown } from "@/lib/markdown/RichMarkdown";
 import styles from "../blog.module.css";
 
@@ -138,6 +143,7 @@ export default async function Post({ params }: Props) {
           <div className={styles.markdown}>
             <RichMarkdown>{post.content}</RichMarkdown>
           </div>
+          <RelatedAndAdjacent slug={post.slug} />
           <div className={styles.footer}>
             <Link href="/blog" className={styles.footerLink}>
               ← All posts
@@ -149,5 +155,56 @@ export default async function Post({ params }: Props) {
         </article>
       </div>
     </div>
+  );
+}
+
+function RelatedAndAdjacent({ slug }: { slug: string }) {
+  const related = getRelatedPosts(slug, 3);
+  const { previous, next } = getAdjacentPosts(slug);
+  if (related.length === 0 && !previous && !next) return null;
+  return (
+    <aside className={styles.related} aria-label="Related posts">
+      {related.length > 0 && (
+        <div className={styles.relatedBlock}>
+          <div className={styles.relatedTitle}>More from the blog</div>
+          <ul className={styles.relatedList}>
+            {related.map((p) => (
+              <li key={p.slug} className={styles.relatedItem}>
+                <Link
+                  href={`/blog/${p.slug}`}
+                  className={styles.relatedLink}
+                >
+                  <div className={styles.relatedItemTitle}>{p.title}</div>
+                  <div className={styles.relatedItemSummary}>{p.summary}</div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {(previous || next) && (
+        <nav className={styles.adjacent} aria-label="Previous and next posts">
+          {previous ? (
+            <Link href={`/blog/${previous.slug}`} className={styles.adjLink}>
+              <span className={styles.adjLabel}>← Previous</span>
+              <span className={styles.adjTitle}>{previous.title}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {next ? (
+            <Link
+              href={`/blog/${next.slug}`}
+              className={`${styles.adjLink} ${styles.adjNext}`}
+            >
+              <span className={styles.adjLabel}>Next →</span>
+              <span className={styles.adjTitle}>{next.title}</span>
+            </Link>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )}
+    </aside>
   );
 }
