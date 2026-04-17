@@ -32,7 +32,8 @@ export type Program =
   | { type: "display" }
   | { type: "mail" }
   | { type: "minesweeper" }
-  | { type: "guestbook" };
+  | { type: "guestbook" }
+  | { type: "recycle" };
 
 export type AlertAction = {
   label: string;

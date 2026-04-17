@@ -43,6 +43,7 @@ type IconPositions = Record<string, IconPosition>;
 const BLOG_ICON_ID = "__blog__";
 const RESUME_ICON_ID = "__resume__";
 const MINESWEEPER_ICON_ID = "__minesweeper__";
+const RECYCLE_ICON_ID = "__recycle__";
 
 function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions): IconPositions {
   const positions = { ...existing };
@@ -54,6 +55,9 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   }
   if (!positions[MINESWEEPER_ICON_ID]) {
     positions[MINESWEEPER_ICON_ID] = { col: 0, row: 2 };
+  }
+  if (!positions[RECYCLE_ICON_ID]) {
+    positions[RECYCLE_ICON_ID] = { col: 0, row: 3 };
   }
   const occupied = new Set(
     Object.values(positions).map((p) => `${p.col},${p.row}`)
@@ -149,6 +153,15 @@ export const Desktop = () => {
     });
   }, []);
 
+  const openRecycle = useCallback(() => {
+    createWindow({
+      title: "Recycle Bin",
+      program: { type: "recycle" },
+      size: { width: 420, height: 420 },
+      icon: "/icons/recycle.svg",
+    });
+  }, []);
+
   return (
     <div className={styles.desktop} role="main" onClick={() => setSelectedIcon(null)}>
       <BuiltInIcon
@@ -182,6 +195,17 @@ export const Desktop = () => {
         onSelect={() => setSelectedIcon(MINESWEEPER_ICON_ID)}
         position={iconPositions[MINESWEEPER_ICON_ID] || { col: 0, row: 2 }}
         onMove={(col, row) => moveIcon(MINESWEEPER_ICON_ID, col, row)}
+        mobile={mobile}
+      />
+      <BuiltInIcon
+        id={RECYCLE_ICON_ID}
+        name="Recycle Bin"
+        icon="/icons/recycle.svg"
+        onOpen={openRecycle}
+        isSelected={selectedIcon === RECYCLE_ICON_ID}
+        onSelect={() => setSelectedIcon(RECYCLE_ICON_ID)}
+        position={iconPositions[RECYCLE_ICON_ID] || { col: 0, row: 3 }}
+        onMove={(col, row) => moveIcon(RECYCLE_ICON_ID, col, row)}
         mobile={mobile}
       />
       {programs.map((program) => (
