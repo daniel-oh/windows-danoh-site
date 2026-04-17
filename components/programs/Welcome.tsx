@@ -6,6 +6,7 @@ import styles from "./Welcome.module.css";
 import check from "@/components/assets/check.png";
 import { sortedPosts } from "@/content/blog/posts";
 import { createWindow } from "@/lib/createWindow";
+import { useVisitorCount } from "@/lib/useVisitorCount";
 
 type TableOfContentsEntry = {
   title: string;
@@ -104,6 +105,7 @@ const contentByKey = {
                 AI, craft, and the work of building things that last.
               </span>
             </p>
+            <VisitorBadge />
             <p>
               Platform engineer at Nike. Michigan Engineering alum. I build
               infrastructure that teams ship on, and side projects that keep
@@ -311,6 +313,31 @@ const contentByKey = {
     );
   },
 };
+
+function VisitorBadge() {
+  const total = useVisitorCount();
+  // Defer render until we have a number — avoids flashing "#null"
+  if (total === null) return null;
+  return (
+    <div
+      style={{
+        display: "inline-block",
+        marginTop: 4,
+        padding: "2px 8px",
+        fontSize: 10,
+        background: "#000",
+        color: "#00ff66",
+        fontFamily: "monospace",
+        border: "1px solid #555",
+        letterSpacing: 0.5,
+      }}
+      aria-label={`You are visitor number ${total}`}
+      title="Unique visitors since this site went live"
+    >
+      you are visitor #{total.toLocaleString()}
+    </div>
+  );
+}
 
 export const WIDTH = 700;
 

@@ -19,6 +19,7 @@ import Image from "next/image";
 import { initState } from "@/lib/initState";
 import { WIDTH } from "./programs/Welcome";
 import { fsManagerAtom } from "@/state/fsManager";
+import { burstConfetti } from "@/lib/confetti";
 
 export function OS() {
   // Temp fix lol
@@ -129,13 +130,35 @@ function TaskBar() {
         <WindowTaskBarItem key={id} id={id} />
       ))}
       <div className={styles.taskbarSpacer} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/danoh-logo.svg"
-        alt="danoh.com"
-        className={styles.taskbarLogo}
-      />
+      <LogoEasterEgg />
     </div>
+  );
+}
+
+function LogoEasterEgg() {
+  const clicksRef = useRef<number[]>([]);
+  const onClick = (e: React.MouseEvent<HTMLImageElement>) => {
+    const now = Date.now();
+    // Keep only clicks within the last 2s
+    const recent = clicksRef.current.filter((t) => now - t < 2000);
+    recent.push(now);
+    clicksRef.current = recent;
+    if (recent.length >= 3) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      burstConfetti(rect.left + rect.width / 2, rect.top + rect.height / 2);
+      clicksRef.current = [];
+    }
+  };
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/danoh-logo.svg"
+      alt="danoh.com"
+      className={styles.taskbarLogo}
+      onClick={onClick}
+      style={{ cursor: "pointer" }}
+      title="Psst — try clicking me three times"
+    />
   );
 }
 

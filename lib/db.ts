@@ -84,6 +84,14 @@ async function ensureTables() {
       PRIMARY KEY (post_slug, reaction, visitor_id)
     );
   `);
+  // Anonymous hit counter. One row per unique visitor_id. COUNT(*) gives
+  // the "you are visitor #N" display. Small enough that COUNT is fine.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS visits (
+      visitor_id TEXT PRIMARY KEY,
+      first_seen TIMESTAMP DEFAULT NOW()
+    );
+  `);
 
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at);
