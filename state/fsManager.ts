@@ -37,11 +37,3 @@ export const fsManagerAtom = atom(async (get) => {
   const mountedDirs = await get(mountedDirectoriesAtom);
   return createFsManager(dir, mountedDirs);
 });
-
-// async function resetFs() {
-//   const dir = await getRootDirectoryHandle();
-//   // Remove all items in the directory
-//   for await (const entry of dir.values()) {
-//     await dir.removeEntry(entry.name, { recursive: true });
-//   }
-// }

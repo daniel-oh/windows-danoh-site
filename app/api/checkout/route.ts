@@ -3,9 +3,20 @@ import { redirect } from "next/navigation";
 
 import Stripe from "stripe";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+let _stripe: Stripe | null = null;
+function getStripe(): Stripe | null {
+  if (_stripe) return _stripe;
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return null;
+  _stripe = new Stripe(key);
+  return _stripe;
+}
 
 export async function POST(): Promise<Response> {
+  const stripe = getStripe();
+  if (!stripe || !process.env.STRIPE_PRICE_ID) {
+    return new Response("Checkout is not configured.", { status: 503 });
+  }
   const user = await getUser();
   if (!user) {
     return new Response("Unauthorized", { status: 401 });

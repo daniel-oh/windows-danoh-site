@@ -12,6 +12,7 @@ import { Settings } from "@/state/settings";
 import { User } from "@supabase/supabase-js";
 import { createPaymentRequiredResponse } from "@/server/paymentRequiredResponse";
 import { checkAccess } from "@/lib/apiGuard";
+import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "icon");
@@ -33,18 +34,30 @@ export async function POST(req: Request) {
   const body = await req.json();
   const settings = await getSettingsFromJSON(body);
   const prompt = body.name;
-  const imagePrompt = await genImagePrompt({
-    name: prompt,
-    settings,
-    req,
-    user,
-  });
-  if (!imagePrompt) {
-    return new Response("", { status: 500 });
+
+  let imagePrompt: string | null;
+  try {
+    imagePrompt = await genImagePrompt({
+      name: prompt,
+      settings,
+      req,
+      user,
+    });
+  } catch (err) {
+    return upstreamErrorResponse("icon", err);
   }
-  const image = await generateIcon(imagePrompt);
+  if (!imagePrompt) {
+    return upstreamErrorResponse("icon", new Error("Empty image prompt"));
+  }
+
+  let image;
+  try {
+    image = await generateIcon(imagePrompt);
+  } catch (err) {
+    return upstreamErrorResponse("image", err);
+  }
   if (!image) {
-    return new Response("", { status: 500 });
+    return upstreamErrorResponse("image", new Error("Empty image response"));
   }
 
   const path = await put(`icons/${generateUniqueID()}.png`, image);
