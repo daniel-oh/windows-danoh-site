@@ -31,7 +31,8 @@ export type Program =
   | { type: "now" }
   | { type: "display" }
   | { type: "mail" }
-  | { type: "minesweeper" };
+  | { type: "minesweeper" }
+  | { type: "guestbook" };
 
 export type AlertAction = {
   label: string;
