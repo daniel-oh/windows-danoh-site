@@ -42,6 +42,7 @@ type IconPositions = Record<string, IconPosition>;
 
 const BLOG_ICON_ID = "__blog__";
 const RESUME_ICON_ID = "__resume__";
+const MINESWEEPER_ICON_ID = "__minesweeper__";
 
 function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions): IconPositions {
   const positions = { ...existing };
@@ -50,6 +51,9 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   }
   if (!positions[RESUME_ICON_ID]) {
     positions[RESUME_ICON_ID] = { col: 0, row: 1 };
+  }
+  if (!positions[MINESWEEPER_ICON_ID]) {
+    positions[MINESWEEPER_ICON_ID] = { col: 0, row: 2 };
   }
   const occupied = new Set(
     Object.values(positions).map((p) => `${p.col},${p.row}`)
@@ -136,6 +140,15 @@ export const Desktop = () => {
     });
   }, []);
 
+  const openMinesweeper = useCallback(() => {
+    createWindow({
+      title: "Minesweeper",
+      program: { type: "minesweeper" },
+      size: { width: 280, height: 360 },
+      icon: "/icons/pirate-playing.png",
+    });
+  }, []);
+
   return (
     <div className={styles.desktop} role="main" onClick={() => setSelectedIcon(null)}>
       <BuiltInIcon
@@ -158,6 +171,17 @@ export const Desktop = () => {
         onSelect={() => setSelectedIcon(RESUME_ICON_ID)}
         position={iconPositions[RESUME_ICON_ID] || { col: 0, row: 1 }}
         onMove={(col, row) => moveIcon(RESUME_ICON_ID, col, row)}
+        mobile={mobile}
+      />
+      <BuiltInIcon
+        id={MINESWEEPER_ICON_ID}
+        name="Minesweeper"
+        icon="/icons/pirate-playing.png"
+        onOpen={openMinesweeper}
+        isSelected={selectedIcon === MINESWEEPER_ICON_ID}
+        onSelect={() => setSelectedIcon(MINESWEEPER_ICON_ID)}
+        position={iconPositions[MINESWEEPER_ICON_ID] || { col: 0, row: 2 }}
+        onMove={(col, row) => moveIcon(MINESWEEPER_ICON_ID, col, row)}
         mobile={mobile}
       />
       {programs.map((program) => (
@@ -378,7 +402,7 @@ function BuiltInIcon({
 }: {
   id: string;
   name: string;
-  icon?: typeof defaultIcon;
+  icon?: typeof defaultIcon | string;
   onOpen: () => void;
   isSelected: boolean;
   onSelect: () => void;
