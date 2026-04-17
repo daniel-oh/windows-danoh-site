@@ -1,0 +1,291 @@
+.page {
+  min-height: 100dvh;
+  background: #008080;
+  padding: 32px 16px 80px;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+}
+
+.shell {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #c0c0c0;
+  border: 2px solid #fff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+  box-shadow: 2px 2px 0 #000;
+}
+
+.titleBar {
+  background: linear-gradient(to right, #000080 0%, #1084d0 100%);
+  color: #fff;
+  padding: 4px 8px;
+  font-weight: bold;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.titleBarText {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.titleBarLink {
+  color: #fff;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: normal;
+  padding: 2px 8px;
+  background: #c0c0c0;
+  color: #000;
+  border: 1px solid #fff;
+  border-right-color: #404040;
+  border-bottom-color: #404040;
+}
+
+.titleBarLink:hover {
+  text-decoration: underline;
+}
+
+.body {
+  padding: 24px 28px 32px;
+}
+
+.tagline {
+  padding: 12px 14px;
+  background: linear-gradient(to bottom, #000080 0%, #0000c0 100%);
+  color: #fff;
+  border-bottom: 1px solid #000040;
+}
+
+.taglineLine1 {
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 0.3px;
+  line-height: 1.25;
+}
+
+.taglineLine2 {
+  font-size: 13px;
+  font-style: italic;
+  color: #c0c8ff;
+  margin-top: 3px;
+}
+
+.meta {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.postHeading {
+  font-size: 26px;
+  margin: 4px 0 10px;
+  line-height: 1.2;
+}
+
+.summary {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 18px;
+  font-style: italic;
+  border-left: 3px solid #000080;
+  padding: 4px 10px;
+  background: #dfdfdf;
+}
+
+.tags {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #dfdfdf;
+  border: 1px solid #808080;
+  color: #333;
+}
+
+.markdown {
+  font-size: 15px;
+  line-height: 1.65;
+  color: #111;
+  overflow-wrap: break-word;
+}
+
+.markdown h2 {
+  font-size: 18px;
+  margin: 28px 0 10px;
+  border-bottom: 1px solid #888;
+  padding-bottom: 4px;
+}
+
+.markdown h3 {
+  font-size: 16px;
+  margin: 20px 0 8px;
+}
+
+.markdown p {
+  margin: 12px 0;
+}
+
+.markdown ul,
+.markdown ol {
+  margin: 10px 0;
+  padding-left: 26px;
+}
+
+.markdown li {
+  margin: 4px 0;
+}
+
+.markdown a {
+  color: #000080;
+  text-decoration: underline;
+}
+
+.markdown a:hover {
+  color: #0000ff;
+}
+
+.markdown blockquote {
+  border-left: 3px solid #000080;
+  margin: 14px 0;
+  padding: 8px 12px;
+  background: #dfdfdf;
+  font-style: italic;
+  color: #333;
+}
+
+.markdown hr {
+  border: none;
+  border-top: 1px solid #808080;
+  margin: 22px 0;
+}
+
+.markdown code {
+  background: #ddd;
+  padding: 1px 4px;
+  border-radius: 2px;
+  font-size: 13px;
+  font-family: "SF Mono", Consolas, monospace;
+}
+
+.markdown pre {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  padding: 12px;
+  overflow-x: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  margin: 14px 0;
+  border: 1px solid #808080;
+  border-radius: 0;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+  color: inherit;
+}
+
+.markdown img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 14px 0;
+}
+
+.footer {
+  margin-top: 32px;
+  padding-top: 18px;
+  border-top: 1px solid #808080;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.footerLink {
+  color: #000080;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.footerLink:hover {
+  color: #0000ff;
+}
+
+.index {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.indexItem {
+  padding: 14px 0;
+  border-bottom: 1px solid #808080;
+}
+
+.indexItem:last-child {
+  border-bottom: none;
+}
+
+.indexTitle {
+  font-size: 18px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+}
+
+.indexSummary {
+  font-size: 13px;
+  color: #333;
+  margin: 4px 0 6px;
+}
+
+.indexMeta {
+  font-size: 11px;
+  color: #555;
+}
+
+.pinnedBadge {
+  display: inline-block;
+  background: #000080;
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 6px;
+  margin-right: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+  vertical-align: 1px;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 16px 8px 48px;
+  }
+  .body {
+    padding: 16px 14px 20px;
+  }
+  .postHeading {
+    font-size: 22px;
+  }
+  .markdown {
+    font-size: 14px;
+  }
+  .markdown h2 {
+    font-size: 16px;
+  }
+}
