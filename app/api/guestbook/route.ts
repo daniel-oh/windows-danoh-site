@@ -2,6 +2,7 @@ import { query, hasDatabase } from "@/lib/db";
 import Anthropic from "@anthropic-ai/sdk";
 import { getCheapestModel } from "@/ai/client";
 import { notifyAdmin } from "@/lib/notify";
+import { getClientIP } from "@/lib/api/clientIP";
 
 const MAX_NAME = 40;
 const MAX_MESSAGE = 280;
@@ -31,12 +32,6 @@ type Bucket = { count: number; firstAt: number };
 const ipBuckets = new Map<string, Bucket>();
 const visitorBuckets = new Map<string, Bucket>();
 const visitorLastAt = new Map<string, number>();
-
-function getClientIP(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0].trim();
-  return req.headers.get("x-real-ip") || "unknown";
-}
 
 function trip(map: Map<string, Bucket>, key: string, limit: number, windowMs: number): boolean {
   const now = Date.now();
