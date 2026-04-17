@@ -2,6 +2,16 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
+import { RuntimeLoader } from "@rive-app/canvas";
+
+// Self-host the Rive WASM binary to avoid pulling it from unpkg / jsdelivr
+// at runtime. The binary ships as a static asset in /public. When the
+// @rive-app/canvas package is upgraded, also re-copy rive.wasm +
+// rive_fallback.wasm from node_modules into /public so the runtime and
+// asset stay in lock-step (a version mismatch would crash WASM init).
+if (typeof window !== "undefined") {
+  RuntimeLoader.setWasmUrl("/rive.wasm");
+}
 
 export type RiveProps = {
   /** URL of the .riv asset, typically under /animations/. */

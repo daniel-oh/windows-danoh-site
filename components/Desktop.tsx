@@ -158,7 +158,7 @@ export const Desktop = () => {
       title: "Recycle Bin",
       program: { type: "recycle" },
       size: { width: 420, height: 420 },
-      icon: "/icons/recycle.svg",
+      icon: "/icons/recycle-bin.png",
     });
   }, []);
 
@@ -200,7 +200,7 @@ export const Desktop = () => {
       <BuiltInIcon
         id={RECYCLE_ICON_ID}
         name="Recycle Bin"
-        icon="/icons/recycle.svg"
+        icon="/icons/recycle-bin.png"
         onOpen={openRecycle}
         isSelected={selectedIcon === RECYCLE_ICON_ID}
         onSelect={() => setSelectedIcon(RECYCLE_ICON_ID)}
