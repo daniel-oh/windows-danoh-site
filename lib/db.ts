@@ -80,6 +80,12 @@ async function ensureTables() {
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_generations_session_created ON generations(session_id, created_at DESC);
   `);
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_programs_session ON programs(session_id);
+  `);
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_sessions_code_hash ON sessions(code_hash);
+  `);
 
   initialized = true;
 }

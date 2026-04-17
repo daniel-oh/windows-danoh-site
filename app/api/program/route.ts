@@ -15,6 +15,7 @@ import { isLocal } from "@/lib/isLocal";
 import { createStreamingCompletion } from "@/ai/createCompletion";
 import { getMaxTokens } from "@/ai/getMaxTokens";
 import { checkAccess } from "@/lib/apiGuard";
+import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function GET(req: Request) {
   const denied = await checkAccess(req, "program");
@@ -73,17 +74,24 @@ export async function GET(req: Request) {
     return new Response("Description too long (max 2000 characters)", { status: 400 });
   }
 
-  const programStream = await createProgramStream({
-    desc,
-    keys,
-    settings,
-    req,
-  });
+  let programStream;
+  try {
+    programStream = await createProgramStream({
+      desc,
+      keys,
+      settings,
+      req,
+    });
+  } catch (err) {
+    return upstreamErrorResponse("program", err);
+  }
+  const parentOrigin = new URL(req.url).origin;
   return new Response(
     streamAnthropicHtml(programStream, {
-      injectIntoHead: `<script src="/api.js"></script>
+      injectIntoHead: `<script>window.__PARENT_ORIGIN__=${JSON.stringify(parentOrigin)}</script>
+<script src="/api.js"></script>
 <link
-  rel="stylesheet" 
+  rel="stylesheet"
 href="https://unpkg.com/98.css"
 >
 <link
