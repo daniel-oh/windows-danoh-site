@@ -50,6 +50,14 @@ export function Blog({ id: _id }: { id: string }) {
 
   return (
     <div className={styles.blogContainer}>
+      <header className={styles.taglineHeader}>
+        <div className={styles.taglineLine1}>
+          Engineer who designs. Operator who writes.
+        </div>
+        <div className={styles.taglineLine2}>
+          AI, craft, and the work of building things that last.
+        </div>
+      </header>
       <div className={styles.contentWrapper}>
         {showSidebar && (
           <nav className={styles.sidebar} role="navigation" aria-label="Blog posts">
@@ -178,7 +186,7 @@ function ReactionBar({ slug }: { slug: string }) {
       <div style={{ fontSize: 11, color: "#555" }}>
         How did this land?
       </div>
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {REACTIONS.map((r) => {
           const active = mine.includes(r.key);
           const count = counts[r.key] ?? 0;
@@ -192,13 +200,14 @@ function ReactionBar({ slug }: { slug: string }) {
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 6,
-                padding: "3px 10px",
-                fontSize: 13,
+                gap: 8,
+                padding: "8px 14px",
+                minHeight: 40,
+                fontSize: 14,
                 fontWeight: active ? 700 : 400,
               }}
             >
-              <span style={{ fontSize: 15 }}>{r.emoji}</span>
+              <span style={{ fontSize: 17 }}>{r.emoji}</span>
               <span style={{ fontVariantNumeric: "tabular-nums" }}>{count}</span>
             </button>
           );

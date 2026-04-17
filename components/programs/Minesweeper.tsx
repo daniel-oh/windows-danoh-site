@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Cell = {
   mine: boolean;
@@ -166,19 +166,17 @@ export function Minesweeper() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [flagMode, setFlagMode] = useState(false);
-  const rafRef = useRef<number | null>(null);
 
-  // tick timer while playing
+  // Tick the timer once per second while playing. setInterval is
+  // intentional here — we only display whole seconds, so rAF's 60fps
+  // would trigger ~59 needless re-renders per second.
   useEffect(() => {
     if (status !== "playing" || startedAt === null) return;
-    const tick = () => {
+    setElapsedMs(Date.now() - startedAt);
+    const id = setInterval(() => {
       setElapsedMs(Date.now() - startedAt);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
+    }, 500);
+    return () => clearInterval(id);
   }, [status, startedAt]);
 
   const reset = (d: Difficulty = difficulty) => {

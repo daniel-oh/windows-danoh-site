@@ -4,6 +4,43 @@ import { query, hasDatabase } from "@/lib/db";
 export const REACTION_TYPES = ["like", "love", "fire"] as const;
 type Reaction = (typeof REACTION_TYPES)[number];
 
+// Per-IP sliding-window rate limit for POST /api/reactions. Defends
+// against an attacker who forges visitor_ids client-side to inflate
+// counts. In-memory is fine for single-container deploy.
+const RL_MAX = 200;
+const RL_WINDOW_MS = 10 * 60 * 1000;
+type Attempt = { count: number; firstAt: number };
+const attempts = new Map<string, Attempt>();
+
+function getClientIP(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+function rateLimit(req: Request): Response | null {
+  const ip = getClientIP(req);
+  const now = Date.now();
+  const prev = attempts.get(ip);
+  if (prev && now - prev.firstAt > RL_WINDOW_MS) attempts.delete(ip);
+  const cur = attempts.get(ip);
+  if (cur && cur.count >= RL_MAX) {
+    return Response.json(
+      { error: "Too many reactions. Slow down." },
+      { status: 429 }
+    );
+  }
+  return null;
+}
+
+function recordAttempt(req: Request): void {
+  const ip = getClientIP(req);
+  const now = Date.now();
+  const cur = attempts.get(ip);
+  if (!cur) attempts.set(ip, { count: 1, firstAt: now });
+  else cur.count++;
+}
+
 const EMPTY_COUNTS: Record<Reaction, number> = { like: 0, love: 0, fire: 0 };
 
 function isValidReaction(r: unknown): r is Reaction {
@@ -65,6 +102,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const limited = rateLimit(req);
+  if (limited) return limited;
+  recordAttempt(req);
+
   if (!hasDatabase()) {
     return Response.json({ counts: EMPTY_COUNTS, mine: [] });
   }
