@@ -94,7 +94,10 @@
 
 @media (max-width: 768px) {
   .taskbar {
-    height: 48px;
+    /* Taskbar height is driven by --taskbar-height (40px on mobile)
+     * for all dependents (start menu anchor, OS layout). */
+    height: var(--taskbar-height);
+    padding: 2px 0;
   }
 
   .startMenu {
@@ -102,16 +105,16 @@
   }
 
   .startButton {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .windowButton {
     font-size: 12px;
-    min-height: 36px;
+    min-height: 32px;
   }
 
   .taskbarLogo {
-    height: 26px;
+    height: 22px;
     margin-right: 6px;
   }
 }
