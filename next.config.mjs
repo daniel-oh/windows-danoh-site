@@ -1,34 +1,31 @@
+import createMDX from "@next/mdx";
+
+// Plugins are passed as string identifiers so Turbopack can serialize
+// them (function refs would trip "does not have serializable options").
+// @next/mdx resolves these to modules at build time.
+//
+// Note: rehype-raw is NOT used here. MDX natively supports JSX / raw HTML
+// in posts (`<video>`, `<iframe>`, `<Rive />`), so rehype-raw is both
+// redundant and actively breaks when it encounters MDX ESM nodes like
+// `export const meta = ...`.
+const withMDX = createMDX({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [["remark-gfm"]],
+    rehypePlugins: [["rehype-highlight", { ignoreMissing: true }]],
+  },
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
   images: {
-    remotePatterns: [
-      {
-        hostname: "localhost",
-      },
-    ],
+    remotePatterns: [{ hostname: "localhost" }],
     formats: ["image/avif", "image/webp"],
   },
   transpilePackages: ["file-system-access", "fetch-blob"],
-  // Raw .md imports → the string contents of the file. Lets us author each
-  // blog post as a standalone .md with YAML frontmatter and still ship it
-  // as part of the client bundle (we parse frontmatter with gray-matter
-  // at module-eval time — works in both RSC and client).
-  turbopack: {
-    rules: {
-      "*.md": {
-        loaders: ["raw-loader"],
-        as: "*.js",
-      },
-    },
-  },
-  webpack(config) {
-    config.module.rules.push({
-      test: /\.md$/,
-      type: "asset/source",
-    });
-    return config;
-  },
+  // Keep .tsx etc as pages. MDX files are content modules, not routes,
+  // so we deliberately don't add "mdx" here.
   async headers() {
     return [
       {
@@ -51,4 +48,4 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withMDX(nextConfig);

@@ -2,18 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { sortedPosts, BlogPost } from "@/content/blog/posts";
+import { getPostComponent } from "@/content/blog/posts-content";
 import styles from "./Blog.module.css";
 import { isMobile } from "@/lib/isMobile";
 import { REACTIONS, useReactions } from "@/lib/useReactions";
-import { RichMarkdown } from "@/lib/markdown/RichMarkdown";
 
 export const BLOG_WIDTH = 700;
-
-function readingTime(content: string): string {
-  const words = content.trim().split(/\s+/).length;
-  const minutes = Math.max(1, Math.ceil(words / 200));
-  return `${minutes} min read`;
-}
 
 export function Blog({ id: _id }: { id: string }) {
   const [selectedSlug, setSelectedSlug] = useState(
@@ -137,7 +131,7 @@ function PostView({
         <span>&middot;</span>
         <span>{post.date}</span>
         <span>&middot;</span>
-        <span>{readingTime(post.content)}</span>
+        <span>{post.readingTime} read</span>
       </div>
       {post.tags.length > 0 && (
         <div className={styles.tags}>
@@ -165,7 +159,7 @@ function PostView({
         </figure>
       )}
       <div className={styles.markdown}>
-        <RichMarkdown>{post.content}</RichMarkdown>
+        <PostBody slug={post.slug} />
       </div>
       <PostActions slug={post.slug} />
       <ReactionBar slug={post.slug} />
@@ -212,6 +206,12 @@ function PostActions({ slug }: { slug: string }) {
       </a>
     </div>
   );
+}
+
+function PostBody({ slug }: { slug: string }) {
+  const Component = getPostComponent(slug);
+  if (!Component) return <p>Post content not found.</p>;
+  return <Component />;
 }
 
 function ReactionBar({ slug }: { slug: string }) {

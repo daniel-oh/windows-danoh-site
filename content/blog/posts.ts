@@ -1,13 +1,12 @@
-import matter from "gray-matter";
-
-// Per-file posts. Adding a new post:
-//   1. Create content/blog/posts/<slug>.md with YAML frontmatter.
-//   2. Add one import line + entry to RAW_POSTS below.
-// The .md files are pulled in as raw strings via a webpack asset rule
-// (see next.config.mjs) so the same bundle works in server + client.
-
-import welcomeToDanoh from "./posts/welcome-to-danoh.md";
-import aiAppGeneration from "./posts/ai-app-generation.md";
+// Post metadata — one array of plain TS data, no React imports.
+// Kept separate from the MDX component modules so that non-React code
+// paths (RSS feed, sitemap, metadata helpers) can import post data
+// without eagerly evaluating MDX → React.
+//
+// Adding a new post:
+//   1. Create content/blog/posts/<slug>.mdx (markdown + MDX body).
+//   2. Add an entry below.
+//   3. Add an import + map entry to content/blog/posts-content.tsx.
 
 export type BlogPost = {
   slug: string;
@@ -16,8 +15,7 @@ export type BlogPost = {
   author: string;
   summary: string;
   tags: string[];
-  content: string;
-  /** Set true to surface this post at the top of the Blog regardless of date. */
+  readingTime: string;
   pinned?: boolean;
   /** Optional hero image shown at the top of the post + used as OG preview. */
   image?: string;
@@ -25,39 +23,28 @@ export type BlogPost = {
   imageCaption?: string;
 };
 
-type RawPost = { slug: string; raw: string };
-
-const RAW_POSTS: RawPost[] = [
-  { slug: "welcome-to-danoh", raw: welcomeToDanoh },
-  { slug: "ai-app-generation", raw: aiAppGeneration },
+export const posts: BlogPost[] = [
+  {
+    slug: "welcome-to-danoh",
+    title: "Welcome to danoh.com",
+    date: "2026-04-09",
+    author: "Daniel Oh",
+    summary:
+      "Introducing danoh.com: an AI-powered retro OS that generates apps on the fly.",
+    tags: ["announcement", "launch"],
+    readingTime: "2 min",
+  },
+  {
+    slug: "ai-app-generation",
+    title: "How AI App Generation Works",
+    date: "2026-04-10",
+    author: "Daniel Oh",
+    summary:
+      "A look under the hood at how danoh.com generates applications from text descriptions.",
+    tags: ["engineering", "ai"],
+    readingTime: "3 min",
+  },
 ];
-
-function toIsoDate(v: unknown): string {
-  if (typeof v === "string") return v;
-  if (v instanceof Date) return v.toISOString().slice(0, 10);
-  return "";
-}
-
-function parsePost({ slug, raw }: RawPost): BlogPost {
-  const parsed = matter(raw);
-  const data = parsed.data as Record<string, unknown>;
-  return {
-    slug,
-    title: String(data.title ?? slug),
-    date: toIsoDate(data.date),
-    author: String(data.author ?? "Daniel Oh"),
-    summary: String(data.summary ?? ""),
-    tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
-    content: parsed.content.trim(),
-    pinned: data.pinned === true,
-    image: typeof data.image === "string" ? data.image : undefined,
-    imageAlt: typeof data.imageAlt === "string" ? data.imageAlt : undefined,
-    imageCaption:
-      typeof data.imageCaption === "string" ? data.imageCaption : undefined,
-  };
-}
-
-export const posts: BlogPost[] = RAW_POSTS.map(parsePost);
 
 // Pinned posts float to the top. Within each group (pinned / unpinned)
 // posts are ordered newest-first by date.
@@ -87,8 +74,6 @@ export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
 export function getAdjacentPosts(
   slug: string
 ): { previous: BlogPost | null; next: BlogPost | null } {
-  // "previous" = older (earlier in sortedPosts because sortedPosts is
-  // newest-first, older posts come later). "next" = newer.
   const unpinned = sortedPosts.filter((p) => !p.pinned);
   const idx = unpinned.findIndex((p) => p.slug === slug);
   if (idx === -1) return { previous: null, next: null };
