@@ -17,6 +17,7 @@ import { Shortcuts } from "./programs/Shortcuts";
 import { Now } from "./programs/Now";
 import { Display } from "./programs/Display";
 import { Mail } from "./programs/Mail";
+import { Minesweeper } from "./programs/Minesweeper";
 
 export function WindowBody({ state }: { state: WindowState }) {
   const dispatch = useSetAtom(windowAtomFamily(state.id));
@@ -75,6 +76,8 @@ export function WindowBody({ state }: { state: WindowState }) {
       return <Display />;
     case "mail":
       return <Mail id={state.id} />;
+    case "minesweeper":
+      return <Minesweeper />;
     default:
       assertNever(state.program);
   }

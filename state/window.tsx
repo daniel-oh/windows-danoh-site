@@ -30,7 +30,8 @@ export type Program =
   | { type: "shortcuts" }
   | { type: "now" }
   | { type: "display" }
-  | { type: "mail" };
+  | { type: "mail" }
+  | { type: "minesweeper" };
 
 export type AlertAction = {
   label: string;
