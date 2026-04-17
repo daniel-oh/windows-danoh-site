@@ -223,7 +223,7 @@ function StartMenu() {
           title: "Minesweeper",
           program: { type: "minesweeper" },
           size: { width: 280, height: 360 },
-          icon: "/icons/pirate-smiley.png",
+          icon: "/icons/pirate-playing.png",
         });
       },
     },
