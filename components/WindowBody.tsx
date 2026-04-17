@@ -15,6 +15,7 @@ import { Blog } from "./programs/Blog";
 import { Resume } from "./programs/Resume";
 import { Shortcuts } from "./programs/Shortcuts";
 import { Now } from "./programs/Now";
+import { Display } from "./programs/Display";
 
 export function WindowBody({ state }: { state: WindowState }) {
   const dispatch = useSetAtom(windowAtomFamily(state.id));
@@ -69,6 +70,8 @@ export function WindowBody({ state }: { state: WindowState }) {
       return <Shortcuts />;
     case "now":
       return <Now />;
+    case "display":
+      return <Display />;
     default:
       assertNever(state.program);
   }
