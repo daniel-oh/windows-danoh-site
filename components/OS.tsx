@@ -227,6 +227,16 @@ function StartMenu() {
       },
     },
     {
+      label: "Guestbook",
+      cb: () => {
+        createWindow({
+          title: "Guestbook",
+          program: { type: "guestbook" },
+          size: { width: 440, height: 520 },
+        });
+      },
+    },
+    {
       label: "Run",
       cb: () => {
         createWindow({

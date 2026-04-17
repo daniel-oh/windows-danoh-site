@@ -92,6 +92,20 @@ async function ensureTables() {
       first_seen TIMESTAMP DEFAULT NOW()
     );
   `);
+  // Guestbook messages, passed through an AI classifier on submit.
+  // status: 'pending' (AI unavailable) | 'approved' | 'rejected'.
+  // Only 'approved' messages are rendered on the wall.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS guestbook (
+      id SERIAL PRIMARY KEY,
+      name TEXT,
+      message TEXT NOT NULL,
+      visitor_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      moderation_reason TEXT,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
 
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at);
@@ -107,6 +121,10 @@ async function ensureTables() {
   `);
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_reactions_slug ON post_reactions(post_slug);
+  `);
+  await p.query(`
+    CREATE INDEX IF NOT EXISTS idx_guestbook_status_created
+      ON guestbook(status, created_at DESC);
   `);
 
   initialized = true;
