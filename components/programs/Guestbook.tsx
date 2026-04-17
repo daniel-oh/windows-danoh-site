@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getVisitorId } from "@/lib/visitorId";
 
 type Entry = {
@@ -34,6 +34,8 @@ export function Guestbook() {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [honeypot, setHoneypot] = useState("");
+  const mountedAtRef = useRef<number>(Date.now());
 
   const load = useCallback(async () => {
     try {
@@ -71,6 +73,8 @@ export function Guestbook() {
           name: name.trim() || null,
           message: m,
           visitorId: getVisitorId(),
+          website: honeypot, // bot trap; human-invisible field
+          elapsedMs: Date.now() - mountedAtRef.current,
         }),
       });
       const data = (await res.json()) as { status?: string; error?: string };
@@ -127,6 +131,29 @@ export function Guestbook() {
         onSubmit={submit}
         style={{ display: "flex", flexDirection: "column", gap: 6 }}
       >
+        {/* Honeypot: real humans don't see or focus this; bots fill it in.
+            If the field is non-empty on submit, the server silently drops. */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            left: "-9999px",
+            width: 1,
+            height: 1,
+            overflow: "hidden",
+          }}
+        >
+          <label htmlFor="gb-website">Website (leave blank)</label>
+          <input
+            id="gb-website"
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={honeypot}
+            onChange={(e) => setHoneypot(e.target.value)}
+          />
+        </div>
         <div className="field-row-stacked">
           <label htmlFor="gb-name">Name (optional)</label>
           <input

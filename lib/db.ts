@@ -93,7 +93,7 @@ async function ensureTables() {
     );
   `);
   // Guestbook messages, passed through an AI classifier on submit.
-  // status: 'pending' (AI unavailable) | 'approved' | 'rejected'.
+  // status: 'pending' (AI unavailable) | 'approved' | 'rejected' | 'spam'.
   // Only 'approved' messages are rendered on the wall.
   await p.query(`
     CREATE TABLE IF NOT EXISTS guestbook (
@@ -106,6 +106,9 @@ async function ensureTables() {
       created_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  // Add forensics columns to existing deployments.
+  await p.query(`ALTER TABLE guestbook ADD COLUMN IF NOT EXISTS ip TEXT;`);
+  await p.query(`ALTER TABLE guestbook ADD COLUMN IF NOT EXISTS user_agent TEXT;`);
 
   await p.query(`
     CREATE INDEX IF NOT EXISTS idx_sessions_created ON sessions(created_at);
