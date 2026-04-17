@@ -27,7 +27,8 @@ export type Program =
     }
   | { type: "blog" }
   | { type: "resume" }
-  | { type: "shortcuts" };
+  | { type: "shortcuts" }
+  | { type: "now" };
 
 export type AlertAction = {
   label: string;
