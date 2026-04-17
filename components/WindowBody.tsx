@@ -13,6 +13,7 @@ import { History } from "./programs/History";
 import { Alert } from "./programs/Alert";
 import { Blog } from "./programs/Blog";
 import { Resume } from "./programs/Resume";
+import { Shortcuts } from "./programs/Shortcuts";
 
 export function WindowBody({ state }: { state: WindowState }) {
   const dispatch = useSetAtom(windowAtomFamily(state.id));
@@ -63,6 +64,8 @@ export function WindowBody({ state }: { state: WindowState }) {
       return <Blog id={state.id} />;
     case "resume":
       return <Resume />;
+    case "shortcuts":
+      return <Shortcuts />;
     default:
       assertNever(state.program);
   }

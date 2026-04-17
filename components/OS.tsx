@@ -189,6 +189,16 @@ function StartMenu() {
       },
     },
     {
+      label: "Shortcuts",
+      cb: () => {
+        createWindow({
+          title: "Keyboard Shortcuts",
+          program: { type: "shortcuts" },
+          size: { width: 440, height: 380 },
+        });
+      },
+    },
+    {
       label: "Report a bug",
       cb: () => {
         window.open("https://forms.gle/ZqG1eLbgBtwadLe4A", "_blank");

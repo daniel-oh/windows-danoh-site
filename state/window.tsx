@@ -7,7 +7,7 @@ import { ReactNode } from "react";
 
 export type Program =
   | { type: "welcome" }
-  | { type: "run" }
+  | { type: "run"; initialPrompt?: string }
   | { type: "history"; programID: string }
   | { type: "iframe"; programID: string; canSave?: boolean; canOpen?: boolean }
   | { type: "help"; targetWindowID?: string }
@@ -26,7 +26,8 @@ export type Program =
       actions?: AlertAction[];
     }
   | { type: "blog" }
-  | { type: "resume" };
+  | { type: "resume" }
+  | { type: "shortcuts" };
 
 export type AlertAction = {
   label: string;
