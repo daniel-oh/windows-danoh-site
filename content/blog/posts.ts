@@ -1,3 +1,14 @@
+import matter from "gray-matter";
+
+// Per-file posts. Adding a new post:
+//   1. Create content/blog/posts/<slug>.md with YAML frontmatter.
+//   2. Add one import line + entry to RAW_POSTS below.
+// The .md files are pulled in as raw strings via a webpack asset rule
+// (see next.config.mjs) so the same bundle works in server + client.
+
+import welcomeToDanoh from "./posts/welcome-to-danoh.md";
+import aiAppGeneration from "./posts/ai-app-generation.md";
+
 export type BlogPost = {
   slug: string;
   title: string;
@@ -14,104 +25,39 @@ export type BlogPost = {
   imageCaption?: string;
 };
 
-export const posts: BlogPost[] = [
-  {
-    slug: "welcome-to-danoh",
-    title: "Welcome to danoh.com",
-    date: "2026-04-09",
-    author: "Daniel Oh",
-    summary: "Introducing danoh.com: an AI-powered retro OS that generates apps on the fly.",
-    tags: ["announcement", "launch"],
-    content: `
-danoh.com is a retro operating system experience powered by AI. Describe any application you want, and it gets generated on the fly, right inside a Windows 98-style desktop.
+type RawPost = { slug: string; raw: string };
 
-## How it works
-
-1. Click **Start > Run**
-2. Describe the app you want: "paint app", "calculator", "snake game", anything
-3. The AI generates a fully functional HTML/CSS/JS application in seconds
-4. It opens in a draggable, resizable window on your desktop
-
-## Fix & Iterate
-
-Found a bug in a generated app? Click the **?** button on any app window to open the **Fix & Iterate** chat. Describe what's wrong, and the AI developer fixes the code and updates the app live: no reload needed.
-
-## What can you build?
-
-Anything that runs in a browser:
-
-- **Games**: chess, snake, tetris, minesweeper
-- **Productivity**: calculators, timers, todo lists, note-taking
-- **Creative tools**: paint apps, pixel editors, music sequencers
-- **Data tools**: charts, unit converters, JSON formatters
-- **Fun stuff**: quote generators, fortune tellers, trivia games
-
-The only limit is your imagination.
-
-## The tech behind it
-
-danoh.com is built with:
-
-- **Next.js 16** + **React 19** for the frontend
-- **Anthropic Claude** for AI-powered app generation
-- **98.css** for the authentic Windows 98 aesthetic
-- **Docker** + **Traefik** for deployment
-- **PostgreSQL** for session management
-
-> "The future of yesterday": every app you generate feels like discovering a lost program from an alternate reality 1998.
-
-Stay tuned for updates. We're just getting started.
-    `,
-  },
-  {
-    slug: "ai-app-generation",
-    title: "How AI App Generation Works",
-    date: "2026-04-10",
-    author: "Daniel Oh",
-    summary: "A look under the hood at how danoh.com generates applications from text descriptions.",
-    tags: ["engineering", "ai"],
-    content: `
-Ever wondered how typing "paint app" into a text box creates a fully functional painting application? Here's what happens behind the scenes.
-
-## The Pipeline
-
-### 1. Prompt Engineering
-
-Your description gets wrapped in a carefully crafted system prompt that instructs Claude to generate a complete, standalone HTML application. The prompt includes:
-
-- Rules for responsive design (relative units, overflow handling)
-- The 98.css library for Windows 98 styling
-- OS APIs for file access, registry, and chat capabilities
-- Guidelines for making apps genuinely functional, not just mockups
-
-### 2. Streaming Generation
-
-The AI response streams directly into an iframe: you literally watch the app build itself in real-time as HTML chunks arrive over the network. No loading spinner, no waiting for the full response. The app appears piece by piece.
-
-### 3. Code Capture & Caching
-
-Once streaming completes, the generated HTML is captured from the iframe's DOM and cached. The next time you open that app, it loads instantly: no AI call needed.
-
-### 4. Live Iteration
-
-The **?** button on any app window opens a chat where the AI has full context of your app's source code. You can:
-
-- Report bugs: *"The canvas doesn't respond to touch"*
-- Request features: *"Add a color picker"*
-- Ask questions: *"How does the undo system work?"*
-
-The AI responds with updated code that's applied live: the app changes in front of your eyes.
-
-## Security & Safety
-
-Generated apps run in sandboxed iframes with restricted permissions. They can execute JavaScript but can't access the parent page, make cross-origin requests, or access your data outside the provided OS APIs.
-
----
-
-*Have questions about how danoh.com works? Open a **Run** dialog and ask the AI to build you something.*
-    `,
-  },
+const RAW_POSTS: RawPost[] = [
+  { slug: "welcome-to-danoh", raw: welcomeToDanoh },
+  { slug: "ai-app-generation", raw: aiAppGeneration },
 ];
+
+function toIsoDate(v: unknown): string {
+  if (typeof v === "string") return v;
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return "";
+}
+
+function parsePost({ slug, raw }: RawPost): BlogPost {
+  const parsed = matter(raw);
+  const data = parsed.data as Record<string, unknown>;
+  return {
+    slug,
+    title: String(data.title ?? slug),
+    date: toIsoDate(data.date),
+    author: String(data.author ?? "Daniel Oh"),
+    summary: String(data.summary ?? ""),
+    tags: Array.isArray(data.tags) ? data.tags.map(String) : [],
+    content: parsed.content.trim(),
+    pinned: data.pinned === true,
+    image: typeof data.image === "string" ? data.image : undefined,
+    imageAlt: typeof data.imageAlt === "string" ? data.imageAlt : undefined,
+    imageCaption:
+      typeof data.imageCaption === "string" ? data.imageCaption : undefined,
+  };
+}
+
+export const posts: BlogPost[] = RAW_POSTS.map(parsePost);
 
 // Pinned posts float to the top. Within each group (pinned / unpinned)
 // posts are ordered newest-first by date.
@@ -119,3 +65,35 @@ export const sortedPosts = [...posts].sort((a, b) => {
   if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
   return new Date(b.date).getTime() - new Date(a.date).getTime();
 });
+
+// --- Related / adjacent helpers -------------------------------------
+export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
+  const current = sortedPosts.find((p) => p.slug === slug);
+  if (!current) return [];
+  return sortedPosts
+    .filter((p) => p.slug !== slug)
+    .map((p) => ({
+      post: p,
+      score: p.tags.filter((t) => current.tags.includes(t)).length,
+    }))
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      return new Date(b.post.date).getTime() - new Date(a.post.date).getTime();
+    })
+    .slice(0, limit)
+    .map((r) => r.post);
+}
+
+export function getAdjacentPosts(
+  slug: string
+): { previous: BlogPost | null; next: BlogPost | null } {
+  // "previous" = older (earlier in sortedPosts because sortedPosts is
+  // newest-first, older posts come later). "next" = newer.
+  const unpinned = sortedPosts.filter((p) => !p.pinned);
+  const idx = unpinned.findIndex((p) => p.slug === slug);
+  if (idx === -1) return { previous: null, next: null };
+  return {
+    next: idx > 0 ? unpinned[idx - 1] : null,
+    previous: idx < unpinned.length - 1 ? unpinned[idx + 1] : null,
+  };
+}
