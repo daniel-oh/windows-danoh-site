@@ -6,6 +6,8 @@ export type BlogPost = {
   summary: string;
   tags: string[];
   content: string;
+  /** Set true to surface this post at the top of the Blog regardless of date. */
+  pinned?: boolean;
 };
 
 export const posts: BlogPost[] = [
@@ -107,6 +109,9 @@ Generated apps run in sandboxed iframes with restricted permissions. They can ex
   },
 ];
 
-export const sortedPosts = [...posts].sort(
-  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-);
+// Pinned posts float to the top. Within each group (pinned / unpinned)
+// posts are ordered newest-first by date.
+export const sortedPosts = [...posts].sort((a, b) => {
+  if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+  return new Date(b.date).getTime() - new Date(a.date).getTime();
+});
