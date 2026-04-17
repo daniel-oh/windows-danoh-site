@@ -1,0 +1,46 @@
+{/* Metadata lives in content/blog/posts.ts — keep them in sync when you
+ * create a new post. Body below is pure markdown + MDX (JSX allowed). */}
+
+import { Rive } from "@/components/mdx/Rive";
+
+When I migrated the blog from plain markdown to MDX, the point wasn't syntax cosmetics. It was to let a post contain a **real React component** — interactive, stateful, whatever the post needs — next to the prose.
+
+Here's the proof. Below is a [Rive](https://rive.app) animation rendered by an actual React component embedded inline in this post. It's not an iframe, not a video, not a GIF. The runtime spins up in the browser, loads a ~4 KB `.riv` asset, and paints to a `<canvas>` driven by the Rive state machine.
+
+<Rive
+  src="/animations/fire.riv"
+  height={320}
+  alt="A stylised fire animation by the Rive community — an illustration of the flexibility unlocked by embedding Rive directly in MDX."
+  caption="Fire — Rive community file (3420-7173). ~4 KB asset."
+/>
+
+## The one-line change
+
+In MDX, using a React component in a post is one `import` and one JSX tag:
+
+```mdx
+import { Rive } from "@/components/mdx/Rive";
+
+<Rive src="/animations/fire.riv" height={320} alt="Stylised fire animation" />
+```
+
+No build config, no `<iframe>` wrapper page, no escape hatch. The MDX compiler treats `<Rive />` as a React element and bundles it alongside the post content.
+
+## How it's wired
+
+The component behaves the way I want a blog embed to behave:
+
+- **Lazy-loaded.** The Rive runtime is ~300 KB gzipped. A post without `<Rive />` never ships that code to the browser — `next/dynamic` defers the import until render time on posts that need it.
+- **Respects reduced motion.** If your OS has "reduce motion" set, autoplay is suppressed. You can still interact with state machines if the animation is responsive.
+- **Sized for any viewport.** `width: 100%; maxWidth: 100%` means the canvas scales to the post width on mobile without overflowing.
+- **Accessible.** `<figure>`/`<figcaption>` with an `aria-label` describing the animation. Screen readers get a meaningful label; the caption provides context for readers (and Google) who can't see the canvas.
+
+## What this unlocks
+
+Any React component you'd put on a page can now live inside a post: interactive demos, live-rendered charts (Recharts, visx, D3), custom callouts, decision-tree widgets, diagram explainers. The post is the component tree; the component tree is the post.
+
+The caveat: the in-OS Blog window renders these the same way as the standalone SSR pages. Both paths reuse the same compiled MDX module, so what you see in the retro desktop matches what Google indexes at `/blog/mdx-rive-demo`.
+
+---
+
+*Credit: "Rive Fire" file by the Rive community at [rive.app/marketplace/3420-7173-rive-fire](https://rive.app/marketplace/3420-7173-rive-fire/). Served straight from the Rive public CDN, copied locally to `/public/animations/fire.riv` for snappier loads.*
