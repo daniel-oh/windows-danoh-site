@@ -46,12 +46,18 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
           );
         })}
       </ul>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/danoh-logo-animated.gif"
-        alt="danoh.com"
+      <video
         className={styles.sidebarLogo}
-      />
+        poster="/danoh-logo-poster.png"
+        autoPlay
+        loop
+        muted
+        playsInline
+        aria-hidden="true"
+      >
+        <source src="/danoh-logo-animated.webm" type="video/webm" />
+        <source src="/danoh-logo-animated.mp4" type="video/mp4" />
+      </video>
       <div className={styles.sidebarCounter}>
         <VisitorBadge />
       </div>
