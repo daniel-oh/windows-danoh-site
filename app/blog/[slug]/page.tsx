@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -104,29 +105,19 @@ export default async function Post({ params }: Props) {
               ))}
             </div>
           )}
-          {post.image && (
-            <figure style={{ margin: "16px 0" }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+          {post.image && post.imageWidth && post.imageHeight && (
+            <figure className={styles.postHero}>
+              <Image
                 src={post.image}
                 alt={post.imageAlt || post.title}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  display: "block",
-                  border: "1px solid #808080",
-                }}
+                width={post.imageWidth}
+                height={post.imageHeight}
+                sizes="(max-width: 720px) 100vw, 720px"
+                priority
+                className={styles.postHeroImage}
               />
               {post.imageCaption && (
-                <figcaption
-                  style={{
-                    fontSize: 12,
-                    color: "#555",
-                    textAlign: "center",
-                    marginTop: 6,
-                    fontStyle: "italic",
-                  }}
-                >
+                <figcaption className={styles.postHeroCaption}>
                   {post.imageCaption}
                 </figcaption>
               )}

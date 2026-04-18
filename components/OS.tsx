@@ -22,7 +22,13 @@ import { fsManagerAtom } from "@/state/fsManager";
 import { burstConfetti } from "@/lib/confetti";
 
 export function OS() {
-  // Temp fix lol
+  // Eager-subscribe to fsManagerAtom so the async chain
+  // (IndexedDB open → root handle → mounted dirs → FsManager init)
+  // starts on OS mount rather than lazily on the first getFsManager()
+  // call from a child program. Without this, opening Explorer or any
+  // program that touches the virtual FS pays the full cold-start
+  // latency on its first render. The returned value is intentionally
+  // unused — this is a subscription-for-side-effect.
   useAtom(fsManagerAtom);
   const [windows] = useAtom(windowsListAtom);
   const setFocusedWindow = useSetAtom(focusedWindowAtom);

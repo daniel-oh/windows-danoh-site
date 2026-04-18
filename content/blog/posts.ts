@@ -19,6 +19,11 @@ export type BlogPost = {
   pinned?: boolean;
   /** Optional hero image shown at the top of the post + used as OG preview. */
   image?: string;
+  /** Intrinsic width + height of the hero image. Required when `image` is
+   * set so next/image can reserve space (no layout shift) and pick the
+   * right srcSet. Both must be provided together. */
+  imageWidth?: number;
+  imageHeight?: number;
   imageAlt?: string;
   imageCaption?: string;
 };
