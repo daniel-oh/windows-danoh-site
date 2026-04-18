@@ -1,15 +1,18 @@
 "use client";
 
+import Image from "next/image";
 import styles from "./Resume.module.css";
 
 export function Resume() {
   return (
     <div className={styles.resumeContainer}>
       <div className={styles.header}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src="/headshot-resume.jpg"
           alt="Daniel Oh"
+          width={144}
+          height={144}
+          sizes="(max-width: 768px) 56px, 72px"
           className={styles.headshot}
         />
         <h1 className={styles.name}>DANIEL OH</h1>
