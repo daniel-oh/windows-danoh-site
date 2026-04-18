@@ -20,6 +20,7 @@ import { initState } from "@/lib/initState";
 import { WIDTH } from "./programs/Welcome";
 import { fsManagerAtom } from "@/state/fsManager";
 import { burstConfetti } from "@/lib/confetti";
+import { alert } from "@/lib/alert";
 
 export function OS() {
   // Eager-subscribe to fsManagerAtom so the async chain
@@ -335,13 +336,50 @@ function StartMenu() {
           {entry.label}
         </button>
       ))}
-      <form style={{ display: "contents" }}>
-        <button role="menuitem" formAction={logout}>
-          Logout
-        </button>
-      </form>
+      <button role="menuitem" onClick={wrap(() => confirmLogout(logout))}>
+        Log Off...
+      </button>
     </div>
   );
+}
+
+// Retro Win98 "Log Off Windows" confirmation. Counts the currently-open
+// programs so the visitor knows what's about to close, matching the way
+// the real Windows shell used to warn before a shutdown. Calling logout()
+// in the Yes callback runs the Supabase server action, which redirects
+// back to / and hard-reloads — so any remaining open windows are wiped
+// with the session.
+function confirmLogout(logout: () => void) {
+  const store = getDefaultStore();
+  const openCount = store.get(windowsListAtom).length;
+  const openLine =
+    openCount === 0
+      ? "No programs are open."
+      : openCount === 1
+        ? "1 open program will close."
+        : `${openCount} open programs will close.`;
+  alert({
+    alertId: "LOG_OFF_CONFIRM",
+    message: (
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <p style={{ margin: 0 }}>Are you sure you want to log off?</p>
+        <p style={{ margin: 0, fontSize: 11, color: "#555" }}>{openLine}</p>
+      </div>
+    ),
+    actions: [
+      {
+        label: "No",
+        callback: (close) => close(),
+      },
+      {
+        label: "Yes",
+        callback: (close) => {
+          close();
+          logout();
+        },
+      },
+    ],
+  });
 }
 
 const WindowTaskBarItem = memo(function WindowTaskBarItem({ id }: { id: string }) {
