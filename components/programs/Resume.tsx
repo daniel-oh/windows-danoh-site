@@ -92,10 +92,10 @@ export function Resume() {
       </Section>
 
       <Section title="VENTURES">
-        <p className={styles.ventureSubtitle}>Founder — Building with Swift/SwiftUI, Supabase, Cloudflare, Stripe, and Claude API</p>
+        <p className={styles.ventureSubtitle}>Founder · Building with Swift/SwiftUI, Supabase, Cloudflare, Stripe, and Claude API</p>
         <ul className={styles.ventureList}>
-          <li><strong>AM Training Hall</strong> – Fitness coaching marketplace connecting trainers and clients. Stripe Connect payments, multi-role architecture.</li>
-          <li><strong>312eats / 312 Built</strong> – Chicago directory platforms: 3,700+ restaurant listings and 1,600+ vetted contractors across 15 categories.</li>
+          <li><strong>AM Training Hall</strong>: Fitness coaching marketplace connecting trainers and clients. Stripe Connect payments, multi-role architecture.</li>
+          <li><strong>312eats / 312 Built</strong>: Chicago directory platforms. 3,700+ restaurant listings and 1,600+ vetted contractors across 15 categories.</li>
         </ul>
       </Section>
 
@@ -111,11 +111,11 @@ export function Resume() {
 
       <Section title="TECHNICAL SKILLS">
         <ul className={styles.skillsList}>
-          <li><strong>Cloud</strong> — All three major clouds (Azure, AWS, GCP). Three Azure Expert certifications: DevOps, Architecture, and Network Security.</li>
-          <li><strong>Infrastructure</strong> — Kubernetes, Terraform, Terragrunt, Crossplane, Helm, ArgoCD, Ansible.</li>
-          <li><strong>Delivery</strong> — GitHub Actions, Jenkins, Harness CD. GitOps and trunk-based development.</li>
-          <li><strong>Security & Observability</strong> — Wiz, Snyk, Trivy, Cloudflare WAF, Azure WAF, Datadog, OpenTelemetry, Splunk.</li>
-          <li><strong>Languages & Tools</strong> — Python, Swift, Bash. Databricks, JIRA, ServiceNow, Terraform Enterprise.</li>
+          <li><strong>Cloud</strong>: All three major clouds (Azure, AWS, GCP). Three Azure Expert certifications: DevOps, Architecture, and Network Security.</li>
+          <li><strong>Infrastructure</strong>: Kubernetes, Terraform, Terragrunt, Crossplane, Helm, ArgoCD, Ansible.</li>
+          <li><strong>Delivery</strong>: GitHub Actions, Jenkins, Harness CD. GitOps and trunk-based development.</li>
+          <li><strong>Security & Observability</strong>: Wiz, Snyk, Trivy, Cloudflare WAF, Azure WAF, Datadog, OpenTelemetry, Splunk.</li>
+          <li><strong>Languages & Tools</strong>: Python, Swift, Bash. Databricks, JIRA, ServiceNow, Terraform Enterprise.</li>
         </ul>
       </Section>
 
@@ -156,7 +156,7 @@ function Job({
     <div className={styles.job}>
       <div className={styles.jobHeader}>
         <div>
-          <strong>{company}</strong> — {location}
+          <strong>{company}</strong> · {location}
           <div className={styles.jobTitle}>{title}</div>
         </div>
         <div className={styles.jobDates}>{dates}</div>

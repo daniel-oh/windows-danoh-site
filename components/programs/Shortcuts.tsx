@@ -25,7 +25,7 @@ const SHORTCUTS: { section: string; items: Shortcut[] }[] = [
     items: [
       {
         keys: ["⌘", "+"],
-        description: "Zoom in (works on mobile too — pinch to zoom)",
+        description: "Zoom in (works on mobile too; pinch to zoom)",
       },
     ],
   },

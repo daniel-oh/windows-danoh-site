@@ -26,7 +26,7 @@ export type BlogPost = {
 export const posts: BlogPost[] = [
   {
     slug: "mdx-rive-demo",
-    title: "Rive in MDX — live React components in a blog post",
+    title: "Rive in MDX: live React components in a blog post",
     date: "2026-04-17",
     author: "Daniel Oh",
     summary:

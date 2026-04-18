@@ -1,7 +1,7 @@
 import { sortedPosts } from "@/content/blog/posts";
 
 const SITE = "https://danoh.com";
-const TITLE = "Daniel Oh — Blog";
+const TITLE = "Daniel Oh · Blog";
 const DESCRIPTION =
   "Engineer who designs. Operator who writes. Notes on AI, craft, and the work of building things that last.";
 

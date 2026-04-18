@@ -3,7 +3,7 @@
 
 import { Rive } from "@/components/mdx/Rive";
 
-When I migrated the blog from plain markdown to MDX, the point wasn't syntax cosmetics. It was to let a post contain a **real React component** — interactive, stateful, whatever the post needs — next to the prose.
+When I migrated the blog from plain markdown to MDX, the point wasn't syntax cosmetics. It was to let a post contain a **real React component** (interactive, stateful, whatever the post needs) next to the prose.
 
 Here's the proof. Below is a [Rive](https://rive.app) animation rendered by an actual React component embedded inline in this post. It's not an iframe, not a video, not a GIF. The runtime spins up in the browser, loads a ~4 KB `.riv` asset, and paints to a `<canvas>` driven by the Rive state machine.
 
@@ -11,8 +11,8 @@ Here's the proof. Below is a [Rive](https://rive.app) animation rendered by an a
   src="/animations/fire.riv"
   height={320}
   loop
-  alt="A stylised fire animation by the Rive community — an illustration of the flexibility unlocked by embedding Rive directly in MDX."
-  caption="Fire — Rive community file (3420-7173). ~4 KB asset."
+  alt="A stylised fire animation by the Rive community. An illustration of the flexibility unlocked by embedding Rive directly in MDX."
+  caption="Fire · Rive community file (3420-7173). ~4 KB asset."
 />
 
 ## The one-line change
@@ -25,7 +25,7 @@ import { Rive } from "@/components/mdx/Rive";
 <Rive src="/animations/fire.riv" height={320} loop alt="Stylised fire animation" />
 ```
 
-The `loop` prop is opt-in — pass it on decorative embeds (ambient fire, background motion). Omit it for animations meant to play once, like confetti bursts or checkmarks, so the `.riv` file's own Loop / One-shot flag is respected.
+The `loop` prop is opt-in. Pass it on decorative embeds (ambient fire, background motion). Omit it for animations meant to play once, like confetti bursts or checkmarks, so the `.riv` file's own Loop / One-shot flag is respected.
 
 No build config, no `<iframe>` wrapper page, no escape hatch. The MDX compiler treats `<Rive />` as a React element and bundles it alongside the post content.
 
@@ -33,7 +33,7 @@ No build config, no `<iframe>` wrapper page, no escape hatch. The MDX compiler t
 
 The component behaves the way I want a blog embed to behave:
 
-- **Lazy-loaded.** The Rive runtime is ~300 KB gzipped. A post without `<Rive />` never ships that code to the browser — `next/dynamic` defers the import until render time on posts that need it.
+- **Lazy-loaded.** The Rive runtime is ~300 KB gzipped. A post without `<Rive />` never ships that code to the browser, because `next/dynamic` defers the import until render time on posts that need it.
 - **Respects reduced motion.** If your OS has "reduce motion" set, autoplay is suppressed. You can still interact with state machines if the animation is responsive.
 - **Sized for any viewport.** `width: 100%; maxWidth: 100%` means the canvas scales to the post width on mobile without overflowing.
 - **Accessible.** `<figure>`/`<figcaption>` with an `aria-label` describing the animation. Screen readers get a meaningful label; the caption provides context for readers (and Google) who can't see the canvas.

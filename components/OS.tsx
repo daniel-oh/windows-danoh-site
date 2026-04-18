@@ -161,6 +161,7 @@ function LogoEasterEgg() {
 
 function StartMenu() {
   const { logout } = useActions();
+  const setStartMenuOpen = useSetAtom(startMenuOpenAtom);
   // Suppress synthetic click on a button if the user was scrolling
   // the menu (iOS fires click on touchend even after a small drag).
   // Track touch start Y, flip a ref on touchmove past a threshold,
@@ -187,6 +188,7 @@ function StartMenu() {
       return;
     }
     cb();
+    setStartMenuOpen(false);
   };
 
   // Audited + reordered by focus. Welcome anchors the top; everything
