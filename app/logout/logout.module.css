@@ -19,6 +19,9 @@
       #000 65%,
       #000 100%
     );
+  /* Kill the blue tap-flash iOS Safari paints over amber when you
+   * mash the buttons — reads as a bug against this palette. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .screen {
@@ -99,7 +102,8 @@
 .signature {
   font-size: 11px;
   letter-spacing: 2px;
-  color: #886000;
+  /* Dim amber but still AA-readable on black (~4.5:1). */
+  color: #a87a00;
   margin: 0;
   text-transform: uppercase;
 }
