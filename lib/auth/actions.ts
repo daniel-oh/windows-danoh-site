@@ -33,5 +33,8 @@ export async function logout() {
 
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
-  redirect("/");
+  // Land on a dedicated farewell screen rather than reloading the
+  // desktop. The /logout page is the retro "safe to turn off" moment
+  // and offers clear CTAs back to /.
+  redirect("/logout");
 }
