@@ -345,11 +345,15 @@ function StartMenu() {
 
 // Retro Win98 "Log Off Windows" confirmation. Counts the currently-open
 // programs so the visitor knows what's about to close, matching the way
-// the real Windows shell used to warn before a shutdown. Calling logout()
-// in the Yes callback runs the Supabase server action, which redirects
-// back to / and hard-reloads — so any remaining open windows are wiped
-// with the session.
-function confirmLogout(logout: () => void) {
+// the real Windows shell used to warn before a shutdown.
+//
+// The Yes path awaits the Supabase signOut server action, then forces
+// a hard navigation to /logout. Server actions called from a bare
+// onClick (as opposed to a form's formAction) don't reliably dispatch
+// `redirect()` on the client — the signOut runs and cookies clear, but
+// the browser stays put. Awaiting + window.location gives us a belt-
+// and-suspenders flow that works in both paths.
+function confirmLogout(logout: () => Promise<void> | void) {
   const store = getDefaultStore();
   const openCount = store.get(windowsListAtom).length;
   const openLine =
@@ -373,9 +377,17 @@ function confirmLogout(logout: () => void) {
       },
       {
         label: "Yes",
-        callback: (close) => {
+        callback: async (close) => {
           close();
-          logout();
+          try {
+            await logout();
+          } catch {
+            // NEXT_REDIRECT from the server action throws on some
+            // Next versions; let Next's machinery handle that path.
+          }
+          // If the redirect didn't auto-dispatch, force it. If it
+          // did, this lands on the same page and is a no-op.
+          window.location.href = "/logout";
         },
       },
     ],
