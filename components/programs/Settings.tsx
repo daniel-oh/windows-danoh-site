@@ -7,6 +7,12 @@ import {
   isRootDirectorySetAtom,
   rootDirectoryHandleAtom,
 } from "@/lib/filesystem/directoryMapping";
+import {
+  DEFAULT_THEME,
+  THEME_KEY,
+  Theme,
+  registryAtom,
+} from "@/state/registry";
 import styles from "./Settings.module.css";
 import cx from "classnames";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
@@ -133,12 +139,61 @@ export function Settings({ id }: { id: string }) {
         </div>
       </fieldset>
 
+      <ThemeSection />
+
       <DirectorySection />
 
       <button onClick={() => windowsDispatch({ type: "REMOVE", payload: id })} className={styles.submit}>
         Done
       </button>
     </div>
+  );
+}
+
+function ThemeSection() {
+  const [registry, setRegistry] = useAtom(registryAtom);
+  const current: Theme =
+    registry[THEME_KEY] === "dark" ? "dark" : DEFAULT_THEME;
+
+  const setTheme = (next: Theme) => {
+    setRegistry({ ...registry, [THEME_KEY]: next });
+  };
+
+  return (
+    <fieldset>
+      <legend>Theme</legend>
+      <div
+        className="field-row"
+        style={{ display: "flex", gap: 16, flexWrap: "wrap" }}
+      >
+        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <input
+            type="radio"
+            name="settings-theme"
+            value="light"
+            checked={current === "light"}
+            onChange={() => setTheme("light")}
+          />
+          Light (classic)
+        </label>
+        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <input
+            type="radio"
+            name="settings-theme"
+            value="dark"
+            checked={current === "dark"}
+            onChange={() => setTheme("dark")}
+          />
+          Dark
+        </label>
+      </div>
+      <p className={styles.note}>
+        Dark darkens window bodies and the desktop while leaving the
+        title-bar chrome intact. AI-generated programs read the theme
+        from <code>registry.get(&quot;public_theme&quot;)</code> and
+        style themselves to match.
+      </p>
+    </fieldset>
   );
 }
 

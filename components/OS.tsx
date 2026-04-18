@@ -165,7 +165,13 @@ function LogoEasterEgg() {
 function StartMenu() {
   const { logout } = useActions();
 
+  // Audited + reordered by focus. Welcome anchors the top; everything
+  // else flows from "read / create / play / configure" so visitors
+  // aren't staring at a wall of equally-weighted buttons. Display
+  // was folded into Settings; Now was removed as redundant with the
+  // Welcome program's own Updates tab and the bio hero.
   const entries: { label: string; cb: () => void }[] = [
+    // Anchor
     {
       label: "Welcome",
       cb: () => {
@@ -173,6 +179,17 @@ function StartMenu() {
           title: "Welcome to danoh.com",
           program: { type: "welcome" },
           size: { width: WIDTH, height: "auto" },
+        });
+      },
+    },
+    // Read
+    {
+      label: "Blog",
+      cb: () => {
+        createWindow({
+          title: "Blog",
+          program: { type: "blog" },
+          size: { width: 700, height: 500 },
         });
       },
     },
@@ -186,26 +203,17 @@ function StartMenu() {
         });
       },
     },
+    // Create
     {
-      label: "Blog",
+      label: "Run",
       cb: () => {
         createWindow({
-          title: "Blog",
-          program: { type: "blog" },
-          size: { width: 700, height: 500 },
+          title: "Run",
+          program: { type: "run" },
         });
       },
     },
-    {
-      label: "Now",
-      cb: () => {
-        createWindow({
-          title: "Now",
-          program: { type: "now" },
-          size: { width: 520, height: 520 },
-        });
-      },
-    },
+    // Connect
     {
       label: "Mail",
       cb: () => {
@@ -213,17 +221,6 @@ function StartMenu() {
           title: "New Message",
           program: { type: "mail" },
           size: { width: 460, height: 400 },
-        });
-      },
-    },
-    {
-      label: "Minesweeper",
-      cb: () => {
-        createWindow({
-          title: "Minesweeper",
-          program: { type: "minesweeper" },
-          size: { width: 280, height: 360 },
-          icon: "/icons/pirate-playing.png",
         });
       },
     },
@@ -237,15 +234,19 @@ function StartMenu() {
         });
       },
     },
+    // Play
     {
-      label: "Run",
+      label: "Minesweeper",
       cb: () => {
         createWindow({
-          title: "Run",
-          program: { type: "run" },
+          title: "Minesweeper",
+          program: { type: "minesweeper" },
+          size: { width: 280, height: 360 },
+          icon: "/icons/pirate-playing.png",
         });
       },
     },
+    // Utility
     {
       label: "Explorer",
       cb: () => {
@@ -261,19 +262,11 @@ function StartMenu() {
         createWindow({
           title: "Settings",
           program: { type: "settings" },
+          size: { width: 440, height: 520 },
         });
       },
     },
-    {
-      label: "Display",
-      cb: () => {
-        createWindow({
-          title: "Display",
-          program: { type: "display" },
-          size: { width: 360, height: 280 },
-        });
-      },
-    },
+    // Help
     {
       label: "Shortcuts",
       cb: () => {
@@ -298,9 +291,13 @@ function StartMenu() {
         <button
           key={entry.label}
           role="menuitem"
+          // onClick only — dropping the previous onMouseDown/onTouchStart
+          // handlers which fired on pointer-down and made the menu
+          // un-scrollable on mobile (every swipe-attempt registered as
+          // a tap on the first-touched item). A normal click waits for
+          // touchend on the same element, so swipes pass through to the
+          // parent's overflow scroll.
           onClick={entry.cb}
-          onMouseDown={entry.cb}
-          onTouchStart={entry.cb}
         >
           {entry.label}
         </button>

@@ -15,8 +15,6 @@ import { Alert } from "./programs/Alert";
 import { Blog } from "./programs/Blog";
 import { Resume } from "./programs/Resume";
 import { Shortcuts } from "./programs/Shortcuts";
-import { Now } from "./programs/Now";
-import { Display } from "./programs/Display";
 import { Mail } from "./programs/Mail";
 import { Minesweeper } from "./programs/Minesweeper";
 import { Guestbook } from "./programs/Guestbook";
@@ -84,10 +82,6 @@ export const WindowBody = memo(function WindowBody({
       return <Resume />;
     case "shortcuts":
       return <Shortcuts />;
-    case "now":
-      return <Now />;
-    case "display":
-      return <Display />;
     case "mail":
       return <Mail id={id} />;
     case "minesweeper":
