@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
-import { RuntimeLoader } from "@rive-app/canvas";
+import { EventType, RuntimeLoader } from "@rive-app/canvas";
 
 // Self-host the Rive WASM binary to avoid pulling it from unpkg / jsdelivr
 // at runtime. The binary ships as a static asset in /public. When the
@@ -65,20 +65,19 @@ export function RiveInner({
     stateMachines,
   });
 
-  // Loop animations that were authored as one-shot. State machines
-  // usually loop natively, so this only matters for plain timeline
-  // animations like the Rive Fire demo. When Rive fires its "stop"
-  // event we replay immediately. Gated by reducedMotion so visitors
-  // with that preference still only see one cycle (or zero, per the
-  // autoplay:false above). Gated by the loop prop so embeds that
-  // intentionally want one-shot semantics (confetti, checkmarks)
-  // can opt out with `loop={false}`.
+  // Loop animations that were authored as one-shot. When a one-shot
+  // finishes, the playhead sits at the end — calling play() alone
+  // doesn't rewind, so we use reset({autoplay: true}) which rewinds
+  // AND plays in one call. Gated by reducedMotion + the loop prop so
+  // confetti-style embeds can opt out with `loop={false}`.
   useEffect(() => {
     if (!rive || reducedMotion || !loop) return;
-    const restart = () => rive.play();
-    rive.on("stop" as Parameters<typeof rive.on>[0], restart);
+    const restart = () => {
+      rive.reset({ autoplay: true });
+    };
+    rive.on(EventType.Stop, restart);
     return () => {
-      rive.off("stop" as Parameters<typeof rive.off>[0], restart);
+      rive.off(EventType.Stop, restart);
     };
   }, [rive, reducedMotion, loop]);
 
