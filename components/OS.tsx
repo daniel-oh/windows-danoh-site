@@ -37,7 +37,15 @@ export function OS() {
   useEffect(() => {
     const onPointerDown = (e: MouseEvent | TouchEvent) => {
       const target = e.target as HTMLElement;
-      getDefaultStore().set(startMenuOpenAtom, false);
+      // Don't close the Start menu if the touch/click started INSIDE
+      // the menu (user is scrolling its items) or ON the Start button
+      // itself (the button's own click handler toggles open/close).
+      const insideStartSurface = target.closest(
+        "[data-start-menu], [data-start-button]"
+      );
+      if (!insideStartSurface) {
+        getDefaultStore().set(startMenuOpenAtom, false);
+      }
       const windowID = windowsRef.current.find((windowId) => {
         const windowElement = document.getElementById(windowId);
         return windowElement && windowElement.contains(target);
@@ -105,6 +113,7 @@ function TaskBar() {
       <button
         className={styles.startButton}
         aria-label="Start menu"
+        data-start-button
         onClick={(e) => {
           e.stopPropagation();
           setStartMenuOpen((v) => !v);
@@ -152,6 +161,33 @@ function LogoEasterEgg() {
 
 function StartMenu() {
   const { logout } = useActions();
+  // Suppress synthetic click on a button if the user was scrolling
+  // the menu (iOS fires click on touchend even after a small drag).
+  // Track touch start Y, flip a ref on touchmove past a threshold,
+  // then swallow the click in the capture phase.
+  const scrollingRef = useRef(false);
+  const touchStartYRef = useRef(0);
+  const SCROLL_CANCEL_PX = 8;
+
+  const onMenuTouchStart = (e: React.TouchEvent) => {
+    scrollingRef.current = false;
+    touchStartYRef.current = e.touches[0]?.clientY ?? 0;
+  };
+  const onMenuTouchMove = (e: React.TouchEvent) => {
+    const dy = Math.abs(
+      (e.touches[0]?.clientY ?? 0) - touchStartYRef.current
+    );
+    if (dy > SCROLL_CANCEL_PX) scrollingRef.current = true;
+  };
+  const wrap = (cb: () => void) => (e: React.MouseEvent) => {
+    if (scrollingRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      scrollingRef.current = false;
+      return;
+    }
+    cb();
+  };
 
   // Audited + reordered by focus. Welcome anchors the top; everything
   // else flows from "read / create / play / configure" so visitors
@@ -274,35 +310,25 @@ function StartMenu() {
   ];
 
   return (
-    <div className={cx("window", styles.startMenu)} role="menu" aria-label="Start menu">
+    <div
+      className={cx("window", styles.startMenu)}
+      role="menu"
+      aria-label="Start menu"
+      data-start-menu
+      onTouchStart={onMenuTouchStart}
+      onTouchMove={onMenuTouchMove}
+    >
       {entries.map((entry) => (
         <button
           key={entry.label}
           role="menuitem"
-          // onClick only — dropping the previous onMouseDown/onTouchStart
-          // handlers which fired on pointer-down and made the menu
-          // un-scrollable on mobile (every swipe-attempt registered as
-          // a tap on the first-touched item). A normal click waits for
-          // touchend on the same element, so swipes pass through to the
-          // parent's overflow scroll.
-          onClick={entry.cb}
+          onClick={wrap(entry.cb)}
         >
           {entry.label}
         </button>
       ))}
       <form style={{ display: "contents" }}>
-        <button
-          role="menuitem"
-          formAction={logout}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-          onTouchStart={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
+        <button role="menuitem" formAction={logout}>
           Logout
         </button>
       </form>
