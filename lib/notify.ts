@@ -14,26 +14,45 @@ const FROM_EMAIL_DEFAULT = "onboarding@resend.dev";
 export type NotifyPayload = {
   subject: string;
   text: string;
+  /** Sets Resend's reply_to header so a "Reply" on the admin inbox
+   * lands back at the visitor. Only set when a valid email was captured. */
+  replyTo?: string;
 };
 
-export async function notifyAdmin(payload: NotifyPayload): Promise<void> {
+/**
+ * Returns true if the Resend integration is configured. Call sites
+ * can use this to fall back to mailto UX when we can't send server-side.
+ */
+export function canSendEmail(): boolean {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
+/**
+ * Sends via Resend and returns true on 2xx, false otherwise.
+ * Unlike the old fire-and-forget variant, callers that care (e.g. the
+ * contact endpoint) can surface a real error to the user instead of
+ * lying about success.
+ */
+export async function notifyAdmin(payload: NotifyPayload): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return;
+  if (!key) return false;
   const to = process.env.ADMIN_EMAIL || ADMIN_EMAIL_DEFAULT;
   const from = process.env.NOTIFY_FROM_EMAIL || FROM_EMAIL_DEFAULT;
   try {
+    const body: Record<string, unknown> = {
+      from,
+      to: [to],
+      subject: payload.subject,
+      text: payload.text,
+    };
+    if (payload.replyTo) body.reply_to = payload.replyTo;
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${key}`,
         "content-type": "application/json",
       },
-      body: JSON.stringify({
-        from,
-        to: [to],
-        subject: payload.subject,
-        text: payload.text,
-      }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       console.error(
@@ -41,8 +60,11 @@ export async function notifyAdmin(payload: NotifyPayload): Promise<void> {
         res.status,
         await res.text().catch(() => "")
       );
+      return false;
     }
+    return true;
   } catch (err) {
     console.error("[notify] send failed:", err);
+    return false;
   }
 }
