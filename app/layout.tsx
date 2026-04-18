@@ -1,7 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "98.css";
-import "highlight.js/styles/github.css";
+// github-dark, not github — our blog code blocks use a near-black
+// background (#1a1a1a) in both the in-OS Blog window and the standalone
+// /blog/[slug] page. The light github theme ships dark token colors,
+// so on our dark background everything reads as black-on-black. The
+// dark theme's tokens are engineered for this exact contrast.
+import "highlight.js/styles/github-dark.css";
 import "./globals.css";
 import { CSPostHogProvider } from "@/lib/CSPosthogProvider";
 import { APIProvider } from "@/lib/api/APIProvider";
