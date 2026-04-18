@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
@@ -17,7 +16,7 @@ export async function POST(req: Request) {
   const stripe = getStripe();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!stripe || !webhookSecret) {
-    return NextResponse.json(
+    return Response.json(
       { error: "Stripe webhook is not configured." },
       { status: 503 }
     );
@@ -32,7 +31,7 @@ export async function POST(req: Request) {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
     console.error("Stripe webhook signature verification failed:", err);
-    return NextResponse.json(
+    return Response.json(
       { error: "Webhook signature verification failed" },
       { status: 400 }
     );
@@ -44,7 +43,7 @@ export async function POST(req: Request) {
     const client = await createClient();
 
     if (!userId) {
-      return NextResponse.json({ error: "User ID not found" }, { status: 400 });
+      return Response.json({ error: "User ID not found" }, { status: 400 });
     }
 
     if (userId) {
@@ -57,7 +56,7 @@ export async function POST(req: Request) {
 
       if (error) {
         console.error("Error updating user tokens:", error);
-        return NextResponse.json(
+        return Response.json(
           { error: "Error updating user tokens" },
           { status: 500 }
         );
@@ -65,5 +64,5 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ received: true });
+  return Response.json({ received: true });
 }
