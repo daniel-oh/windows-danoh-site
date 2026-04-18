@@ -1,12 +1,33 @@
 "use client";
 
+import { useEffect } from "react";
+import posthog from "posthog-js";
+
 export default function GlobalError({
-  error: _error,
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  // Report to PostHog so we find out about client crashes without
+  // depending on visitors flagging them. Wrapped in try/catch because
+  // the boundary must never throw its own error. If PostHog wasn't
+  // initialized (local dev, or the init itself is what crashed) the
+  // capture call is a no-op.
+  useEffect(() => {
+    try {
+      posthog.capture("client_error", {
+        message: error.message,
+        digest: error.digest,
+        stack: error.stack,
+        path: typeof window !== "undefined" ? window.location.pathname : null,
+      });
+    } catch {
+      // swallow — telemetry isn't allowed to break the fallback UI
+    }
+  }, [error]);
+
   return (
     <html>
       <body
