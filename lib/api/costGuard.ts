@@ -24,10 +24,7 @@
 
 import { getClientIP } from "@/lib/api/clientIP";
 import { hasOwnAnthropicKey } from "@/lib/api/hasOwnAnthropicKey";
-import {
-  createRateLimitBucket,
-  type Bucket,
-} from "@/lib/api/rateLimit";
+import { createRateLimitBucket } from "@/lib/api/rateLimit";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -40,9 +37,10 @@ const GLOBAL_DAILY_DEFAULT = 500;
 const ipBucket = createRateLimitBucket();
 const visitorHourBucket = createRateLimitBucket();
 const visitorDayBucket = createRateLimitBucket();
-
-// Global bucket is a single-entry Map that resets at UTC midnight.
-const globalBucket = new Map<string, Bucket>();
+// Same bucket pattern as the others; keyed by the UTC day string so
+// the count resets naturally at midnight. Yesterday's entry ages out
+// via the bucket's own window check next time any request lands.
+const globalBucket = createRateLimitBucket();
 
 function globalCap(): number {
   const raw = process.env.GLOBAL_AI_DAILY_CAP;
@@ -53,20 +51,6 @@ function globalCap(): number {
 
 function todayKey(): string {
   return new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
-}
-
-function checkGlobalDaily(): { ok: boolean; count: number } {
-  const key = todayKey();
-  // Drop entries for any previous day so the map stays O(1).
-  for (const k of globalBucket.keys()) {
-    if (k !== key) globalBucket.delete(k);
-  }
-  const cur = globalBucket.get(key);
-  const cap = globalCap();
-  if (cur && cur.count >= cap) return { ok: false, count: cur.count };
-  if (!cur) globalBucket.set(key, { count: 1, firstAt: Date.now() });
-  else cur.count++;
-  return { ok: true, count: (globalBucket.get(key)?.count ?? 0) };
 }
 
 // Visitor ID pulled from a cookie mirrored from localStorage. Name
@@ -117,8 +101,8 @@ export async function costGuard(req: Request): Promise<Response | null> {
     }
   }
 
-  const global = checkGlobalDaily();
-  if (!global.ok) {
+  if (globalBucket.tripAndRecord(todayKey(), globalCap(), DAY_MS)) {
+    console.warn("[costGuard] global daily cap reached");
     return new Response(
       JSON.stringify({
         error:
