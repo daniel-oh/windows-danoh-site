@@ -1,23 +1,15 @@
 import { query, hasDatabase } from "@/lib/db";
 import { getClientIP } from "@/lib/api/clientIP";
+import { createRateLimitBucket } from "@/lib/api/rateLimit";
 
 // Per-IP rate limit to make it harder to inflate the counter by forging
 // visitor_ids client-side.
 const RL_MAX = 30;
 const RL_WINDOW_MS = 10 * 60 * 1000;
-type Attempt = { count: number; firstAt: number };
-const attempts = new Map<string, Attempt>();
+const bucket = createRateLimitBucket();
 
 function rateLimit(req: Request): boolean {
-  const ip = getClientIP(req);
-  const now = Date.now();
-  const prev = attempts.get(ip);
-  if (prev && now - prev.firstAt > RL_WINDOW_MS) attempts.delete(ip);
-  const cur = attempts.get(ip);
-  if (cur && cur.count >= RL_MAX) return true;
-  if (!cur) attempts.set(ip, { count: 1, firstAt: now });
-  else cur.count++;
-  return false;
+  return bucket.tripAndRecord(getClientIP(req), RL_MAX, RL_WINDOW_MS);
 }
 
 function isValidVisitor(v: unknown): v is string {

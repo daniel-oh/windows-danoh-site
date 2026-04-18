@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getCheapestModel } from "@/ai/client";
 import { notifyAdmin } from "@/lib/notify";
 import { getClientIP } from "@/lib/api/clientIP";
+import { createLastSeenBucket, createRateLimitBucket } from "@/lib/api/rateLimit";
 
 const MAX_NAME = 40;
 const MAX_MESSAGE = 280;
@@ -28,21 +29,9 @@ const VISITOR_LIMIT = 5;
 const VISITOR_WINDOW_MS = 24 * 60 * 60 * 1000;
 const VISITOR_COOLDOWN_MS = 30 * 1000; // min gap between submissions
 
-type Bucket = { count: number; firstAt: number };
-const ipBuckets = new Map<string, Bucket>();
-const visitorBuckets = new Map<string, Bucket>();
-const visitorLastAt = new Map<string, number>();
-
-function trip(map: Map<string, Bucket>, key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now();
-  const prev = map.get(key);
-  if (prev && now - prev.firstAt > windowMs) map.delete(key);
-  const cur = map.get(key);
-  if (cur && cur.count >= limit) return true;
-  if (!cur) map.set(key, { count: 1, firstAt: now });
-  else cur.count++;
-  return false;
-}
+const ipBucket = createRateLimitBucket();
+const visitorBucket = createRateLimitBucket();
+const visitorLastAt = createLastSeenBucket(VISITOR_COOLDOWN_MS);
 
 // AI moderation -------------------------------------------------------
 let modClient: Anthropic | null = null;
@@ -169,13 +158,13 @@ export async function POST(req: Request) {
     return Response.json({ error: "Message is required" }, { status: 400 });
   }
 
-  if (trip(ipBuckets, ip, IP_LIMIT, IP_WINDOW_MS)) {
+  if (ipBucket.tripAndRecord(ip, IP_LIMIT, IP_WINDOW_MS)) {
     return Response.json(
       { error: "Too many submissions from your network. Try again later." },
       { status: 429 }
     );
   }
-  if (trip(visitorBuckets, visitorId, VISITOR_LIMIT, VISITOR_WINDOW_MS)) {
+  if (visitorBucket.tripAndRecord(visitorId, VISITOR_LIMIT, VISITOR_WINDOW_MS)) {
     return Response.json(
       { error: "You've reached the daily submission limit." },
       { status: 429 }
