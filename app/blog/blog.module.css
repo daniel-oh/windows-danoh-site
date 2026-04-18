@@ -52,6 +52,12 @@
 
 .body {
   padding: 24px 28px 32px;
+  /* Hard guardrail against any long unbroken string — emails, URLs,
+   * code identifiers, third-party brand tokens in /privacy — pushing
+   * content past the shell on narrow viewports. "anywhere" only
+   * kicks in when a normal break is impossible, so prose flow is
+   * unaffected on desktop. */
+  overflow-wrap: anywhere;
 }
 
 .tagline {
@@ -436,6 +442,20 @@
   }
   .body {
     padding: 16px 14px 20px;
+  }
+  /* Lists on narrow viewports shed their default ~40 px left padding
+   * so bullet content doesn't get pushed into the right-hand edge,
+   * which used to make the /privacy bullet text feel clipped. */
+  .body ul,
+  .body ol {
+    padding-left: 22px;
+  }
+  /* Inline code in prose needs explicit wrap — long identifiers like
+   * VISITOR_LIMIT_MS are indivisible to overflow-wrap: anywhere until
+   * we tell it the pill is allowed to break. */
+  .body code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   .postHeading {
     font-size: 22px;
