@@ -22,11 +22,22 @@
   display: flex;
   flex-direction: column;
   animation: startMenuOpenAnimation 120ms ease-out both;
+  /* Don't let the menu exceed the viewport — make it scrollable if
+   * there are more items than rows. touch-action: pan-y tells iOS the
+   * menu accepts vertical scrolling so swipes don't register as taps
+   * on the nearest button. */
+  max-height: calc(100dvh - var(--taskbar-height) - 16px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 
   & button {
     box-shadow: none;
     padding: 16px;
     text-align: left;
+    flex-shrink: 0;
   }
 
   & button:hover {
@@ -101,7 +112,10 @@
   }
 
   .startMenu {
-    width: 150px;
+    width: 170px;
+  }
+  .startMenu button {
+    padding: 12px 14px;
   }
 
   .startButton {

@@ -28,8 +28,6 @@ export type Program =
   | { type: "blog" }
   | { type: "resume" }
   | { type: "shortcuts" }
-  | { type: "now" }
-  | { type: "display" }
   | { type: "mail" }
   | { type: "minesweeper" }
   | { type: "guestbook" }
