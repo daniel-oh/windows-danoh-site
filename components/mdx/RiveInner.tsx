@@ -27,10 +27,12 @@ export type RiveProps = {
   /** Optional state-machine name to trigger (passed through to useRive). */
   stateMachines?: string | string[];
   /**
-   * When true (default), one-shot animations are restarted on stop so
-   * decorative embeds keep playing. Pass `loop={false}` for animations
-   * that are meant to play once — confetti bursts, checkmarks, reveals
-   * — so the author's intent is preserved.
+   * When true, one-shot animations are restarted on stop so decorative
+   * embeds keep playing. Default is false — the .riv file's authored
+   * Loop / One-shot flag is respected (matching how <video>, <audio>,
+   * and CSS animations all default to the asset's own playback mode).
+   * Pass `loop` on ambient decorative embeds where one-shot would read
+   * as "broken".
    */
   loop?: boolean;
 };
@@ -42,7 +44,7 @@ export function RiveInner({
   caption,
   alt,
   stateMachines,
-  loop = true,
+  loop = false,
 }: RiveProps) {
   // Respect prefers-reduced-motion — skip autoplay if the visitor has
   // it set. Readers can still interact with the canvas if the Rive
