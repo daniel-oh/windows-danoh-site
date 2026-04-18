@@ -26,6 +26,13 @@ export type RiveProps = {
   alt?: string;
   /** Optional state-machine name to trigger (passed through to useRive). */
   stateMachines?: string | string[];
+  /**
+   * When true (default), one-shot animations are restarted on stop so
+   * decorative embeds keep playing. Pass `loop={false}` for animations
+   * that are meant to play once — confetti bursts, checkmarks, reveals
+   * — so the author's intent is preserved.
+   */
+  loop?: boolean;
 };
 
 export function RiveInner({
@@ -35,6 +42,7 @@ export function RiveInner({
   caption,
   alt,
   stateMachines,
+  loop = true,
 }: RiveProps) {
   // Respect prefers-reduced-motion — skip autoplay if the visitor has
   // it set. Readers can still interact with the canvas if the Rive
@@ -60,15 +68,17 @@ export function RiveInner({
   // animations like the Rive Fire demo. When Rive fires its "stop"
   // event we replay immediately. Gated by reducedMotion so visitors
   // with that preference still only see one cycle (or zero, per the
-  // autoplay:false above).
+  // autoplay:false above). Gated by the loop prop so embeds that
+  // intentionally want one-shot semantics (confetti, checkmarks)
+  // can opt out with `loop={false}`.
   useEffect(() => {
-    if (!rive || reducedMotion) return;
+    if (!rive || reducedMotion || !loop) return;
     const restart = () => rive.play();
     rive.on("stop" as Parameters<typeof rive.on>[0], restart);
     return () => {
       rive.off("stop" as Parameters<typeof rive.off>[0], restart);
     };
-  }, [rive, reducedMotion]);
+  }, [rive, reducedMotion, loop]);
 
   const containerStyle: CSSProperties = {
     margin: "16px 0",
