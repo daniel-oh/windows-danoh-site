@@ -23,12 +23,11 @@
 // the frequency cap is still a useful backup to the token balance.
 
 import { getClientIP } from "@/lib/api/clientIP";
+import { hasOwnAnthropicKey } from "@/lib/api/hasOwnAnthropicKey";
 import {
   createRateLimitBucket,
   type Bucket,
 } from "@/lib/api/rateLimit";
-
-const ANTHROPIC_KEY_PATTERN = /^sk-ant-[A-Za-z0-9_-]{80,}$/;
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -70,31 +69,6 @@ function checkGlobalDaily(): { ok: boolean; count: number } {
   return { ok: true, count: (globalBucket.get(key)?.count ?? 0) };
 }
 
-function isValidOwnApiKey(key: unknown): key is string {
-  return typeof key === "string" && ANTHROPIC_KEY_PATTERN.test(key);
-}
-
-// Accepts both the GET ?settings=... query-string shape and the POST
-// { settings: { apiKey } } body shape used by the AI endpoints.
-async function hasOwnApiKey(req: Request): Promise<boolean> {
-  try {
-    const url = new URL(req.url);
-    const settingsParam = url.searchParams.get("settings");
-    if (settingsParam) {
-      const parsed = JSON.parse(decodeURIComponent(settingsParam));
-      if (isValidOwnApiKey(parsed?.apiKey)) return true;
-    }
-    if (req.method === "POST") {
-      const cloned = req.clone();
-      const body = await cloned.json().catch(() => null);
-      if (isValidOwnApiKey(body?.settings?.apiKey)) return true;
-    }
-  } catch {
-    /* ignore parse errors — treat as no key */
-  }
-  return false;
-}
-
 // Visitor ID pulled from a cookie mirrored from localStorage. Name
 // matches the client-side VISITOR_KEY in lib/visitorId.ts; mirroring
 // is a one-liner on the client (document.cookie) but until that ships
@@ -124,7 +98,7 @@ function reject(reason: string, retryHint: string): Response {
 
 export async function costGuard(req: Request): Promise<Response | null> {
   // Visitor bringing their own key pays their own bill — skip.
-  if (await hasOwnApiKey(req)) return null;
+  if (await hasOwnAnthropicKey(req)) return null;
 
   const ip = getClientIP(req);
   if (ipBucket.tripAndRecord(ip, PER_IP_HOURLY, HOUR_MS)) {

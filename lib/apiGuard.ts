@@ -2,47 +2,22 @@ import { cookies } from "next/headers";
 import { query, hasDatabase } from "@/lib/db";
 import { isLocal } from "@/lib/isLocal";
 import { getCodeHash } from "@/lib/accessCode";
+import { hasOwnAnthropicKey } from "@/lib/api/hasOwnAnthropicKey";
 
 const MAX_GENERATIONS_PER_HOUR = 20;
-
-// Anthropic keys start with sk-ant- and are 90+ chars
-const ANTHROPIC_KEY_PATTERN = /^sk-ant-[A-Za-z0-9_-]{80,}$/;
-
-function isValidApiKey(key: unknown): boolean {
-  return typeof key === "string" && ANTHROPIC_KEY_PATTERN.test(key);
-}
-
-async function checkForOwnApiKey(req: Request): Promise<boolean> {
-  try {
-    const url = new URL(req.url);
-    // Check GET request (program generation)
-    const settingsParam = url.searchParams.get("settings");
-    if (settingsParam) {
-      const parsed = JSON.parse(decodeURIComponent(settingsParam));
-      if (isValidApiKey(parsed?.apiKey)) return true;
-    }
-    // Check POST request body (chat, help, name, icon)
-    if (req.method === "POST") {
-      const cloned = req.clone();
-      const body = await cloned.json().catch(() => null);
-      if (isValidApiKey(body?.settings?.apiKey)) return true;
-    }
-  } catch { /* ignore parse errors */ }
-  return false;
-}
 
 export async function checkAccess(
   req: Request,
   endpoint: string
 ): Promise<Response | null> {
-  // Skip protection entirely if not in local mode or no database configured
+  // Skip protection entirely if not in local mode or no database configured.
+  // Prod cost ceilings live in costGuard — see lib/api/costGuard.ts.
   if (!isLocal() || !hasDatabase()) {
     return null;
   }
 
-  // Bypass access code if user provides their own API key
-  const hasOwnKey = await checkForOwnApiKey(req);
-  if (hasOwnKey) {
+  // Bypass access code if visitor provides their own Anthropic API key.
+  if (await hasOwnAnthropicKey(req)) {
     return null;
   }
 
