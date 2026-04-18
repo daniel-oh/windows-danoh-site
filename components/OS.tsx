@@ -12,7 +12,7 @@ import { createWindow } from "@/lib/createWindow";
 import { Window } from "./Window";
 import { startMenuOpenAtom } from "@/state/startMenu";
 import { Desktop } from "./Desktop";
-import { DEFAULT_THEME, DESKTOP_URL_KEY, THEME_KEY, registryAtom } from "@/state/registry";
+import { DESKTOP_URL_KEY, registryAtom } from "@/state/registry";
 import { ContextMenu } from "./ContextMenu";
 import { useActions } from "@/lib/actions/ActionsProvider";
 import Image from "next/image";
@@ -28,19 +28,7 @@ export function OS() {
   const setFocusedWindow = useSetAtom(focusedWindowAtom);
   const registry = useAtomValue(registryAtom);
 
-  const theme = registry[THEME_KEY] === "dark" ? "dark" : DEFAULT_THEME;
-  const publicDesktopUrl =
-    registry[DESKTOP_URL_KEY] ?? (theme === "dark" ? "" : "/bg.jpg");
-
-  // Apply theme at the <html> level so our scoped dark-mode CSS overrides fire.
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.dataset.theme = "dark";
-    } else {
-      delete root.dataset.theme;
-    }
-  }, [theme]);
+  const publicDesktopUrl = registry[DESKTOP_URL_KEY] ?? "/bg.jpg";
 
   // Keep latest windows in a ref so listeners don't need to resubscribe
   const windowsRef = useRef(windows);
