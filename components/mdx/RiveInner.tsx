@@ -68,15 +68,32 @@ export function RiveInner({
   // Loop animations that were authored as one-shot. When a one-shot
   // finishes, the playhead sits at the end — calling play() alone
   // doesn't rewind, so we use reset({autoplay: true}) which rewinds
-  // AND plays in one call. Gated by reducedMotion + the loop prop so
-  // confetti-style embeds can opt out with `loop={false}`.
+  // AND plays in one call.
+  //
+  // Reset internally calls stop() which synchronously fires the Stop
+  // event. If we're still subscribed when that happens, our listener
+  // re-enters reset → stack overflow. Same hazard fires on unmount:
+  // Rive's cleanupInstances calls stop(), fires Stop, and if we're
+  // still subscribed we'd try to reset a torn-down instance.
+  //
+  // Mitigation: unsubscribe before reset, re-subscribe on the next
+  // microtask, and hard-gate on a `mounted` flag so the cleanup path
+  // can't trip the listener.
   useEffect(() => {
     if (!rive || reducedMotion || !loop) return;
+    let mounted = true;
     const restart = () => {
+      if (!mounted) return;
+      rive.off(EventType.Stop, restart);
       rive.reset({ autoplay: true });
+      queueMicrotask(() => {
+        if (!mounted) return;
+        rive.on(EventType.Stop, restart);
+      });
     };
     rive.on(EventType.Stop, restart);
     return () => {
+      mounted = false;
       rive.off(EventType.Stop, restart);
     };
   }, [rive, reducedMotion, loop]);
