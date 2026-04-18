@@ -316,6 +316,12 @@ function StartMenu() {
         window.open("https://forms.gle/ZqG1eLbgBtwadLe4A", "_blank");
       },
     },
+    {
+      label: "Privacy",
+      cb: () => {
+        window.open("/privacy", "_blank");
+      },
+    },
   ];
 
   return (
