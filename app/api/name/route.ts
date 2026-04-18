@@ -8,11 +8,14 @@ import { isLocal } from "@/lib/isLocal";
 
 import { log } from "@/lib/log";
 import { checkAccess } from "@/lib/apiGuard";
+import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "name");
   if (denied) return denied;
+  const capped = await costGuard(req);
+  if (capped) return capped;
   const user = await getUser();
   if (!isLocal()) {
     if (!user) {

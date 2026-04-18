@@ -11,12 +11,15 @@ import { canGenerate } from "@/server/usage/canGenerate";
 import { insertGeneration } from "@/server/usage/insertGeneration";
 import { createPaymentRequiredResponse } from "@/server/paymentRequiredResponse";
 import { checkAccess } from "@/lib/apiGuard";
+import { costGuard } from "@/lib/api/costGuard";
 import { sanitizeWithSystem } from "@/lib/sanitizeMessages";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "help");
   if (denied) return denied;
+  const capped = await costGuard(req);
+  if (capped) return capped;
   const body = await req.json();
   const settings = await getSettingsFromJSON(body);
   const user = await getUser();
