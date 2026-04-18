@@ -4,34 +4,54 @@ import styles from "./logout.module.css";
 
 export const metadata: Metadata = {
   title: "Logged off · Daniel Oh",
-  description: "You are safely logged off from danoh.com.",
+  description: "Session terminated. You are signed out of danoh.com.",
   robots: { index: false, follow: false },
 };
 
-// Classic Win95 "It is now safe to turn off your computer" screen,
-// re-dressed for danoh.com. Amber-on-black is the part that reads as
-// nostalgia at a glance; the CTA below keeps it functional for
-// visitors who actually want to do something next.
+// Matrix-style terminal farewell. Phosphor green on black, staggered
+// line reveals, a blinking cursor on the final line, and a subtle
+// scanline overlay for CRT flavor. Full accessible fallback: the
+// prefers-reduced-motion path paints every line instantly at the
+// start, so screen-reader and motion-sensitive visitors get the
+// whole message without any animation timing.
 export default function LoggedOff() {
   return (
     <div className={styles.root}>
-      <div className={styles.screen}>
-        <h1 className={styles.headline}>
-          It&apos;s now safe to turn off your computer.
-        </h1>
-        <p className={styles.sub}>
-          You&apos;ve been signed out of danoh.com.
-        </p>
-        <div className={styles.actions}>
+      <div className={styles.scanlines} aria-hidden="true" />
+      <main className={styles.terminal} aria-live="polite">
+        <div className={`${styles.line} ${styles.l1}`}>
+          <span className={styles.prompt}>$</span>{" "}
+          <span>logout</span>
+        </div>
+        <div className={`${styles.line} ${styles.l2}`}>
+          <span className={styles.angle}>&gt;</span>{" "}
+          <span>disconnecting from danoh.com...</span>
+        </div>
+        <div className={`${styles.line} ${styles.l3}`}>
+          <span className={styles.angle}>&gt;</span>{" "}
+          <span>session terminated.</span>
+        </div>
+        <div className={`${styles.line} ${styles.l4}`}>
+          <span className={styles.angle}>&gt;</span>{" "}
+          <span>ready for next login</span>
+          <span className={styles.cursor} aria-hidden="true">
+            _
+          </span>
+        </div>
+
+        <div className={`${styles.actions} ${styles.l5}`}>
           <Link href="/" className={styles.primary}>
-            Restart
+            [ Restart ]
           </Link>
           <Link href="/blog" className={styles.secondary}>
-            Read the blog
+            [ Browse Archive ]
           </Link>
         </div>
-        <p className={styles.signature}>danoh.com</p>
-      </div>
+
+        <p className={`${styles.signature} ${styles.l6}`}>
+          danoh.com // daniel oh
+        </p>
+      </main>
     </div>
   );
 }

@@ -1,100 +1,190 @@
-/* Win95 "safe to turn off" screen. Amber on black, center-of-tube
- * framing, slight inner glow. CTAs sit below the headline in the same
- * color palette so the whole thing reads as one intentional screen
- * rather than a dialog floating on void. */
+/* Matrix-style hacker-terminal farewell. Phosphor green on black,
+ * staggered reveal, CRT scanlines, a blinking cursor. Accessibility
+ * is the load-bearing part: prefers-reduced-motion skips every
+ * animation so visitors who disable motion see the full message
+ * immediately, and contrast is engineered to clear WCAG AAA
+ * (phosphor green on black ≈ 15:1). */
+
+:root {
+  --term-bg: #000;
+  --term-fg: #33ff66; /* Phosphor green; AAA on black. */
+  --term-fg-dim: #1fa347; /* ~7:1, comfortably AA. */
+  --term-accent: #00ff6a;
+  --term-prompt: #5eff8e;
+}
 
 .root {
+  position: relative;
   min-height: 100dvh;
-  background: #000;
+  background: var(--term-bg);
+  color: var(--term-fg);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
-  font-family: "Lucida Console", "Courier New", Consolas, monospace;
-  /* Soft vignette pulls focus to center — the CRT feel. */
-  background:
-    radial-gradient(
-      ellipse at center,
-      #0a0a0a 0%,
-      #000 65%,
-      #000 100%
-    );
-  /* Kill the blue tap-flash iOS Safari paints over amber when you
-   * mash the buttons — reads as a bug against this palette. */
+  padding: 28px 20px;
+  font-family: "Fira Code", "JetBrains Mono", "Menlo", "Consolas",
+    "Lucida Console", monospace;
+  overflow: hidden;
+  /* Kill the blue tap-flash iOS paints over green links. */
   -webkit-tap-highlight-color: transparent;
 }
 
-.screen {
-  max-width: 520px;
+/* Subtle scanlines over the whole screen — the CRT texture. Pointer
+ * events off so it can't swallow clicks. z-index sits above background
+ * but below the terminal content. */
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(51, 255, 102, 0.04) 0,
+    rgba(51, 255, 102, 0.04) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  /* Soft flicker — animate only if motion is allowed. */
+  animation: flicker 3.6s infinite steps(2);
+}
+
+@keyframes flicker {
+  0%,
+  95% {
+    opacity: 0.9;
+  }
+  96% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+.terminal {
+  position: relative;
+  z-index: 2;
   width: 100%;
-  text-align: center;
-  color: #ffb000; /* Amber phosphor, the iconic Win9x shutdown hue */
-  /* Subtle glow — evokes the CRT bloom without overdoing it. */
-  text-shadow: 0 0 1px rgba(255, 176, 0, 0.9);
-}
-
-.headline {
-  font-size: 22px;
-  line-height: 1.35;
-  letter-spacing: 0.5px;
-  margin: 0 0 14px 0;
-}
-
-.sub {
-  font-size: 14px;
-  line-height: 1.5;
-  color: #c08000;
-  margin: 0 0 28px 0;
+  max-width: 560px;
+  font-size: 15px;
+  line-height: 1.7;
   letter-spacing: 0.3px;
+  /* Soft green glow — the CRT bloom. */
+  text-shadow: 0 0 1px rgba(51, 255, 102, 0.75);
+}
+
+.line {
+  margin: 0;
+  white-space: pre-wrap;
+  /* Default state for the reveal: invisible, nudged left. The staggered
+   * .l1–.l6 rules below animate each back in sequence. */
+  opacity: 0;
+  transform: translateX(-4px);
+  animation: revealLine 0.35s ease-out forwards;
+}
+
+.prompt {
+  color: var(--term-prompt);
+  font-weight: 700;
+}
+
+.angle {
+  color: var(--term-fg-dim);
+}
+
+.cursor {
+  display: inline-block;
+  width: 0.6ch;
+  margin-left: 2px;
+  animation: blink 1s steps(2) infinite;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes revealLine {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Staggered reveal. Each line fires slightly later than the last so
+ * the sequence reads like a terminal response rather than a full page
+ * painting at once. */
+.l1 {
+  animation-delay: 120ms;
+}
+.l2 {
+  animation-delay: 640ms;
+}
+.l3 {
+  animation-delay: 1120ms;
+}
+.l4 {
+  animation-delay: 1560ms;
+}
+.l5 {
+  animation-delay: 2000ms;
+}
+.l6 {
+  animation-delay: 2300ms;
 }
 
 .actions {
   display: flex;
-  gap: 10px;
-  justify-content: center;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 40px;
+  margin: 22px 0 22px 0;
+  opacity: 0;
+  transform: translateX(-4px);
+  animation: revealLine 0.35s ease-out forwards;
 }
 
 .primary,
 .secondary {
   display: inline-block;
-  padding: 10px 22px;
+  padding: 10px 18px;
   font-size: 14px;
   min-height: 44px;
-  line-height: 1.5;
+  line-height: 1.6;
   font-family: inherit;
-  letter-spacing: 0.5px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
   text-decoration: none;
+  color: var(--term-accent);
+  background: transparent;
+  border: 1px solid var(--term-accent);
+  transition: background 120ms ease, color 120ms ease;
   cursor: pointer;
-  color: #000;
-  background: #ffb000;
-  border: 2px solid #ffb000;
-  transition: transform 80ms ease;
+}
+
+.primary {
+  background: rgba(0, 255, 106, 0.12);
 }
 
 .primary:hover,
-.primary:focus-visible {
-  background: #ffc940;
-  border-color: #ffc940;
-  outline: none;
-}
-
-.primary:active {
-  transform: translateY(1px);
-}
-
-.secondary {
-  background: transparent;
-  color: #ffb000;
-}
-
+.primary:focus-visible,
 .secondary:hover,
 .secondary:focus-visible {
-  background: rgba(255, 176, 0, 0.12);
+  background: var(--term-accent);
+  color: #000;
   outline: none;
 }
 
+.primary:active,
 .secondary:active {
   transform: translateY(1px);
 }
@@ -102,23 +192,44 @@
 .signature {
   font-size: 11px;
   letter-spacing: 2px;
-  /* Dim amber but still AA-readable on black (~4.5:1). */
-  color: #a87a00;
+  color: var(--term-fg-dim);
   margin: 0;
   text-transform: uppercase;
+  opacity: 0;
+  animation: revealLine 0.35s ease-out forwards;
 }
 
 @media (max-width: 600px) {
-  .headline {
-    font-size: 18px;
-  }
-  .sub {
-    font-size: 13px;
-    margin-bottom: 22px;
+  .terminal {
+    font-size: 14px;
+    line-height: 1.65;
   }
   .actions {
     flex-direction: column;
     align-items: stretch;
-    margin-bottom: 28px;
+  }
+  .primary,
+  .secondary {
+    text-align: center;
+  }
+}
+
+/* Accessibility floor: if the visitor has reduced-motion enabled,
+ * paint everything instantly. No blinking cursor, no scanline
+ * flicker, no staggered reveal. The content still reads the same. */
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .actions,
+  .signature {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .cursor {
+    animation: none;
+    opacity: 1;
+  }
+  .scanlines {
+    animation: none;
   }
 }
