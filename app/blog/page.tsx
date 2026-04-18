@@ -4,12 +4,12 @@ import { sortedPosts } from "@/content/blog/posts";
 import styles from "./blog.module.css";
 
 export const metadata: Metadata = {
-  title: "Blog — Daniel Oh",
+  title: "Blog · Daniel Oh",
   description:
     "Writing from Daniel Oh on AI, craft, and the work of building things that last.",
   alternates: { canonical: "https://danoh.com/blog" },
   openGraph: {
-    title: "Blog — Daniel Oh",
+    title: "Blog · Daniel Oh",
     description:
       "Writing from Daniel Oh on AI, craft, and the work of building things that last.",
     url: "https://danoh.com/blog",
@@ -22,7 +22,7 @@ export default function BlogIndex() {
     <div className={styles.page}>
       <div className={styles.shell}>
         <div className={styles.titleBar}>
-          <div className={styles.titleBarText}>Blog — danoh.com</div>
+          <div className={styles.titleBarText}>Blog · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop ↗
           </Link>

@@ -23,13 +23,13 @@ function getPost(slug: string): BlogPost | undefined {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = getPost(slug);
-  if (!post) return { title: "Post not found — Daniel Oh" };
+  if (!post) return { title: "Post not found · Daniel Oh" };
   const url = `https://danoh.com/blog/${post.slug}`;
   const ogImages = post.image
     ? [{ url: post.image, alt: post.imageAlt || post.title }]
     : undefined;
   return {
-    title: `${post.title} — Daniel Oh`,
+    title: `${post.title} · Daniel Oh`,
     description: post.summary,
     keywords: post.tags,
     alternates: { canonical: url },
@@ -82,7 +82,7 @@ export default async function Post({ params }: Props) {
       />
       <div className={styles.shell}>
         <div className={styles.titleBar}>
-          <div className={styles.titleBarText}>{post.title} — danoh.com</div>
+          <div className={styles.titleBarText}>{post.title} · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop ↗
           </Link>

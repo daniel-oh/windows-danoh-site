@@ -254,7 +254,7 @@ const contentByKey = {
           <h4 style={{ margin: "0 0 4px" }}>Apr 17, 2026</h4>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>MDX, new programs, mobile polish</p>
           <p style={{ margin: "0 0 8px" }}>
-            Blog now runs on MDX — posts are individual{" "}
+            Blog now runs on MDX. Posts are individual{" "}
             <code>.mdx</code> files that can embed live React components.
             The new <em>Rive in MDX</em> post has an animation running
             inline. Feed also picked up RSS, anonymous 👍 ❤️ 🔥 reactions,
@@ -264,18 +264,18 @@ const contentByKey = {
             Four new programs on the desktop: Minesweeper (pirate-themed),
             an AI-moderated Guestbook, Mail, and a Recycle Bin. Welcome
             gained a classic hit counter. Any generated app can be
-            shared over URL — <code>danoh.com/?run=a+snake+game</code>{" "}
-            opens Run and builds it automatically.
+            shared over URL. Try <code>danoh.com/?run=a+snake+game</code>{" "}
+            to open Run with the prompt pre-filled.
           </p>
           <p style={{ margin: "0 0 12px" }}>
             Mobile audited top to bottom: proper 44px touch targets on
-            forms, scrollable Start menu, fixed Minesweeper's fat-finger
-            problem, tighter window chrome. Security tightened at the
-            same time (iframe registry namespaced per program, auth
-            rate-limited, CSP enforced, Guestbook gets a bot honeypot +
-            30s cooldown). One thing that didn&apos;t land: a dark
-            theme. Colors clashed with the 98 palette and visibility
-            suffered — pulled it rather than ship something
+            forms, scrollable Start menu, fixed Minesweeper&apos;s
+            fat-finger problem, tighter window chrome. Security tightened
+            at the same time (iframe registry namespaced per program,
+            auth rate-limited, CSP enforced, Guestbook gets a bot
+            honeypot + 30s cooldown). One thing that didn&apos;t land: a
+            dark theme. Colors clashed with the 98 palette and visibility
+            suffered, so I pulled it rather than ship something
             half-baked.
           </p>
 

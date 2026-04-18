@@ -187,7 +187,7 @@ export async function POST(req: Request) {
       (VISITOR_COOLDOWN_MS - (Date.now() - lastAt)) / 1000
     );
     return Response.json(
-      { error: `Easy there — try again in ${waitSec}s.` },
+      { error: `Easy there. Try again in ${waitSec}s.` },
       { status: 429 }
     );
   }

@@ -9,12 +9,12 @@ import { APIProvider } from "@/lib/api/APIProvider";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Daniel Oh — Engineer who designs. Operator who writes.",
+  title: "Daniel Oh · Engineer who designs. Operator who writes.",
   description:
     "AI, craft, and the work of building things that last. Personal site of Daniel Oh.",
   metadataBase: new URL("https://danoh.com"),
   openGraph: {
-    title: "Daniel Oh — Engineer who designs. Operator who writes.",
+    title: "Daniel Oh · Engineer who designs. Operator who writes.",
     description:
       "AI, craft, and the work of building things that last. Personal site of Daniel Oh.",
     url: "https://danoh.com",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Daniel Oh — Engineer who designs. Operator who writes.",
+    title: "Daniel Oh · Engineer who designs. Operator who writes.",
     description:
       "AI, craft, and the work of building things that last. Personal site of Daniel Oh.",
     images: ["/og-image.png"],
@@ -60,7 +60,7 @@ export default function RootLayout({
         <link
           rel="alternate"
           type="application/rss+xml"
-          title="Daniel Oh — Blog"
+          title="Daniel Oh · Blog"
           href="/feed.xml"
         />
         <script

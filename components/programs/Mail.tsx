@@ -37,7 +37,7 @@ export function Mail({ id }: { id: string }) {
         }}
       >
         <p style={{ margin: 0 }}>
-          Email isn&apos;t set up for this inbox — but I&apos;d love to hear
+          Email isn&apos;t set up for this inbox, but I&apos;d love to hear
           from you.
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -73,7 +73,7 @@ export function Mail({ id }: { id: string }) {
       }}
     >
       <p style={{ fontSize: 12, color: "#555", margin: 0 }}>
-        New Message — opens in your default mail client.
+        New Message. Opens in your default mail client.
       </p>
       <div className="field-row-stacked">
         <label htmlFor="mail-to">To</label>

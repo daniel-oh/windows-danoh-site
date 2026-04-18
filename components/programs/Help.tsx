@@ -43,7 +43,7 @@ OS APIs available on window:
 ${getApiText(keys)}
 
 Rules:
-- ALWAYS return the COMPLETE updated HTML wrapped in \`\`\`html markers when the user reports any bug, issue, or requests any change. Do not just explain — fix it and return the full code.
+- ALWAYS return the COMPLETE updated HTML wrapped in \`\`\`html markers when the user reports any bug, issue, or requests any change. Do not just explain. Fix it and return the full code.
 - Only omit code if the user is asking a pure question with no change requested.
 - Keep explanations brief. Focus on returning working code.
 - The returned HTML must be a complete standalone document wrapped in <html> tags.
@@ -257,7 +257,7 @@ export function Help({ id }: { id: string }) {
           msg={{
             role: "system",
             content:
-              "Hey! I built this app. Describe any bug or change — I'll fix the code and update the app automatically. \n\n**What needs fixing?**",
+              "Hey! I built this app. Describe any bug or change, and I'll fix the code and update the app automatically. \n\n**What needs fixing?**",
           }}
           onRequestFix={() => {}}
           isLastAssistant={false}

@@ -87,7 +87,7 @@ export function Guestbook() {
           setFeedback("Posted! Thanks for signing in.");
           load();
         } else {
-          setFeedback("Thanks — your message has been received.");
+          setFeedback("Thanks. Your message has been received.");
         }
       }
     } catch {
@@ -173,7 +173,7 @@ export function Guestbook() {
             value={message}
             maxLength={MAX_MESSAGE}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="Drop a line — a note, a thought, a hello."
+            placeholder="Leave a note, a thought, or just a hello."
             style={{ width: "100%", resize: "vertical" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
