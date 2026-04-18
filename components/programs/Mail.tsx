@@ -12,11 +12,49 @@ import { getVisitorId } from "@/lib/visitorId";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
+// Common domain typos → canonical. A full levenshtein is overkill for
+// 20 domains that account for 95% of consumer email; this static map
+// catches the typo cases that matter ("gmial.com", "hotnail.com") and
+// no-ops for everything else. Gentle nudge, not a block.
+const DOMAIN_TYPOS: Record<string, string> = {
+  "gmial.com": "gmail.com",
+  "gamil.com": "gmail.com",
+  "gmal.com": "gmail.com",
+  "gnail.com": "gmail.com",
+  "gmai.com": "gmail.com",
+  "gmaill.com": "gmail.com",
+  "gmail.co": "gmail.com",
+  "gmail.con": "gmail.com",
+  "yahooo.com": "yahoo.com",
+  "yaho.com": "yahoo.com",
+  "yahoo.co": "yahoo.com",
+  "hotnail.com": "hotmail.com",
+  "hotmial.com": "hotmail.com",
+  "hotmail.co": "hotmail.com",
+  "outlok.com": "outlook.com",
+  "outloo.com": "outlook.com",
+  "iclould.com": "icloud.com",
+  "icluod.com": "icloud.com",
+  "icloud.co": "icloud.com",
+};
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function suggestEmailFix(email: string): string | null {
+  const at = email.indexOf("@");
+  if (at < 0) return null;
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1).toLowerCase();
+  const fix = DOMAIN_TYPOS[domain];
+  return fix ? `${local}@${fix}` : null;
+}
+
 export function Mail({ id }: { id: string }) {
   const windowsDispatch = useSetAtom(windowsListAtom);
 
   const [name, setName] = useState("");
   const [replyTo, setReplyTo] = useState("");
+  const [replyToTouched, setReplyToTouched] = useState(false);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
@@ -25,16 +63,33 @@ export function Mail({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
   const mountedAtRef = useRef(Date.now());
 
+  const emailValid = replyTo === "" || EMAIL_RE.test(replyTo.trim());
+  const emailSuggestion = suggestEmailFix(replyTo.trim());
+  const hasDraft = (name + replyTo + subject + body).trim().length > 10;
+
   useEffect(() => {
     mountedAtRef.current = Date.now();
   }, []);
 
-  const close = () => windowsDispatch({ type: "REMOVE", payload: id });
+  const close = () => {
+    if (status !== "sent" && hasDraft) {
+      const ok = window.confirm(
+        "You have an unsent message. Close anyway?"
+      );
+      if (!ok) return;
+    }
+    windowsDispatch({ type: "REMOVE", payload: id });
+  };
 
   const send = async () => {
     if (!CONTACT_EMAIL) return;
     if (!body.trim()) {
       setErrorMsg("Add a message before sending.");
+      setStatus("error");
+      return;
+    }
+    if (replyTo.trim() && !EMAIL_RE.test(replyTo.trim())) {
+      setErrorMsg("That reply-to email looks off. Fix it or clear it.");
       setStatus("error");
       return;
     }
@@ -213,10 +268,47 @@ export function Mail({ id }: { id: string }) {
           placeholder="you@example.com"
           value={replyTo}
           onChange={(e) => setReplyTo(e.target.value)}
+          onBlur={() => setReplyToTouched(true)}
           maxLength={120}
           autoComplete="email"
           inputMode="email"
+          aria-invalid={replyToTouched && !emailValid ? "true" : undefined}
+          aria-describedby="mail-reply-hint"
         />
+        <div id="mail-reply-hint" style={{ fontSize: 11, minHeight: 14 }}>
+          {replyToTouched && replyTo && !emailValid && (
+            <span style={{ color: "#800000" }}>
+              That doesn&apos;t look like a valid email.
+            </span>
+          )}
+          {emailSuggestion && (
+            <span style={{ color: "#555" }}>
+              Did you mean{" "}
+              <button
+                type="button"
+                onClick={() => setReplyTo(emailSuggestion)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  color: "#000080",
+                  textDecoration: "underline",
+                  cursor: "pointer",
+                  font: "inherit",
+                  minHeight: 0,
+                }}
+              >
+                {emailSuggestion}
+              </button>
+              ?
+            </span>
+          )}
+          {replyTo === "" && (
+            <span style={{ color: "#555" }}>
+              Leave blank if you don&apos;t want a reply.
+            </span>
+          )}
+        </div>
       </div>
       <div className="field-row-stacked">
         <label htmlFor="mail-subject">Subject</label>

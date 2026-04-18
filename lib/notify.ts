@@ -33,6 +33,16 @@ export function canSendEmail(): boolean {
  * contact endpoint) can surface a real error to the user instead of
  * lying about success.
  */
+/**
+ * Strips CR/LF so untrusted input can't inject extra email headers
+ * when it ends up in the `subject` or `reply_to` fields. Resend sends
+ * its own JSON body to SMTP, but defense-in-depth — if we ever swap
+ * transports to a raw SMTP client, this prevents header smuggling.
+ */
+function stripHeaderNewlines(s: string): string {
+  return s.replace(/[\r\n]+/g, " ").trim();
+}
+
 export async function notifyAdmin(payload: NotifyPayload): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return false;
@@ -42,10 +52,10 @@ export async function notifyAdmin(payload: NotifyPayload): Promise<boolean> {
     const body: Record<string, unknown> = {
       from,
       to: [to],
-      subject: payload.subject,
-      text: payload.text,
+      subject: stripHeaderNewlines(payload.subject),
+      text: payload.text, // text body may contain newlines — legitimate
     };
-    if (payload.replyTo) body.reply_to = payload.replyTo;
+    if (payload.replyTo) body.reply_to = stripHeaderNewlines(payload.replyTo);
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {

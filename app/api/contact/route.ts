@@ -10,6 +10,7 @@ const MAX_EMAIL = 120;
 const MAX_SUBJECT = 140;
 const MAX_MESSAGE = 4000;
 const MIN_ELAPSED_MS = 2000;
+const MAX_URLS_IN_BODY = 3; // cheap spam signal — legit contact rarely needs more
 
 // Same defense layers as the guestbook: an IP ceiling, a visitor ceiling,
 // and a per-visitor cooldown. Different limits because a contact form is
@@ -41,6 +42,11 @@ function clean(input: unknown, max: number): string | null {
   if (typeof input !== "string") return null;
   const trimmed = input.trim().slice(0, max);
   return trimmed || null;
+}
+
+function countUrls(s: string): number {
+  const matches = s.match(/\bhttps?:\/\/[^\s]+/gi);
+  return matches ? matches.length : 0;
 }
 
 export async function POST(req: Request) {
@@ -88,6 +94,14 @@ export async function POST(req: Request) {
   const cleanMessage = clean(message, MAX_MESSAGE);
   if (!cleanMessage) {
     return Response.json({ error: "Message is required." }, { status: 400 });
+  }
+  if (countUrls(cleanMessage) > MAX_URLS_IN_BODY) {
+    // Silent-drop rather than tell a bot which heuristic fired.
+    console.warn("[contact] too many URLs, silent drop", {
+      ip,
+      count: countUrls(cleanMessage),
+    });
+    return Response.json({ status: "sent" });
   }
   const cleanName = clean(name, MAX_NAME);
   const cleanSubject = clean(subject, MAX_SUBJECT);
