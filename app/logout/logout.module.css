@@ -1,0 +1,120 @@
+/* Win95 "safe to turn off" screen. Amber on black, center-of-tube
+ * framing, slight inner glow. CTAs sit below the headline in the same
+ * color palette so the whole thing reads as one intentional screen
+ * rather than a dialog floating on void. */
+
+.root {
+  min-height: 100dvh;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  font-family: "Lucida Console", "Courier New", Consolas, monospace;
+  /* Soft vignette pulls focus to center — the CRT feel. */
+  background:
+    radial-gradient(
+      ellipse at center,
+      #0a0a0a 0%,
+      #000 65%,
+      #000 100%
+    );
+}
+
+.screen {
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  color: #ffb000; /* Amber phosphor, the iconic Win9x shutdown hue */
+  /* Subtle glow — evokes the CRT bloom without overdoing it. */
+  text-shadow: 0 0 1px rgba(255, 176, 0, 0.9);
+}
+
+.headline {
+  font-size: 22px;
+  line-height: 1.35;
+  letter-spacing: 0.5px;
+  margin: 0 0 14px 0;
+}
+
+.sub {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #c08000;
+  margin: 0 0 28px 0;
+  letter-spacing: 0.3px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.primary,
+.secondary {
+  display: inline-block;
+  padding: 10px 22px;
+  font-size: 14px;
+  min-height: 44px;
+  line-height: 1.5;
+  font-family: inherit;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  cursor: pointer;
+  color: #000;
+  background: #ffb000;
+  border: 2px solid #ffb000;
+  transition: transform 80ms ease;
+}
+
+.primary:hover,
+.primary:focus-visible {
+  background: #ffc940;
+  border-color: #ffc940;
+  outline: none;
+}
+
+.primary:active {
+  transform: translateY(1px);
+}
+
+.secondary {
+  background: transparent;
+  color: #ffb000;
+}
+
+.secondary:hover,
+.secondary:focus-visible {
+  background: rgba(255, 176, 0, 0.12);
+  outline: none;
+}
+
+.secondary:active {
+  transform: translateY(1px);
+}
+
+.signature {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #886000;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+@media (max-width: 600px) {
+  .headline {
+    font-size: 18px;
+  }
+  .sub {
+    font-size: 13px;
+    margin-bottom: 22px;
+  }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 28px;
+  }
+}
