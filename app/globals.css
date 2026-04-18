@@ -126,22 +126,26 @@ figcaption {
     min-width: 26px !important;
     min-height: 26px !important;
   }
-  /* Classic 98 anchors each glyph to a specific corner (minimize at
-   * bottom-left, maximize/restore + close at top-left) with a small
-   * pixel offset, not centered. Preserve those anchors and just scale
-   * the SVG up a touch for visibility at touch size. */
+  /* 98.css anchors each glyph to a specific corner with ~3–4 px
+   * offsets. That reads as "centred" on the desktop's 14 × 14 buttons
+   * because there's barely any empty space around the icon. On a
+   * 26 × 26 mobile button the same absolute offsets leave the glyph
+   * stuck in the top-left with a big empty tile beside it. Centre
+   * them horizontally on mobile so the button reads balanced —
+   * minimise keeps a low vertical anchor to preserve the classic
+   * "bar sits low" look; maximise and close are centred both axes. */
   .window .title-bar-controls button[aria-label="Minimize"] {
     background-size: 10px 3px !important;
-    background-position: bottom 5px left 6px !important;
+    background-position: center calc(100% - 7px) !important;
   }
   .window .title-bar-controls button[aria-label="Maximize"],
   .window .title-bar-controls button[aria-label="Restore"] {
     background-size: 11px 11px !important;
-    background-position: top 5px left 6px !important;
+    background-position: center center !important;
   }
   .window .title-bar-controls button[aria-label="Close"] {
     background-size: 11px 10px !important;
-    background-position: top 5px left 6px !important;
+    background-position: center center !important;
   }
   /* Form action buttons inside window bodies (Submit, OK, Cancel, Copy
    * link, etc.) get a taller touch area. Buttons inside field-rows stay
