@@ -173,7 +173,7 @@ export function Guestbook() {
             value={message}
             maxLength={MAX_MESSAGE}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder="hi daniel :)"
+            placeholder="Drop a line — a note, a thought, a hello."
             style={{ width: "100%", resize: "vertical" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {

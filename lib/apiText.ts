@@ -35,12 +35,6 @@ declare global {
 // Keys without the prefix are private to this program.
 //
 // Known OS keys (readable by every program):
-// - public_theme: "light" | "dark" — current OS theme. If "dark",
-//   your program should use a dark palette (dark backgrounds, light
-//   text). Read once at startup and also listen to changes if you
-//   want to respond to theme switches. Example:
-//     const theme = await registry.get("public_theme");
-//     if (theme === "dark") document.body.classList.add("dark");
 // - public_desktop_url: current desktop wallpaper URL.
 //
 // You can define your own registry keys or use one of these known keys:
