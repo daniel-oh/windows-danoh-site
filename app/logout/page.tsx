@@ -16,9 +16,9 @@ export default function LoggedOff() {
   return (
     <div className={styles.root}>
       <div className={styles.screen}>
-        <p className={styles.headline}>
+        <h1 className={styles.headline}>
           It&apos;s now safe to turn off your computer.
-        </p>
+        </h1>
         <p className={styles.sub}>
           You&apos;ve been signed out of danoh.com.
         </p>
