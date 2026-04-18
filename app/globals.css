@@ -193,36 +193,37 @@ html[data-theme="dark"] figcaption {
  * the tap hit-area of the most-tapped controls (window title-bar buttons
  * and form action buttons) without changing the retro visual language. */
 @media (max-width: 768px) {
-  /* Title-bar: 36px is a reasonable middle ground between 98.css's
-   * 17px default (unreachable on thumbs) and a jumbo 44px bar that
-   * fights the retro proportions. 30×30 buttons keep a tappable hit
-   * area while staying visually closer to desktop. Selectors are
-   * :global — they match 98.css's bare classes. */
+  /* Title-bar tuned toward 98.css's actual proportions. 30 px bar
+   * and 26×26 controls keep the aesthetic while staying tappable
+   * (~27 px is the de-facto iOS floor for secondary icon buttons).
+   * Selectors are :global — they match 98.css's bare classes. */
   .window .title-bar {
-    min-height: 36px !important;
-    padding: 2px 4px !important;
+    min-height: 30px !important;
+    padding: 2px 3px !important;
   }
   .window .title-bar .title-bar-text {
-    font-size: 12px;
+    font-size: 11px;
   }
   .window .title-bar-controls button {
-    min-width: 30px !important;
-    min-height: 30px !important;
-    /* 98.css anchors its icon SVGs to top-left with fixed pixel offsets,
-     * which made them float in the corner of oversized mobile buttons.
-     * Force-center + scale the background image so each glyph reads at
-     * the larger touch-target size. */
-    background-position: center center !important;
+    min-width: 26px !important;
+    min-height: 26px !important;
   }
+  /* Classic 98 anchors each glyph to a specific corner (minimize at
+   * bottom-left, maximize/restore + close at top-left) with a small
+   * pixel offset, not centered. Preserve those anchors and just scale
+   * the SVG up a touch for visibility at touch size. */
   .window .title-bar-controls button[aria-label="Minimize"] {
-    background-size: 12px 4px !important;
+    background-size: 10px 3px !important;
+    background-position: bottom 5px left 6px !important;
   }
   .window .title-bar-controls button[aria-label="Maximize"],
   .window .title-bar-controls button[aria-label="Restore"] {
     background-size: 11px 11px !important;
+    background-position: top 5px left 6px !important;
   }
   .window .title-bar-controls button[aria-label="Close"] {
-    background-size: 10px 9px !important;
+    background-size: 11px 10px !important;
+    background-position: top 5px left 6px !important;
   }
   /* Form action buttons inside window bodies (Submit, OK, Cancel, Copy
    * link, etc.) get a taller touch area. Buttons inside field-rows stay
