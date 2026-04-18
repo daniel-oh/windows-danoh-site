@@ -246,7 +246,7 @@ export function Mail({ id }: { id: string }) {
       }}
     >
       <p style={{ fontSize: 12, color: "#555", margin: 0 }}>
-        Sends straight to my inbox. No mail client needed.
+        Sends straight to my inbox.
       </p>
 
       <div className="field-row-stacked">
