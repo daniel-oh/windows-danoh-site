@@ -15,11 +15,18 @@ import { isLocal } from "@/lib/isLocal";
 import { createStreamingCompletion } from "@/ai/createCompletion";
 import { getMaxTokens } from "@/ai/getMaxTokens";
 import { checkAccess } from "@/lib/apiGuard";
+import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function GET(req: Request) {
   const denied = await checkAccess(req, "program");
   if (denied) return denied;
+
+  // Production cost guardrail. apiGuard above only runs in local/dev
+  // mode; costGuard is the prod ceiling — per-IP, per-visitor, and
+  // global daily caps. Bypassed when the visitor brings their own key.
+  const capped = await costGuard(req);
+  if (capped) return capped;
 
   const settings = await getSettingsFromGetRequest(req);
   const user = await getUser();
