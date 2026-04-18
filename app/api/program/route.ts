@@ -19,14 +19,17 @@ import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function GET(req: Request) {
+  // /api/program is loaded as an <iframe src="…">, so a raw JSON 429
+  // would render as literal JSON text inside the window. Both gates
+  // here get converted to a styled 98.css HTML page if they reject.
   const denied = await checkAccess(req, "program");
-  if (denied) return denied;
+  if (denied) return jsonRejectionAsHtml(denied);
 
   // Production cost guardrail. apiGuard above only runs in local/dev
   // mode; costGuard is the prod ceiling — per-IP, per-visitor, and
   // global daily caps. Bypassed when the visitor brings their own key.
   const capped = await costGuard(req);
-  if (capped) return capped;
+  if (capped) return jsonRejectionAsHtml(capped);
 
   const settings = await getSettingsFromGetRequest(req);
   const user = await getUser();
@@ -113,6 +116,54 @@ href="https://unpkg.com/98.css"
       status: 200,
     }
   );
+}
+
+// Converts a JSON rejection from checkAccess / costGuard into a
+// lightweight 98.css-styled HTML document so the iframe renders
+// something readable instead of raw `{"error":"…"}` text.
+async function jsonRejectionAsHtml(res: Response): Promise<Response> {
+  let message = "That's all for now. Try again shortly.";
+  try {
+    const data = await res.clone().json();
+    if (typeof data?.error === "string") message = data.error;
+  } catch {
+    /* non-JSON response — fall back to the default message */
+  }
+  const safe = message
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const html = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>danoh.com — rate limited</title>
+<link rel="stylesheet" href="https://unpkg.com/98.css">
+<style>
+  html,body{height:100%;margin:0}
+  body{display:flex;align-items:center;justify-content:center;padding:16px;background:#c0c0c0;font-family:"Pixelated MS Sans Serif",Arial,sans-serif}
+  .card{max-width:360px;width:100%}
+  h1{font-size:14px;margin:0 0 8px}
+  p{font-size:13px;line-height:1.5;margin:0 0 10px}
+  .hint{font-size:11px;color:#555}
+</style>
+</head>
+<body>
+  <div class="window card">
+    <div class="title-bar"><div class="title-bar-text">Generation paused</div></div>
+    <div class="window-body">
+      <h1>At the limit for now</h1>
+      <p>${safe}</p>
+      <p class="hint">Want to keep running without waiting? Drop your own Anthropic API key in Settings and we'll step out of the way.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+  return new Response(html, {
+    status: res.status,
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
 }
 
 function makeSystem(keys: string[]) {
