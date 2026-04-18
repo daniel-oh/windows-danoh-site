@@ -10,6 +10,7 @@ Here's the proof. Below is a [Rive](https://rive.app) animation rendered by an a
 <Rive
   src="/animations/fire.riv"
   height={320}
+  loop
   alt="A stylised fire animation by the Rive community — an illustration of the flexibility unlocked by embedding Rive directly in MDX."
   caption="Fire — Rive community file (3420-7173). ~4 KB asset."
 />
@@ -21,8 +22,10 @@ In MDX, using a React component in a post is one `import` and one JSX tag:
 ```mdx
 import { Rive } from "@/components/mdx/Rive";
 
-<Rive src="/animations/fire.riv" height={320} alt="Stylised fire animation" />
+<Rive src="/animations/fire.riv" height={320} loop alt="Stylised fire animation" />
 ```
+
+The `loop` prop is opt-in — pass it on decorative embeds (ambient fire, background motion). Omit it for animations meant to play once, like confetti bursts or checkmarks, so the `.riv` file's own Loop / One-shot flag is respected.
 
 No build config, no `<iframe>` wrapper page, no escape hatch. The MDX compiler treats `<Rive />` as a React element and bundles it alongside the post content.
 
