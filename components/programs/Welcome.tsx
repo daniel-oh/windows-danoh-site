@@ -148,7 +148,7 @@ const contentByKey = {
     const recentPosts = sortedPosts.slice(0, 5);
     return (
       <>
-        <header style={{ marginBottom: 12 }}>
+        <header style={{ marginBottom: 0 }}>
           <h3 style={{ margin: 0, lineHeight: 1.1 }}>Blog</h3>
           <p
             style={{
@@ -162,7 +162,7 @@ const contentByKey = {
             AI, craft, and the work of building things that last.
           </p>
         </header>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "12px 0", maxHeight: 300, overflowY: "auto" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "8px 0 10px", maxHeight: 300, overflowY: "auto" }}>
           {recentPosts.map((post) => (
             <div
               key={post.slug}
