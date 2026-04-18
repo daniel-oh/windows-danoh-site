@@ -9,7 +9,11 @@
   flex-direction: row;
   align-items: stretch;
   gap: 4px;
-  z-index: 2;
+  /* Way above the window z-order stack so the Start button is always
+   * reachable even with dozens of windows open. The per-window zOrder
+   * counter starts at 1 and grows by 1 per focus — it won't realistically
+   * cross 1000. */
+  z-index: 1000;
   height: var(--taskbar-height);
 }
 
@@ -17,7 +21,9 @@
   position: fixed;
   left: 0;
   bottom: var(--taskbar-height);
-  z-index: 9999;
+  /* Above both the taskbar (1000) and any window zOrder so the menu is
+   * guaranteed to float over everything while open. */
+  z-index: 10001;
   width: 200px;
   display: flex;
   flex-direction: column;
@@ -40,7 +46,16 @@
     flex-shrink: 0;
   }
 
-  & button:hover {
+  /* Hover highlight only on devices that actually hover (mice / trackpads).
+   * Without this guard, iOS Safari leaves a sticky hover on the last
+   * tapped item. Touch feedback is handled separately via :active. */
+  @media (hover: hover) {
+    & button:hover {
+      background-color: darkblue;
+      color: white;
+    }
+  }
+  & button:active {
     background-color: darkblue;
     color: white;
   }
