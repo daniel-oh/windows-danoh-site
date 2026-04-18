@@ -49,11 +49,26 @@ export function RiveInner({
     return () => mq.removeEventListener("change", listener);
   }, []);
 
-  const { RiveComponent } = useRive({
+  const { rive, RiveComponent } = useRive({
     src,
     autoplay: !reducedMotion,
     stateMachines,
   });
+
+  // Loop animations that were authored as one-shot. State machines
+  // usually loop natively, so this only matters for plain timeline
+  // animations like the Rive Fire demo. When Rive fires its "stop"
+  // event we replay immediately. Gated by reducedMotion so visitors
+  // with that preference still only see one cycle (or zero, per the
+  // autoplay:false above).
+  useEffect(() => {
+    if (!rive || reducedMotion) return;
+    const restart = () => rive.play();
+    rive.on("stop" as Parameters<typeof rive.on>[0], restart);
+    return () => {
+      rive.off("stop" as Parameters<typeof rive.off>[0], restart);
+    };
+  }, [rive, reducedMotion]);
 
   const containerStyle: CSSProperties = {
     margin: "16px 0",
