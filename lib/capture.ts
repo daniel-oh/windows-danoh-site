@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { PostHog } from "posthog-node";
 import { isLocal } from "./isLocal";
+import { getClientIP } from "./api/clientIP";
 
 type Event = {
   type: "chat" | "icon" | "name" | "program" | "help";
@@ -36,4 +37,36 @@ export async function capture(event: Event, req: Request) {
     distinctId: user.data.user?.id ?? "null",
   });
   await posthog.shutdown();
+}
+
+/**
+ * Lightweight server-side event capture for things that don't fit
+ * the typed `capture(event: Event, req)` above (e.g. rate-limit hits,
+ * which don't have a usedOwnKey/model). No Supabase dependency so a
+ * guard path can't fail the request on auth-lookup failure. Distinct
+ * ID is the IP since cap hits typically come from anonymous visitors.
+ * No-ops when PostHog is not configured or in local dev.
+ */
+export async function captureServerEvent(
+  event: string,
+  properties: Record<string, unknown>,
+  req: Request
+): Promise<void> {
+  if (isLocal()) return;
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
+  if (!key || !host) return;
+  try {
+    const posthog = new PostHog(key, { host });
+    const ip = getClientIP(req);
+    posthog.capture({
+      event,
+      properties: { ...properties, ip },
+      distinctId: ip,
+    });
+    await posthog.shutdown();
+  } catch (err) {
+    // Telemetry must never fail the request path.
+    console.warn("[captureServerEvent] send failed:", err);
+  }
 }

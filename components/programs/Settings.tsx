@@ -10,7 +10,12 @@ import {
 import styles from "./Settings.module.css";
 import cx from "classnames";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import posthog from "posthog-js";
+import {
+  isAnalyticsOptedOut,
+  setAnalyticsOptedOut,
+} from "@/lib/analyticsOptOut";
 
 type KeyStatus = "idle" | "testing" | "valid" | "invalid" | "saved" | "cleared";
 
@@ -135,10 +140,63 @@ export function Settings({ id }: { id: string }) {
 
       <DirectorySection />
 
+      <AnalyticsSection />
+
       <button onClick={() => windowsDispatch({ type: "REMOVE", payload: id })} className={styles.submit}>
         Done
       </button>
     </div>
+  );
+}
+
+function AnalyticsSection() {
+  // Read the opt-out flag once on mount (localStorage is client-only).
+  // Flips call posthog.opt_in/out_capturing so the change takes effect
+  // without a reload for the rest of the session.
+  const [optedOut, setOptedOut] = useState(false);
+  useEffect(() => {
+    setOptedOut(isAnalyticsOptedOut());
+  }, []);
+
+  const toggle = () => {
+    const next = !optedOut;
+    setOptedOut(next);
+    setAnalyticsOptedOut(next);
+    try {
+      if (next) posthog.opt_out_capturing();
+      else posthog.opt_in_capturing();
+    } catch {
+      /* posthog may not be initialised yet — the flag still persists
+       * and the next page load will respect it. */
+    }
+  };
+
+  return (
+    <fieldset>
+      <legend>Analytics</legend>
+      <div className={cx("field-row")}>
+        <input
+          id="analytics-opt-out"
+          type="checkbox"
+          checked={optedOut}
+          onChange={toggle}
+        />
+        <label htmlFor="analytics-opt-out">
+          Opt out of analytics (PostHog)
+        </label>
+      </div>
+      <div className={cx("field-row")} style={{ marginTop: 4 }}>
+        <p className={styles.note}>
+          PostHog tracks anonymous events (reactions, errors, AI usage) so
+          I can tell when something is broken. Plausible is cookieless and
+          always on. See the{" "}
+          <a href="/privacy" target="_blank" rel="noopener noreferrer">
+            privacy page
+          </a>{" "}
+          for the full list.
+        </p>
+      </div>
+    </fieldset>
   );
 }
 
