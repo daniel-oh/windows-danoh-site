@@ -162,8 +162,43 @@ export const Desktop = () => {
     });
   }, []);
 
+  // Arrow keys move focus between desktop icons so keyboard-only
+  // visitors can navigate without Tab-through-every-UI-control. Home /
+  // End jump to the first / last icon. Enter / Space is already handled
+  // natively by each BuiltInIcon / ProgramIcon button. Horizontal and
+  // vertical both step through the flat DOM order because the grid is
+  // dynamic — a layered roving-tabindex system would fight the existing
+  // drag-drop placement code.
+  const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Home", "End"];
+    if (!keys.includes(e.key)) return;
+    const host = e.currentTarget;
+    const icons = Array.from(
+      host.querySelectorAll<HTMLButtonElement>(`button.${styles.programIcon}`)
+    );
+    if (icons.length === 0) return;
+    const active = document.activeElement;
+    const currentIndex = icons.findIndex((b) => b === active);
+    let next = 0;
+    if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = icons.length - 1;
+    else if (currentIndex < 0) next = 0;
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+      next = (currentIndex - 1 + icons.length) % icons.length;
+    } else {
+      next = (currentIndex + 1) % icons.length;
+    }
+    e.preventDefault();
+    icons[next]?.focus();
+  };
+
   return (
-    <div className={styles.desktop} role="main" onClick={() => setSelectedIcon(null)}>
+    <div
+      className={styles.desktop}
+      role="main"
+      onClick={() => setSelectedIcon(null)}
+      onKeyDown={onKeyDown}
+    >
       <BuiltInIcon
         id={BLOG_ICON_ID}
         name="Blog"

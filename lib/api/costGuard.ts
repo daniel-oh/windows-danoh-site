@@ -25,6 +25,7 @@
 import { getClientIP } from "@/lib/api/clientIP";
 import { hasOwnAnthropicKey } from "@/lib/api/hasOwnAnthropicKey";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
+import { captureServerEvent } from "@/lib/capture";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -66,8 +67,18 @@ function getVisitorId(req: Request): string | null {
   return raw;
 }
 
-function reject(reason: string, retryHint: string): Response {
+function reject(
+  reason: string,
+  retryHint: string,
+  req: Request
+): Response {
   console.warn("[costGuard] rejected", reason);
+  // Fire-and-forget; telemetry must never block the response.
+  void captureServerEvent(
+    "cost_guard_hit",
+    { reason, path: new URL(req.url).pathname },
+    req
+  );
   return new Response(
     JSON.stringify({
       error:
@@ -86,7 +97,7 @@ export async function costGuard(req: Request): Promise<Response | null> {
 
   const ip = getClientIP(req);
   if (ipBucket.tripAndRecord(ip, PER_IP_HOURLY, HOUR_MS)) {
-    return reject("ip_hour", "Try again in an hour.");
+    return reject("ip_hour", "Try again in an hour.", req);
   }
 
   const visitorId = getVisitorId(req);
@@ -94,15 +105,20 @@ export async function costGuard(req: Request): Promise<Response | null> {
     if (
       visitorHourBucket.tripAndRecord(visitorId, PER_VISITOR_HOURLY, HOUR_MS)
     ) {
-      return reject("visitor_hour", "Try again in an hour.");
+      return reject("visitor_hour", "Try again in an hour.", req);
     }
     if (visitorDayBucket.tripAndRecord(visitorId, PER_VISITOR_DAILY, DAY_MS)) {
-      return reject("visitor_day", "Try again tomorrow.");
+      return reject("visitor_day", "Try again tomorrow.", req);
     }
   }
 
   if (globalBucket.tripAndRecord(todayKey(), globalCap(), DAY_MS)) {
     console.warn("[costGuard] global daily cap reached");
+    void captureServerEvent(
+      "cost_guard_hit",
+      { reason: "global_day", path: new URL(req.url).pathname },
+      req
+    );
     return new Response(
       JSON.stringify({
         error:
