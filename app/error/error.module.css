@@ -1,0 +1,222 @@
+/* Retro-terminal fault screen. Parallel to /logout's treatment so the
+ * two pages read as one system; swapped to red-amber phosphor so the
+ * semantic ("something broke") is instantly distinct from the green
+ * ("safely disconnected") farewell. Same animation + a11y posture. */
+
+:root {
+  --fault-bg: #000;
+  --fault-fg: #ff6b4a;
+  --fault-fg-dim: #b04a32;
+  --fault-accent: #ff8f70;
+  --fault-prompt: #ffb3a0;
+}
+
+.root {
+  position: relative;
+  min-height: 100dvh;
+  background: var(--fault-bg);
+  color: var(--fault-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  font-family: "Fira Code", "JetBrains Mono", "Menlo", "Consolas",
+    "Lucida Console", monospace;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at center,
+    #140a06 0%,
+    #000 65%,
+    #000 100%
+  );
+  -webkit-tap-highlight-color: transparent;
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 107, 74, 0.04) 0,
+    rgba(255, 107, 74, 0.04) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  animation: flicker 3.6s infinite steps(2);
+}
+
+@keyframes flicker {
+  0%,
+  95% {
+    opacity: 0.9;
+  }
+  96% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+.terminal {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 560px;
+  font-size: 15px;
+  line-height: 1.7;
+  letter-spacing: 0.3px;
+  text-shadow: 0 0 1px rgba(255, 107, 74, 0.75);
+}
+
+.line {
+  margin: 0;
+  white-space: pre-wrap;
+  opacity: 0;
+  transform: translateX(-4px);
+  animation: revealLine 0.35s ease-out forwards;
+}
+
+.prompt {
+  color: var(--fault-prompt);
+  font-weight: 700;
+}
+
+.angle {
+  color: var(--fault-fg-dim);
+}
+
+.cursor {
+  display: inline-block;
+  width: 0.6ch;
+  margin-left: 2px;
+  animation: blink 1s steps(2) infinite;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes revealLine {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.l1 {
+  animation-delay: 120ms;
+}
+.l2 {
+  animation-delay: 640ms;
+}
+.l3 {
+  animation-delay: 1100ms;
+}
+.l4 {
+  animation-delay: 1500ms;
+}
+.l5 {
+  animation-delay: 1800ms;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 22px 0 22px 0;
+  opacity: 0;
+  transform: translateX(-4px);
+  animation: revealLine 0.35s ease-out forwards;
+}
+
+.primary,
+.secondary {
+  display: inline-block;
+  padding: 10px 18px;
+  font-size: 14px;
+  min-height: 44px;
+  line-height: 1.6;
+  font-family: inherit;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-decoration: none;
+  color: var(--fault-accent);
+  background: transparent;
+  border: 1px solid var(--fault-accent);
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.primary {
+  background: rgba(255, 143, 112, 0.12);
+}
+
+.primary:hover,
+.primary:focus-visible,
+.secondary:hover,
+.secondary:focus-visible {
+  background: var(--fault-accent);
+  color: #000;
+  outline: none;
+}
+
+.primary:active,
+.secondary:active {
+  transform: translateY(1px);
+}
+
+.signature {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #b07060; /* AA contrast on black */
+  margin: 0;
+  text-transform: uppercase;
+  opacity: 0;
+  animation: revealLine 0.35s ease-out forwards;
+}
+
+@media (max-width: 600px) {
+  .terminal {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .primary,
+  .secondary {
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .line,
+  .actions,
+  .signature {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .cursor {
+    animation: none;
+    opacity: 1;
+  }
+  .scanlines {
+    animation: none;
+  }
+}
