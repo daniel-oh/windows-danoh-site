@@ -86,6 +86,15 @@ export function BlogIndexContent({ posts }: { posts: BlogPost[] }) {
         )}
       </div>
 
+      {/* aria-live so screen readers announce filter changes. polite
+       * so it doesn't fight ongoing speech; atomic so the post count
+       * is spoken as a single update instead of letter by letter. */}
+      <div aria-live="polite" aria-atomic="true" className={styles.srOnly}>
+        {trimmed
+          ? `${filtered.length} ${filtered.length === 1 ? "post" : "posts"} match "${trimmed}".`
+          : ""}
+      </div>
+
       {filtered.length === 0 ? (
         <p className={styles.indexSummary} style={{ marginTop: 14 }}>
           No posts match &ldquo;{trimmed}&rdquo;.
