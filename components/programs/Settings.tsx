@@ -174,14 +174,18 @@ function AnalyticsSection() {
   return (
     <fieldset>
       <legend>Analytics</legend>
+      {/* Input nested inside the label so globals.css's mobile rule
+       * (label:has(> input[type="checkbox"]) { min-height: 40px })
+       * enlarges the whole row to a 40 px tap target — otherwise the
+       * visitor has a ~18 px checkbox and misses it on touch. */}
       <div className={cx("field-row")}>
-        <input
-          id="analytics-opt-out"
-          type="checkbox"
-          checked={optedOut}
-          onChange={toggle}
-        />
         <label htmlFor="analytics-opt-out">
+          <input
+            id="analytics-opt-out"
+            type="checkbox"
+            checked={optedOut}
+            onChange={toggle}
+          />{" "}
           Opt out of analytics (PostHog)
         </label>
       </div>

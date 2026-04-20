@@ -242,6 +242,21 @@
   flex-wrap: wrap;
 }
 
+/* Visually-hide an element while keeping it reachable by screen
+ * readers — used for aria-live announcements. Standard "sr-only"
+ * recipe. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .searchRow {
   display: flex;
   align-items: center;
@@ -250,6 +265,7 @@
   padding: 8px 10px;
   background: #dfdfdf;
   border: 1px solid #808080;
+  flex-wrap: wrap;
 }
 
 .searchLabel {
@@ -278,6 +294,26 @@
   font-size: 12px;
   padding: 4px 10px;
   cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .searchRow {
+    /* A little more padding so the input and Clear aren't jammed
+     * against the edge on narrow phones. */
+    padding: 10px 12px;
+  }
+  /* iOS zoom-prevention: inputs below 16 px trigger auto-zoom on
+   * focus. Match what globals.css does for window-body inputs so the
+   * shell-level search doesn't zoom the page. */
+  .searchInput {
+    font-size: 16px;
+    min-height: 36px;
+  }
+  .searchClear {
+    /* Touch target floor. */
+    min-height: 36px;
+    padding: 6px 14px;
+  }
 }
 
 .indexCount {
