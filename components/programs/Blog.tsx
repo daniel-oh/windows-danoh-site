@@ -7,6 +7,7 @@ import styles from "./Blog.module.css";
 import { isMobile } from "@/lib/isMobile";
 import { REACTIONS, useReactions } from "@/lib/useReactions";
 import { CopyAttribution } from "@/components/CopyAttribution";
+import { ExternalArrow } from "@/components/ExternalArrow";
 
 export const BLOG_WIDTH = 700;
 
@@ -193,13 +194,21 @@ function PostActions({ slug }: { slug: string }) {
       <button type="button" onClick={onCopy}>
         {copied ? "Copied!" : "Copy link"}
       </button>
-      <a
-        href={`/blog/${slug}`}
-        target="_blank"
-        rel="noopener noreferrer"
+      {/* button-with-onClick rather than the previous <button> nested
+       * inside an <a> (interactive-inside-interactive is invalid HTML
+       * and confuses some screen readers + iOS double-tap zoom). The
+       * SVG arrow replaces the bare ↗ Unicode glyph, which mobile
+       * fallback fonts often render as tofu (a black box). */}
+      <button
+        type="button"
+        onClick={() =>
+          window.open(`/blog/${slug}`, "_blank", "noopener,noreferrer")
+        }
+        style={{ display: "inline-flex", alignItems: "center" }}
       >
-        <button type="button">Open full page ↗</button>
-      </a>
+        Open full page
+        <ExternalArrow />
+      </button>
     </div>
   );
 }

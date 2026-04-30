@@ -10,6 +10,7 @@ import {
 } from "@/content/blog/posts";
 import { getPostComponent } from "@/content/blog/posts-content";
 import { CopyAttribution } from "@/components/CopyAttribution";
+import { ExternalArrow } from "@/components/ExternalArrow";
 import styles from "../blog.module.css";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -86,7 +87,7 @@ export default async function Post({ params }: Props) {
         <div className={styles.titleBar}>
           <div className={styles.titleBarText}>{post.title} · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
-            Open the desktop ↗
+            Open the desktop<ExternalArrow />
           </Link>
         </div>
         <article className={styles.body}>
@@ -136,7 +137,7 @@ export default async function Post({ params }: Props) {
               ← All posts
             </Link>
             <Link href="/" className={styles.footerLink}>
-              Open the desktop ↗
+              Open the desktop<ExternalArrow />
             </Link>
           </div>
         </article>

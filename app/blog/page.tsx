@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { sortedPosts } from "@/content/blog/posts";
 import { buildMetadata } from "@/lib/buildMetadata";
+import { ExternalArrow } from "@/components/ExternalArrow";
 import { BlogIndexContent } from "./BlogIndexContent";
 import styles from "./blog.module.css";
 
@@ -21,7 +22,7 @@ export default function BlogIndex() {
         <div className={styles.titleBar}>
           <div className={styles.titleBarText}>Blog · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
-            Open the desktop ↗
+            Open the desktop<ExternalArrow />
           </Link>
         </div>
         <header className={styles.tagline}>
@@ -39,7 +40,7 @@ export default function BlogIndex() {
               ← Back to the desktop
             </Link>
             <a href="/feed.xml" className={styles.footerLink}>
-              RSS ↗
+              RSS<ExternalArrow />
             </a>
           </div>
         </div>

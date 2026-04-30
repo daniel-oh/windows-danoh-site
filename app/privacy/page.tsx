@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buildMetadata } from "@/lib/buildMetadata";
+import { ExternalArrow } from "@/components/ExternalArrow";
 import styles from "../blog/blog.module.css";
 
 export const metadata = buildMetadata({
@@ -21,7 +22,7 @@ export default function Privacy() {
         <div className={styles.titleBar}>
           <div className={styles.titleBarText}>Privacy · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
-            Open the desktop ↗
+            Open the desktop<ExternalArrow />
           </Link>
         </div>
         <div className={styles.body}>
@@ -147,7 +148,7 @@ export default function Privacy() {
               ← Back to the desktop
             </Link>
             <Link href="/blog" className={styles.footerLink}>
-              Blog ↗
+              Blog<ExternalArrow />
             </Link>
           </div>
         </div>
