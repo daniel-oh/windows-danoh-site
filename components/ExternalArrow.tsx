@@ -1,44 +1,33 @@
-// Inline SVG replacement for the bare "↗" Unicode character. Mobile
-// fonts (especially the iOS / Android system fallback chain after
-// Inter) often don't ship a glyph for U+2197 NORTH EAST ARROW, which
-// renders as tofu (a black box) on those devices.
+// "External link" / "open in new" indicator. Renders as a small
+// upper-right chevron next to link text.
 //
-// Implementation: a filled solid polygon (no strokes). The earlier
-// stroke-only version painted as empty space on iOS Safari — a
-// known WebKit quirk where stroke="currentColor" + fill="none"
-// occasionally evaluates the stroke color before the parent's
-// `color` propagates, leaving the path invisible. Filled shapes
-// don't have this problem and render identically across every
-// engine.
+// Implementation: pure CSS. Two borders on a rotated <span> form
+// the corner shape — no SVG, no Unicode, no font fallback chain to
+// fail through. The previous attempts (the bare ↗ glyph and a
+// stroke-then-fill SVG) both rendered as empty space on at least
+// one platform; CSS borders use currentColor reliably across every
+// browser.
 //
-// Sized at 13 px by default — bigger than the previous 11 px so
-// it's actually legible at body-text scales on small screens. Uses
-// currentColor + aria-hidden so it inherits the surrounding link
-// color and is invisible to screen readers (the link text already
-// conveys the action).
+// Sizing chosen so the chevron sits visually balanced against
+// 13–15 px body text. Uses currentColor + aria-hidden so it
+// inherits the surrounding link color and screen readers skip it.
 
-export function ExternalArrow({ size = 13 }: { size?: number }) {
+export function ExternalArrow({ size = 7 }: { size?: number }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="currentColor"
+    <span
       aria-hidden="true"
-      focusable="false"
       style={{
         display: "inline-block",
-        verticalAlign: "-2px",
-        marginLeft: 3,
+        width: size,
+        height: size,
+        marginLeft: 5,
+        marginRight: 1,
+        borderTop: "1.5px solid currentColor",
+        borderRight: "1.5px solid currentColor",
+        transform: "translateY(-2px) rotate(45deg)",
+        verticalAlign: "middle",
         flexShrink: 0,
-        color: "inherit",
       }}
-    >
-      {/* Material-Design "north_east" filled glyph. Arrowhead in the
-       * top-right corner with a chunky diagonal shaft pointing
-       * down-left toward the surrounding text. */}
-      <path d="M5 17.59 L15.59 7 H9 V5 H19 V15 H17 V8.41 L6.41 19 Z" />
-    </svg>
+    />
   );
 }
