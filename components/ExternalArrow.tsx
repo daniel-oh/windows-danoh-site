@@ -1,19 +1,17 @@
-// "External link" / "open in new" indicator. Renders as an
-// upper-right chevron next to link text.
+// "External link" / "open in new" indicator. Small upper-right
+// chevron next to link text.
 //
 // Pure CSS (no SVG, no Unicode glyph) so the render path can't fail
-// on a missing font glyph or an iOS WebKit currentColor-on-stroke
-// quirk. Two borders on a rotated <span> form the corner shape;
-// currentColor on a CSS border is one of the most universally
-// supported inherit-the-text-color mechanisms in the platform.
+// on a missing font glyph or a WebKit currentColor-on-stroke quirk.
+// Two borders on a rotated <span> form the corner shape; currentColor
+// on a CSS border is one of the most universally supported
+// inherit-the-text-color mechanisms.
 //
-// Sized at 9 px square / 2 px border. Visible diagonal after
-// rotation works out to ~13 px corner-to-corner — clearly readable
-// against 13–15 px body text without overpowering it. Em-relative
-// vertical-align so the glyph centers on the cap height rather
-// than the baseline.
+// Sized 8 px / 1.5 px borders by design — calibrated to sit
+// confidently next to 11–14 px body text without overpowering it.
+// Matches the visual weight of a typical Unicode arrow at this scale.
 
-export function ExternalArrow({ size = 9 }: { size?: number }) {
+export function ExternalArrow({ size = 8 }: { size?: number }) {
   return (
     <span
       aria-hidden="true"
@@ -21,12 +19,12 @@ export function ExternalArrow({ size = 9 }: { size?: number }) {
         display: "inline-block",
         width: size,
         height: size,
-        marginLeft: 6,
+        marginLeft: 5,
         marginRight: 1,
-        borderTop: "2px solid currentColor",
-        borderRight: "2px solid currentColor",
+        borderTop: "1.5px solid currentColor",
+        borderRight: "1.5px solid currentColor",
         transform: "rotate(45deg)",
-        verticalAlign: "0.05em",
+        verticalAlign: "0.06em",
         flexShrink: 0,
       }}
     />
