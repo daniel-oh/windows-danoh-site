@@ -172,13 +172,28 @@ export function Mail({ id }: { id: string }) {
           Email isn&apos;t set up for this inbox, but I&apos;d love to hear
           from you.
         </p>
+        {/* Buttons-with-onClick rather than the previous <button> nested
+         * inside <a target="_blank">. Interactive-inside-interactive
+         * is invalid HTML and breaks iOS double-tap-zoom + some
+         * screen readers. window.open with noopener,noreferrer is
+         * the same effect. */}
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <a href={CONTACT_LINKEDIN} target="_blank" rel="noopener noreferrer">
-            <button>Message on LinkedIn</button>
-          </a>
-          <a href={CONTACT_GITHUB} target="_blank" rel="noopener noreferrer">
-            <button>GitHub</button>
-          </a>
+          <button
+            type="button"
+            onClick={() =>
+              window.open(CONTACT_LINKEDIN, "_blank", "noopener,noreferrer")
+            }
+          >
+            Message on LinkedIn
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              window.open(CONTACT_GITHUB, "_blank", "noopener,noreferrer")
+            }
+          >
+            GitHub
+          </button>
           <button onClick={close}>Close</button>
         </div>
       </div>

@@ -125,20 +125,30 @@ const contentByKey = {
           for an access code.
         </p>
         <div className={styles.buttonGroup}>
-          <a
-            href="https://github.com/daniel-oh/windows-danoh-site"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                "https://github.com/daniel-oh/windows-danoh-site",
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }
           >
-            <button>GitHub</button>
-          </a>
-          <a
-            href="https://www.linkedin.com/in/daniel-oh/"
-            target="_blank"
-            rel="noopener noreferrer"
+            GitHub
+          </button>
+          <button
+            type="button"
+            onClick={() =>
+              window.open(
+                "https://www.linkedin.com/in/daniel-oh/",
+                "_blank",
+                "noopener,noreferrer"
+              )
+            }
           >
-            <button>LinkedIn</button>
-          </a>
+            LinkedIn
+          </button>
           <button onClick={openResume}>Resume</button>
         </div>
       </>
@@ -238,9 +248,24 @@ const contentByKey = {
         </p>
         <div className={styles.buttonGroup} style={{ marginTop: 12 }}>
           <button onClick={openResume}>View Full Resume</button>
-          <a href="/Daniel_Oh_Resume.pdf" download style={{ textDecoration: "none" }}>
-            <button type="button">Download PDF</button>
-          </a>
+          {/* Programmatic download via a transient anchor click — the
+           * previous <button> nested inside <a download> was invalid
+           * HTML and the inner button intercepted the anchor's
+           * download attribute on some browsers. */}
+          <button
+            type="button"
+            onClick={() => {
+              const a = document.createElement("a");
+              a.href = "/Daniel_Oh_Resume.pdf";
+              a.download = "Daniel_Oh_Resume.pdf";
+              a.rel = "noopener";
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+            }}
+          >
+            Download PDF
+          </button>
         </div>
       </>
     );
