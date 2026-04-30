@@ -6,6 +6,7 @@ import { getPostComponent } from "@/content/blog/posts-content";
 import styles from "./Blog.module.css";
 import { isMobile } from "@/lib/isMobile";
 import { REACTIONS, useReactions } from "@/lib/useReactions";
+import { CopyAttribution } from "@/components/CopyAttribution";
 
 export const BLOG_WIDTH = 700;
 
@@ -150,9 +151,12 @@ function PostView({
           )}
         </figure>
       )}
-      <div className={styles.markdown}>
+      <CopyAttribution
+        url={`https://danoh.com/blog/${post.slug}`}
+        className={styles.markdown}
+      >
         <PostBody slug={post.slug} />
-      </div>
+      </CopyAttribution>
       <PostActions slug={post.slug} />
       <ReactionBar slug={post.slug} />
     </article>
