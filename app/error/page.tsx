@@ -1,69 +1,46 @@
-import Link from "next/link";
-import type { Metadata } from "next";
-import styles from "./error.module.css";
+import { TerminalScreen } from "@/components/TerminalScreen";
+import { buildMetadata } from "@/lib/buildMetadata";
 
 // Route-level /error landing page. Reached when a server action
 // redirects here — most commonly OAuth failure (see lib/auth/actions.ts).
 // This is NOT an error boundary; those live at app/error.tsx (segment)
-// and app/global-error.tsx (root). Keeping the same retro-terminal
-// look so a visitor who hits any of the three reads them as one
-// coherent system.
+// and app/global-error.tsx (root). All three share <TerminalScreen />.
 
-const TITLE = "Error · Daniel Oh";
-const DESCRIPTION = "Something didn't complete. The site is fine.";
-const URL = "https://danoh.com/error";
-
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  robots: { index: false, follow: false },
-  openGraph: {
-    title: TITLE,
-    description: DESCRIPTION,
-    url: URL,
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-  },
-};
+export const metadata = buildMetadata({
+  title: "Error · Daniel Oh",
+  description: "Something didn't complete. The site is fine.",
+  url: "https://danoh.com/error",
+  noindex: true,
+});
 
 export default function ErrorPage() {
   return (
-    <div className={styles.root}>
-      <div className={styles.scanlines} aria-hidden="true" />
-      <main className={styles.terminal}>
-        <h1 className={`${styles.line} ${styles.l1}`} style={{ font: "inherit", margin: 0 }}>
-          <span className={styles.prompt}>!</span>{" "}
-          <span>fault detected</span>
-        </h1>
-        <div className={`${styles.line} ${styles.l2}`}>
-          <span className={styles.angle}>&gt;</span>{" "}
-          <span>an operation did not complete.</span>
-        </div>
-        <div className={`${styles.line} ${styles.l3}`}>
-          <span className={styles.angle}>&gt;</span>{" "}
-          <span>the site is fine. try again.</span>
-          <span className={styles.cursor} aria-hidden="true">
-            _
-          </span>
-        </div>
-
-        <div className={`${styles.actions} ${styles.l4}`}>
-          <Link href="/" className={styles.primary}>
-            [ Return to desktop ]
-          </Link>
-          <Link href="/blog" className={styles.secondary}>
-            [ Read the blog ]
-          </Link>
-        </div>
-
-        <p className={`${styles.signature} ${styles.l5}`}>
-          danoh.com // status: recoverable
-        </p>
-      </main>
-    </div>
+    <TerminalScreen
+      variant="amber"
+      lines={[
+        { prefix: "!", prefixStyle: "prompt", text: "fault detected" },
+        {
+          prefix: ">",
+          prefixStyle: "angle",
+          text: "an operation did not complete.",
+        },
+        {
+          prefix: ">",
+          prefixStyle: "angle",
+          text: "the site is fine. try again.",
+          cursor: true,
+        },
+      ]}
+      actions={[
+        {
+          kind: "link",
+          label: "[ Return to desktop ]",
+          href: "/",
+          primary: true,
+        },
+        { kind: "link", label: "[ Read the blog ]", href: "/blog" },
+      ]}
+      signature="danoh.com // status: recoverable"
+    />
   );
 }

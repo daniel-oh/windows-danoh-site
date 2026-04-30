@@ -1,35 +1,15 @@
 import Link from "next/link";
-import type { Metadata } from "next";
 import { sortedPosts } from "@/content/blog/posts";
+import { buildMetadata } from "@/lib/buildMetadata";
 import { BlogIndexContent } from "./BlogIndexContent";
 import styles from "./blog.module.css";
 
-// openGraph and twitter both set explicitly. Next.js merges metadata
-// from parents, but in practice that means a missing twitter block
-// here would inherit the homepage's "Daniel Oh · Engineer who designs"
-// title — wrong card for /blog. Mirroring openGraph keeps the X/
-// LinkedIn preview honest.
-const TITLE = "Blog · Daniel Oh";
-const DESCRIPTION =
-  "Writing from Daniel Oh on AI, craft, and the work of building things that last.";
-const URL = "https://danoh.com/blog";
-
-export const metadata: Metadata = {
-  title: TITLE,
-  description: DESCRIPTION,
-  alternates: { canonical: URL },
-  openGraph: {
-    title: TITLE,
-    description: DESCRIPTION,
-    url: URL,
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: TITLE,
-    description: DESCRIPTION,
-  },
-};
+export const metadata = buildMetadata({
+  title: "Blog · Daniel Oh",
+  description:
+    "Writing from Daniel Oh on AI, craft, and the work of building things that last.",
+  url: "https://danoh.com/blog",
+});
 
 // Page shell + metadata stays a server component (SSR, SEO). The list
 // and search live in BlogIndexContent as a client island — posts are
