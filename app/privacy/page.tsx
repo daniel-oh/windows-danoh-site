@@ -2,12 +2,31 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import styles from "../blog/blog.module.css";
 
+// Page-specific OG + twitter so a shared /privacy link doesn't show
+// the homepage URL or title in social cards. Image inherits the
+// site-wide /og-image.png from the root layout — no separate art
+// needed for a meta page.
+const TITLE = "Privacy · Daniel Oh";
+const DESCRIPTION =
+  "Exactly what danoh.com collects, why, and how to opt out. Plain language, no boilerplate.";
+const URL = "https://danoh.com/privacy";
+
 export const metadata: Metadata = {
-  title: "Privacy · Daniel Oh",
-  description:
-    "Exactly what danoh.com collects, why, and how to opt out. Plain language, no boilerplate.",
-  alternates: { canonical: "https://danoh.com/privacy" },
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: URL },
   robots: { index: true, follow: true },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: URL,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 // Intentionally short. A legal wall of text on a personal site is a
