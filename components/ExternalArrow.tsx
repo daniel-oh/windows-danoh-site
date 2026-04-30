@@ -1,18 +1,19 @@
-// "External link" / "open in new" indicator. Renders as a small
+// "External link" / "open in new" indicator. Renders as an
 // upper-right chevron next to link text.
 //
-// Implementation: pure CSS. Two borders on a rotated <span> form
-// the corner shape — no SVG, no Unicode, no font fallback chain to
-// fail through. The previous attempts (the bare ↗ glyph and a
-// stroke-then-fill SVG) both rendered as empty space on at least
-// one platform; CSS borders use currentColor reliably across every
-// browser.
+// Pure CSS (no SVG, no Unicode glyph) so the render path can't fail
+// on a missing font glyph or an iOS WebKit currentColor-on-stroke
+// quirk. Two borders on a rotated <span> form the corner shape;
+// currentColor on a CSS border is one of the most universally
+// supported inherit-the-text-color mechanisms in the platform.
 //
-// Sizing chosen so the chevron sits visually balanced against
-// 13–15 px body text. Uses currentColor + aria-hidden so it
-// inherits the surrounding link color and screen readers skip it.
+// Sized at 9 px square / 2 px border. Visible diagonal after
+// rotation works out to ~13 px corner-to-corner — clearly readable
+// against 13–15 px body text without overpowering it. Em-relative
+// vertical-align so the glyph centers on the cap height rather
+// than the baseline.
 
-export function ExternalArrow({ size = 7 }: { size?: number }) {
+export function ExternalArrow({ size = 9 }: { size?: number }) {
   return (
     <span
       aria-hidden="true"
@@ -20,12 +21,12 @@ export function ExternalArrow({ size = 7 }: { size?: number }) {
         display: "inline-block",
         width: size,
         height: size,
-        marginLeft: 5,
+        marginLeft: 6,
         marginRight: 1,
-        borderTop: "1.5px solid currentColor",
-        borderRight: "1.5px solid currentColor",
-        transform: "translateY(-2px) rotate(45deg)",
-        verticalAlign: "middle",
+        borderTop: "2px solid currentColor",
+        borderRight: "2px solid currentColor",
+        transform: "rotate(45deg)",
+        verticalAlign: "0.05em",
         flexShrink: 0,
       }}
     />
