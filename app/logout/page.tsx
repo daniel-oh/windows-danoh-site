@@ -2,10 +2,28 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import styles from "./logout.module.css";
 
+// noindex/nofollow because the page is transient — but if the URL
+// gets shared anyway, the OG override keeps the social card from
+// showing the homepage title and URL by mistake.
+const TITLE = "Logged off · Daniel Oh";
+const DESCRIPTION = "Session terminated. You are signed out of danoh.com.";
+const URL = "https://danoh.com/logout";
+
 export const metadata: Metadata = {
-  title: "Logged off · Daniel Oh",
-  description: "Session terminated. You are signed out of danoh.com.",
+  title: TITLE,
+  description: DESCRIPTION,
   robots: { index: false, follow: false },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: URL,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 // Matrix-style terminal farewell. Phosphor green on black, staggered

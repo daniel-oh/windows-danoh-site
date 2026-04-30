@@ -4,17 +4,30 @@ import { sortedPosts } from "@/content/blog/posts";
 import { BlogIndexContent } from "./BlogIndexContent";
 import styles from "./blog.module.css";
 
+// openGraph and twitter both set explicitly. Next.js merges metadata
+// from parents, but in practice that means a missing twitter block
+// here would inherit the homepage's "Daniel Oh · Engineer who designs"
+// title — wrong card for /blog. Mirroring openGraph keeps the X/
+// LinkedIn preview honest.
+const TITLE = "Blog · Daniel Oh";
+const DESCRIPTION =
+  "Writing from Daniel Oh on AI, craft, and the work of building things that last.";
+const URL = "https://danoh.com/blog";
+
 export const metadata: Metadata = {
-  title: "Blog · Daniel Oh",
-  description:
-    "Writing from Daniel Oh on AI, craft, and the work of building things that last.",
-  alternates: { canonical: "https://danoh.com/blog" },
+  title: TITLE,
+  description: DESCRIPTION,
+  alternates: { canonical: URL },
   openGraph: {
-    title: "Blog · Daniel Oh",
-    description:
-      "Writing from Daniel Oh on AI, craft, and the work of building things that last.",
-    url: "https://danoh.com/blog",
+    title: TITLE,
+    description: DESCRIPTION,
+    url: URL,
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
   },
 };
 

@@ -9,10 +9,25 @@ import styles from "./error.module.css";
 // look so a visitor who hits any of the three reads them as one
 // coherent system.
 
+const TITLE = "Error · Daniel Oh";
+const DESCRIPTION = "Something didn't complete. The site is fine.";
+const URL = "https://danoh.com/error";
+
 export const metadata: Metadata = {
-  title: "Error · Daniel Oh",
-  description: "Something didn't complete. The site is fine.",
+  title: TITLE,
+  description: DESCRIPTION,
   robots: { index: false, follow: false },
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: URL,
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export default function ErrorPage() {
