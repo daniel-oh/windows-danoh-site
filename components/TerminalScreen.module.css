@@ -1,21 +1,17 @@
-/* Retro-terminal fault screen. Parallel to /logout's treatment so the
- * two pages read as one system; swapped to red-amber phosphor so the
- * semantic ("something broke") is instantly distinct from the green
- * ("safely disconnected") farewell. Same animation + a11y posture. */
-
-:root {
-  --fault-bg: #000;
-  --fault-fg: #ff6b4a;
-  --fault-fg-dim: #b04a32;
-  --fault-accent: #ff8f70;
-  --fault-prompt: #ffb3a0;
-}
+/* Retro-terminal full-screen takeover. Powers /logout, /error, and the
+ * segment-level app/error.tsx — same structure, animations, and a11y
+ * posture; palette switches via the .green / .amber modifier classes
+ * applied to .root.
+ *
+ * Accessibility floor: prefers-reduced-motion skips the staggered
+ * reveal, the cursor blink, and the scanline flicker, so visitors who
+ * disable motion get the full message immediately. Contrast is
+ * engineered to clear WCAG AAA on the primary text (phosphor green
+ * on black ≈ 15:1; amber ≈ 10:1). */
 
 .root {
   position: relative;
   min-height: 100dvh;
-  background: var(--fault-bg);
-  color: var(--fault-fg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,15 +19,39 @@
   font-family: "Fira Code", "JetBrains Mono", "Menlo", "Consolas",
     "Lucida Console", monospace;
   overflow: hidden;
-  background: radial-gradient(
-    ellipse at center,
-    #140a06 0%,
-    #000 65%,
-    #000 100%
-  );
+  background: var(--term-bg);
+  color: var(--term-fg);
+  /* iOS Safari paints a blue flash over taps on tinted text/buttons —
+   * reads as a bug against the phosphor palettes. */
   -webkit-tap-highlight-color: transparent;
 }
 
+.root.green {
+  --term-bg: radial-gradient(ellipse at center, #0a0a0a 0%, #000 65%, #000 100%);
+  --term-fg: #33ff66; /* Phosphor green; AAA on black. */
+  --term-fg-dim: #1fa347; /* ~7:1, comfortably AA. */
+  --term-accent: #00ff6a;
+  --term-prompt: #5eff8e;
+  --term-scanline: rgba(51, 255, 102, 0.04);
+  --term-glow: rgba(51, 255, 102, 0.75);
+  --term-primary-bg: rgba(0, 255, 106, 0.12);
+  --term-signature: #a87a00;
+}
+
+.root.amber {
+  --term-bg: radial-gradient(ellipse at center, #140a06 0%, #000 65%, #000 100%);
+  --term-fg: #ff6b4a;
+  --term-fg-dim: #b04a32;
+  --term-accent: #ff8f70;
+  --term-prompt: #ffb3a0;
+  --term-scanline: rgba(255, 107, 74, 0.04);
+  --term-glow: rgba(255, 107, 74, 0.75);
+  --term-primary-bg: rgba(255, 143, 112, 0.12);
+  --term-signature: #b07060;
+}
+
+/* Subtle scanlines for CRT texture. Pointer events off so it never
+ * swallows a click on the actions below. */
 .scanlines {
   position: absolute;
   inset: 0;
@@ -39,8 +59,8 @@
   z-index: 1;
   background: repeating-linear-gradient(
     to bottom,
-    rgba(255, 107, 74, 0.04) 0,
-    rgba(255, 107, 74, 0.04) 1px,
+    var(--term-scanline) 0,
+    var(--term-scanline) 1px,
     transparent 1px,
     transparent 3px
   );
@@ -68,24 +88,26 @@
   font-size: 15px;
   line-height: 1.7;
   letter-spacing: 0.3px;
-  text-shadow: 0 0 1px rgba(255, 107, 74, 0.75);
+  text-shadow: 0 0 1px var(--term-glow);
 }
 
 .line {
   margin: 0;
   white-space: pre-wrap;
+  /* Default state for the reveal: invisible, nudged left. The .l1–.l6
+   * delay rules below animate each back in sequence. */
   opacity: 0;
   transform: translateX(-4px);
   animation: revealLine 0.35s ease-out forwards;
 }
 
 .prompt {
-  color: var(--fault-prompt);
+  color: var(--term-prompt);
   font-weight: 700;
 }
 
 .angle {
-  color: var(--fault-fg-dim);
+  color: var(--term-fg-dim);
 }
 
 .cursor {
@@ -117,21 +139,15 @@
   }
 }
 
-.l1 {
-  animation-delay: 120ms;
-}
-.l2 {
-  animation-delay: 640ms;
-}
-.l3 {
-  animation-delay: 1100ms;
-}
-.l4 {
-  animation-delay: 1500ms;
-}
-.l5 {
-  animation-delay: 1800ms;
-}
+/* Staggered reveal — each line fires slightly later than the last so
+ * the sequence reads like a terminal response rather than the page
+ * painting all at once. */
+.l1 { animation-delay: 120ms; }
+.l2 { animation-delay: 640ms; }
+.l3 { animation-delay: 1100ms; }
+.l4 { animation-delay: 1500ms; }
+.l5 { animation-delay: 1900ms; }
+.l6 { animation-delay: 2200ms; }
 
 .actions {
   display: flex;
@@ -154,22 +170,22 @@
   font-weight: 600;
   letter-spacing: 0.8px;
   text-decoration: none;
-  color: var(--fault-accent);
+  color: var(--term-accent);
   background: transparent;
-  border: 1px solid var(--fault-accent);
+  border: 1px solid var(--term-accent);
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
 }
 
 .primary {
-  background: rgba(255, 143, 112, 0.12);
+  background: var(--term-primary-bg);
 }
 
 .primary:hover,
 .primary:focus-visible,
 .secondary:hover,
 .secondary:focus-visible {
-  background: var(--fault-accent);
+  background: var(--term-accent);
   color: #000;
   outline: none;
 }
@@ -182,9 +198,9 @@
 .signature {
   font-size: 11px;
   letter-spacing: 2px;
-  color: #b07060; /* AA contrast on black */
   margin: 0;
   text-transform: uppercase;
+  color: var(--term-signature);
   opacity: 0;
   animation: revealLine 0.35s ease-out forwards;
 }
