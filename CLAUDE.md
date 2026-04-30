@@ -39,7 +39,12 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | Adjust window-title-bar mobile sizes  | `app/globals.css` `@media (max-width: 768px)` |
 | Send an admin email (e.g. guestbook) | `lib/notify.ts` (Resend wrapper)          |
 | Add a front-end analytics event       | `posthog.capture(...)` in any client file |
+| Add a server-side analytics event     | `captureServerEvent(name, props, req)` from `lib/capture.ts` |
 | Gate a feature on a user flag         | `flags/flags.ts` + `flags/context.tsx`    |
+| Append "Read more" attribution on copy| Wrap content in `<CopyAttribution url={...}>` (see `components/CopyAttribution.tsx`) |
+| Add OG/Twitter to a new page          | Hoist `TITLE`/`DESCRIPTION`/`URL` consts; mirror across `metadata` + `openGraph` + `twitter`. Pattern lives in `app/blog/page.tsx`, `/privacy`, `/logout`, `/error` |
+| Toggle analytics for a visitor        | `lib/analyticsOptOut.ts` flag — checked by `lib/CSPosthogProvider.tsx`; UI in `components/programs/Settings.tsx` |
+| Catch chunk-load errors after deploy  | `components/ChunkReloadGuard.tsx` (mounted in `app/layout.tsx`) |
 
 ---
 
@@ -76,6 +81,9 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | Client chunk-load recovery | `components/ChunkReloadGuard.tsx` (single reload per 10s) |
 | Client error telemetry     | `app/global-error.tsx` → `posthog.capture("client_error", …)` |
 | Server rate-limit telemetry| `lib/api/costGuard.ts` → `captureServerEvent("cost_guard_hit")` |
+| Visitor opt-out of analytics | `lib/analyticsOptOut.ts` (localStorage flag; respected at PostHog init + can be toggled live from Settings) |
+| Plain-language disclosure  | `app/privacy/page.tsx` (linked from Start menu → Help → Privacy) |
+| Copy-paste attribution     | `components/CopyAttribution.tsx` — appends "Read more at danoh.com/…" to clipboard on selections ≥ 40 chars; opt-out via `<pre>` or `data-no-copy-attribution` |
 
 All in-memory rate limit buckets live in `lib/api/rateLimit.ts` with an
 opportunistic sweep so they don't leak in a long-running container.
