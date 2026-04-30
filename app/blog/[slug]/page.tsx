@@ -9,6 +9,7 @@ import {
   type BlogPost,
 } from "@/content/blog/posts";
 import { getPostComponent } from "@/content/blog/posts-content";
+import { CopyAttribution } from "@/components/CopyAttribution";
 import styles from "../blog.module.css";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -123,9 +124,12 @@ export default async function Post({ params }: Props) {
               )}
             </figure>
           )}
-          <div className={styles.markdown}>
+          <CopyAttribution
+            url={`https://danoh.com/blog/${post.slug}`}
+            className={styles.markdown}
+          >
             <PostBody slug={post.slug} />
-          </div>
+          </CopyAttribution>
           <RelatedAndAdjacent slug={post.slug} />
           <div className={styles.footer}>
             <Link href="/blog" className={styles.footerLink}>
