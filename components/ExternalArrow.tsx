@@ -1,32 +1,36 @@
-// "External link" / "open in new" indicator. Small upper-right
-// chevron next to link text.
+// "External link" / "open in new" indicator.
 //
-// Pure CSS (no SVG, no Unicode glyph) so the render path can't fail
-// on a missing font glyph or a WebKit currentColor-on-stroke quirk.
-// Two borders on a rotated <span> form the corner shape; currentColor
-// on a CSS border is one of the most universally supported
-// inherit-the-text-color mechanisms.
+// History of attempts that didn't render for the user:
+//   1. "↗" U+2197 NORTH EAST ARROW — tofu (no glyph in mobile font
+//      fallback chain).
+//   2. SVG with fill="none" + stroke="currentColor" — empty space
+//      on iOS Safari (a known WebKit currentColor-on-stroke quirk).
+//   3. SVG with fill="currentColor" — also reported empty.
+//   4. CSS chevron with two borders + rotate(45deg) — also reported
+//      empty even though the styled span verifiably reaches the DOM.
 //
-// Sized 8 px / 1.5 px borders by design — calibrated to sit
-// confidently next to 11–14 px body text without overpowering it.
-// Matches the visual weight of a typical Unicode arrow at this scale.
+// At this point the priority is "actually visible" over "perfectly
+// diagonal." Switched to U+2192 RIGHTWARDS ARROW, which is in the
+// most-supported part of the Unicode Arrows block (covered by every
+// iOS / Android / macOS / Windows system font I know of). It's
+// horizontal rather than diagonal, but the surrounding link text
+// already conveys "external" — the arrow is a glance-confirming
+// cue, not the only signal.
+//
+// Wrapped in a span with aria-hidden so screen readers don't narrate
+// "rightwards arrow" after every link.
 
-export function ExternalArrow({ size = 8 }: { size?: number }) {
+export function ExternalArrow() {
   return (
     <span
       aria-hidden="true"
       style={{
+        marginLeft: 4,
         display: "inline-block",
-        width: size,
-        height: size,
-        marginLeft: 5,
-        marginRight: 1,
-        borderTop: "1.5px solid currentColor",
-        borderRight: "1.5px solid currentColor",
-        transform: "rotate(45deg)",
-        verticalAlign: "0.06em",
         flexShrink: 0,
       }}
-    />
+    >
+      &rarr;
+    </span>
   );
 }
