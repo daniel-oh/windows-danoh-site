@@ -30,6 +30,16 @@ export type BlogPost = {
 
 export const posts: BlogPost[] = [
   {
+    slug: "two-sites-one-operator",
+    title: "Two sites, one operator",
+    date: "2026-05-11",
+    author: "Daniel Oh",
+    summary:
+      "I shipped a second site this month. floeberg.com, a different voice and a narrower lane, for the consulting work this place was never going to do. Notes on the brand split, the wedge, and the hand-off between the two.",
+    tags: ["brand", "writing", "consulting", "ai"],
+    readingTime: "4 min",
+  },
+  {
     slug: "building-floeberg",
     title: "Building Floeberg",
     date: "2026-05-11",
