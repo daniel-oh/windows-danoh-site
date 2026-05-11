@@ -212,6 +212,26 @@
   margin: 14px 0;
 }
 
+/* Privacy page section sub-headings + bodies. Lives in the shared
+ * blog shell module because /privacy reuses the same window-shell
+ * layout; keeping the rules co-located makes the visual coherence
+ * explicit rather than scattered across inline styles. */
+.privacySection {
+  margin-top: 20px;
+}
+
+.privacySectionHeading {
+  font-size: 14px;
+  margin: 0 0 6px 0;
+  color: #000080;
+  letter-spacing: 0.3px;
+}
+
+.privacySectionBody {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .copyright {
   /* Quiet legal byline. Sits above the action footer so the credit is
    * the last bit of *content* a reader sees, distinct from the next-
