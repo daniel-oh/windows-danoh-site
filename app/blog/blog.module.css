@@ -215,14 +215,31 @@
 .copyright {
   /* Quiet legal byline. Sits above the action footer so the credit is
    * the last bit of *content* a reader sees, distinct from the next-
-   * post navigation. The site-wide no-em-dash convention is honored
-   * — middle dot as the only separator. */
+   * post navigation. Middle dot is the only separator — no em-dashes
+   * anywhere on the site. */
   font-size: 11px;
   color: #555;
   margin: 32px 0 0;
   padding-top: 18px;
   border-top: 1px solid #808080;
   text-align: center;
+  /* Long canonical URLs (longer slugs) break onto a second line on
+   * narrow viewports rather than overflowing the card edge. */
+  overflow-wrap: anywhere;
+}
+
+.copyrightLink {
+  /* Same muted treatment as the surrounding text — readable but not
+   * shouting blue. Underline-on-hover keeps the affordance discoverable
+   * without competing with the body links. */
+  color: #555;
+  text-decoration: none;
+}
+
+.copyrightLink:hover,
+.copyrightLink:focus-visible {
+  color: #000080;
+  text-decoration: underline;
 }
 
 .footer {
