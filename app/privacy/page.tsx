@@ -165,18 +165,9 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section style={{ marginTop: 20 }}>
-      <h2
-        style={{
-          fontSize: 14,
-          margin: "0 0 6px 0",
-          color: "#000080",
-          letterSpacing: 0.3,
-        }}
-      >
-        {title}
-      </h2>
-      <div style={{ fontSize: 13, lineHeight: 1.55 }}>{children}</div>
+    <section className={styles.privacySection}>
+      <h2 className={styles.privacySectionHeading}>{title}</h2>
+      <div className={styles.privacySectionBody}>{children}</div>
     </section>
   );
 }
