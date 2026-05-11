@@ -60,21 +60,37 @@ export default async function Post({ params }: Props) {
   const post = getPost(slug);
   if (!post) notFound();
 
+  const postYear = post.date.slice(0, 4);
+  const authorPerson = {
+    "@type": "Person",
+    name: post.author,
+    url: "https://danoh.com",
+    // sameAs links resolve the byline to verified profiles so Google
+    // Knowledge Graph and other crawlers tie the article back to the
+    // same identity instead of a free-floating name string.
+    sameAs: [
+      "https://www.linkedin.com/in/daniel-oh/",
+      "https://github.com/daniel-oh",
+    ],
+  } as const;
+
   const ld = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
     description: post.summary,
     datePublished: post.date,
-    author: { "@type": "Person", name: post.author },
+    author: authorPerson,
     keywords: post.tags.join(", "),
     url: `https://danoh.com/blog/${post.slug}`,
     mainEntityOfPage: `https://danoh.com/blog/${post.slug}`,
-    publisher: {
-      "@type": "Person",
-      name: post.author,
-      url: "https://danoh.com",
-    },
+    publisher: authorPerson,
+    copyrightHolder: authorPerson,
+    copyrightYear: postYear,
+    // CC-style implicit terms: byline + canonical link required on
+    // reposts; we treat the CopyAttribution snippet as the
+    // machine-readable expression of the same.
+    creditText: `${post.author} · danoh.com/blog/${post.slug}`,
   };
 
   return (
@@ -132,6 +148,10 @@ export default async function Post({ params }: Props) {
             <PostBody slug={post.slug} />
           </CopyAttribution>
           <RelatedAndAdjacent slug={post.slug} />
+          <p className={styles.copyright}>
+            © {postYear} {post.author}. Quote with attribution; full
+            reposts by permission.
+          </p>
           <div className={styles.footer}>
             <Link href="/blog" className={styles.footerLink}>
               ← All posts

@@ -212,10 +212,23 @@
   margin: 14px 0;
 }
 
-.footer {
-  margin-top: 32px;
+.copyright {
+  /* Quiet legal byline. Sits above the action footer so the credit is
+   * the last bit of *content* a reader sees, distinct from the next-
+   * post navigation. The site-wide no-em-dash convention is honored
+   * — middle dot as the only separator. */
+  font-size: 11px;
+  color: #555;
+  margin: 32px 0 0;
   padding-top: 18px;
   border-top: 1px solid #808080;
+  text-align: center;
+}
+
+.footer {
+  margin-top: 12px;
+  padding-top: 0;
+  border-top: none;
   display: flex;
   justify-content: space-between;
   align-items: center;
