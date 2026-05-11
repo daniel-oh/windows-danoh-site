@@ -30,6 +30,16 @@ export type BlogPost = {
 
 export const posts: BlogPost[] = [
   {
+    slug: "why-i-built-floeberg",
+    title: "Why I built Floeberg",
+    date: "2026-05-11",
+    author: "Daniel Oh",
+    summary:
+      "I shipped a second site this month. floeberg.com, a different voice, the same operator. Notes on the brand split, the wedge, and why one channel couldn't do both jobs.",
+    tags: ["brand", "writing", "consulting", "ai"],
+    readingTime: "4 min",
+  },
+  {
     slug: "mdx-rive-demo",
     title: "Rive in MDX: live React components in a blog post",
     date: "2026-04-17",

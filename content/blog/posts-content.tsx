@@ -12,6 +12,7 @@ import type { MDXComponents } from "mdx/types";
 import WelcomePost from "./posts/welcome-to-danoh.mdx";
 import AiAppGenPost from "./posts/ai-app-generation.mdx";
 import MdxRiveDemoPost from "./posts/mdx-rive-demo.mdx";
+import WhyFloebergPost from "./posts/why-i-built-floeberg.mdx";
 
 type MDXContent = ComponentType<{ components?: MDXComponents }>;
 
@@ -19,6 +20,7 @@ const POST_COMPONENTS: Record<string, MDXContent> = {
   "welcome-to-danoh": WelcomePost,
   "ai-app-generation": AiAppGenPost,
   "mdx-rive-demo": MdxRiveDemoPost,
+  "why-i-built-floeberg": WhyFloebergPost,
 };
 
 export function getPostComponent(slug: string): MDXContent | null {
