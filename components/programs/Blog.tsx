@@ -158,6 +158,18 @@ function PostView({
       >
         <PostBody slug={post.slug} />
       </CopyAttribution>
+      <p
+        style={{
+          fontSize: 11,
+          color: "#555",
+          textAlign: "center",
+          margin: "18px 0 0",
+          paddingTop: 12,
+          borderTop: "1px solid #808080",
+        }}
+      >
+        © {post.date.slice(0, 4)} {post.author}. Quote with attribution.
+      </p>
       <PostActions slug={post.slug} />
       <ReactionBar slug={post.slug} />
     </article>

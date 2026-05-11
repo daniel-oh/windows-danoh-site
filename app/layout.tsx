@@ -48,6 +48,9 @@ export const metadata: Metadata = {
     follow: true,
   },
   keywords: ["Daniel Oh", "platform engineer", "Nike", "cybersecurity", "DevOps", "Kubernetes", "cloud infrastructure", "Michigan Engineering"],
+  authors: [{ name: "Daniel Oh", url: "https://danoh.com" }],
+  creator: "Daniel Oh",
+  publisher: "Daniel Oh",
 };
 
 export const viewport: Viewport = {
