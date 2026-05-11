@@ -1,4 +1,4 @@
-import { canSendEmail, notifyAdmin } from "@/lib/notify";
+import { canSendEmail, notifyAdmin, sendEmail } from "@/lib/notify";
 import { getClientIP } from "@/lib/api/clientIP";
 import {
   createLastSeenBucket,
@@ -139,7 +139,7 @@ export async function POST(req: Request) {
   }
 
   const ok = await notifyAdmin({
-    subject: `[danoh.com contact] ${cleanSubject ?? "Hello"} — ${
+    subject: `[danoh.com contact] ${cleanSubject ?? "Hello"} · ${
       cleanName ?? "Anonymous"
     }`,
     text:
@@ -151,6 +151,27 @@ export async function POST(req: Request) {
       `${cleanMessage}\n`,
     replyTo: cleanReplyTo ?? undefined,
   });
+
+  // Bonus delight: if the visitor gave us a reply-to address, send
+  // them a brief confirmation so they know the form actually delivered
+  // and aren't left wondering. Fire-and-forget — the admin already has
+  // the message, the visitor has already seen the inline "Sent" state,
+  // so a Resend hiccup here shouldn't block or alter the response.
+  if (ok && cleanReplyTo) {
+    void sendEmail({
+      to: cleanReplyTo,
+      subject: "Got your note · danoh.com",
+      text:
+        `Hey ${cleanName ?? "there"},\n\n` +
+        `Thanks for writing in. Your note arrived and I'll read it soon.\n` +
+        `Replies come from me directly, usually within a few days.\n\n` +
+        `For reference, you wrote:\n\n` +
+        cleanMessage.split("\n").map((l) => `> ${l}`).join("\n") +
+        `\n\n` +
+        `Daniel\n` +
+        `danoh.com\n`,
+    });
+  }
 
   if (!ok) {
     return Response.json(
