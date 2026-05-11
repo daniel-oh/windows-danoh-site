@@ -149,8 +149,13 @@ export default async function Post({ params }: Props) {
           </CopyAttribution>
           <RelatedAndAdjacent slug={post.slug} />
           <p className={styles.copyright}>
-            © {postYear} {post.author}. Quote with attribution; full
-            reposts by permission.
+            © {postYear} {post.author} ·{" "}
+            <a
+              href={`https://danoh.com/blog/${post.slug}`}
+              className={styles.copyrightLink}
+            >
+              danoh.com/blog/{post.slug}
+            </a>
           </p>
           <div className={styles.footer}>
             <Link href="/blog" className={styles.footerLink}>

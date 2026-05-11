@@ -36,7 +36,7 @@ export default function BlogIndex() {
         <div className={styles.body}>
           <BlogIndexContent posts={sortedPosts} />
           <p className={styles.copyright}>
-            © {new Date().getFullYear()} Daniel Oh. Writing on danoh.com.
+            © {new Date().getFullYear()} Daniel Oh · danoh.com
           </p>
           <div className={styles.footer}>
             <Link href="/" className={styles.footerLink}>

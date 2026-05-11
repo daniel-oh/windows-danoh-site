@@ -168,7 +168,8 @@ function PostView({
           borderTop: "1px solid #808080",
         }}
       >
-        © {post.date.slice(0, 4)} {post.author}. Quote with attribution.
+        © {post.date.slice(0, 4)} {post.author} · danoh.com/blog/
+        {post.slug}
       </p>
       <PostActions slug={post.slug} />
       <ReactionBar slug={post.slug} />
