@@ -30,14 +30,14 @@ export type BlogPost = {
 
 export const posts: BlogPost[] = [
   {
-    slug: "why-i-built-floeberg",
-    title: "Why I built Floeberg",
+    slug: "building-floeberg",
+    title: "Building Floeberg",
     date: "2026-05-11",
     author: "Daniel Oh",
     summary:
-      "I shipped a second site this month. floeberg.com, a different voice, the same operator. Notes on the brand split, the wedge, and why one channel couldn't do both jobs.",
-    tags: ["brand", "writing", "consulting", "ai"],
-    readingTime: "4 min",
+      "Build log for floeberg.com: self-hosted gotrue on a shared Postgres, an idempotent Stripe → DB → Discord pipeline, and a single chat table projected to two surfaces. The site itself should be a depth-layer build, not duct tape.",
+    tags: ["engineering", "infrastructure", "ai", "consulting"],
+    readingTime: "5 min",
   },
   {
     slug: "mdx-rive-demo",
