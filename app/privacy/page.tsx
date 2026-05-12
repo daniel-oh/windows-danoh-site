@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
+import { SkipLink } from "@/components/SkipLink";
 import styles from "../blog/blog.module.css";
 
 export const metadata = buildMetadata({
@@ -18,6 +19,7 @@ const LAST_UPDATED = "2026-04-18";
 export default function Privacy() {
   return (
     <div className={styles.page}>
+      <SkipLink />
       <div className={styles.shell}>
         <div className={styles.titleBar}>
           <div className={styles.titleBarText}>Privacy · danoh.com</div>
@@ -25,7 +27,7 @@ export default function Privacy() {
             Open the desktop<ExternalArrow />
           </Link>
         </div>
-        <div className={styles.body}>
+        <main id="main" className={styles.body}>
           <h1 className={styles.postHeading} style={{ fontSize: 22 }}>
             Privacy
           </h1>
@@ -151,7 +153,7 @@ export default function Privacy() {
               Blog<ExternalArrow />
             </Link>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );

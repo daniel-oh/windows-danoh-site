@@ -11,6 +11,7 @@ import {
 import { getPostComponent } from "@/content/blog/posts-content";
 import { CopyAttribution } from "@/components/CopyAttribution";
 import { ExternalArrow } from "@/components/ExternalArrow";
+import { SkipLink } from "@/components/SkipLink";
 import styles from "../blog.module.css";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -99,6 +100,7 @@ export default async function Post({ params }: Props) {
 
   return (
     <div className={styles.page}>
+      <SkipLink />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
@@ -110,7 +112,7 @@ export default async function Post({ params }: Props) {
             Open the desktop<ExternalArrow />
           </Link>
         </div>
-        <article className={styles.body}>
+        <article id="main" className={styles.body}>
           <div className={styles.meta}>
             <span>{post.date}</span>
             <span>·</span>
