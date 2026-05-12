@@ -35,7 +35,7 @@ export const posts: BlogPost[] = [
     date: "2026-05-11",
     author: "Daniel Oh",
     summary:
-      "I shipped a second site this month. floeberg.com, a different voice and a narrower lane, for the consulting work this place was never going to do. Notes on the brand split, the wedge, and the hand-off between the two.",
+      "I shipped floeberg.com this month, a narrower voice for the consulting work this site was never going to do. Notes on the brand split.",
     tags: ["brand", "writing", "consulting", "ai"],
     readingTime: "4 min",
   },
@@ -45,7 +45,7 @@ export const posts: BlogPost[] = [
     date: "2026-05-11",
     author: "Daniel Oh",
     summary:
-      "Build log for floeberg.com: self-hosted gotrue on a shared Postgres, an idempotent Stripe → DB → Discord pipeline, and a single chat table projected to two surfaces. The site itself should be a depth-layer build, not duct tape.",
+      "Build log for floeberg.com: self-hosted gotrue on shared Postgres, an idempotent Stripe → DB → Discord pipeline, one chat table for two surfaces.",
     tags: ["engineering", "infrastructure", "ai", "consulting"],
     readingTime: "5 min",
   },
