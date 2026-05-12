@@ -8,7 +8,7 @@ import styles from "./blog.module.css";
 export const metadata = buildMetadata({
   title: "Blog · Daniel Oh",
   description:
-    "Writing from Daniel Oh on AI, craft, and the work of building things that last.",
+    "Posts on AI infrastructure, brand decisions, and the depth layer below the model layer. Writing by Daniel Oh.",
   url: "https://danoh.com/blog",
 });
 
