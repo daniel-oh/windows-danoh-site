@@ -26,6 +26,18 @@ const ipBucket = createRateLimitBucket();
 const visitorBucket = createRateLimitBucket();
 const visitorLastAt = createLastSeenBucket(VISITOR_COOLDOWN_MS);
 
+// Per-recipient cap for the visitor-confirmation email. The contact
+// form sends a courtesy confirmation to whatever reply-to address the
+// visitor supplies — which is also a potential spam-relay vector:
+// fill the form with attacker-controlled body content + a victim's
+// email, victim receives a "Your note arrived" message from
+// noreply@danoh.com quoting the attacker's text. Capping at 1
+// confirmation per recipient per 24 h prevents any one address from
+// being weaponised even if attackers rotate visitor IDs and IPs.
+const CONFIRM_PER_DEST_LIMIT = 1;
+const CONFIRM_PER_DEST_WINDOW_MS = 24 * 60 * 60 * 1000;
+const confirmDestBucket = createRateLimitBucket();
+
 function isValidVisitor(v: unknown): v is string {
   return typeof v === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(v);
 }
@@ -153,11 +165,25 @@ export async function POST(req: Request) {
   });
 
   // Bonus delight: if the visitor gave us a reply-to address, send
-  // them a brief confirmation so they know the form actually delivered
-  // and aren't left wondering. Fire-and-forget — the admin already has
-  // the message, the visitor has already seen the inline "Sent" state,
-  // so a Resend hiccup here shouldn't block or alter the response.
-  if (ok && cleanReplyTo) {
+  // them a brief confirmation so they know the form actually delivered.
+  // Fire-and-forget — the admin already has the message, the visitor
+  // has already seen the inline "Sent" state, so a Resend hiccup here
+  // shouldn't block or alter the response.
+  //
+  // Spam-relay defense: cap per recipient via confirmDestBucket. Without
+  // this an attacker could weaponise the confirmation to spam a target
+  // by filling the form with malicious body content + the target's
+  // email. 1-per-24h-per-destination limit kills that vector while
+  // letting a legit visitor still get their note-arrived receipt.
+  if (
+    ok &&
+    cleanReplyTo &&
+    !confirmDestBucket.tripAndRecord(
+      cleanReplyTo.toLowerCase(),
+      CONFIRM_PER_DEST_LIMIT,
+      CONFIRM_PER_DEST_WINDOW_MS
+    )
+  ) {
     void sendEmail({
       to: cleanReplyTo,
       subject: "Got your note · danoh.com",
