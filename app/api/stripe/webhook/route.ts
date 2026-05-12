@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createTransaction } from "@/server/usage/createTransaction";
+import { query, hasDatabase } from "@/lib/db";
 
 let _stripe: Stripe | null = null;
 function getStripe(): Stripe | null {
@@ -37,30 +38,29 @@ export async function POST(req: Request) {
     );
   }
 
-  const client = await createClient();
-
   // Idempotency. Stripe retries webhooks on any non-2xx or timeout;
   // without this check, a retried checkout.session.completed would
-  // call createTransaction twice and double-credit tokens. We use
+  // call createTransaction twice and double-credit tokens. Use
   // event.id (Stripe-assigned, globally unique per event, stable
-  // across retries) as the dedup key. Inserting into stripe_events
-  // is the first DB write — if the PK conflict fires, this event
-  // was already processed and we can 200 immediately.
-  const { error: dedupError } = await (client.from("stripe_events") as any)
-    .insert({ event_id: event.id, type: event.type });
-
-  if (dedupError) {
-    // 23505 = unique_violation. Anything else is a genuine DB error
-    // that we don't want to silently swallow — fail loud so Stripe
-    // retries and we get logs.
-    if (dedupError.code === "23505") {
+  // across retries) as the dedup key. INSERT ... ON CONFLICT DO
+  // NOTHING into the self-hosted Postgres lets us detect a replay
+  // via the returned rowCount in a single round-trip.
+  //
+  // Self-hosted Postgres (lib/db) rather than Supabase: this is
+  // operational metadata with no RLS concerns; living next to
+  // sessions/generations/guestbook lets it auto-migrate on deploy
+  // via ensureTables(). Falls open (no-op) if no DATABASE_URL,
+  // matching the rest of the app's posture.
+  if (hasDatabase()) {
+    const dedup = await query(
+      `INSERT INTO stripe_events (event_id, type)
+       VALUES ($1, $2)
+       ON CONFLICT (event_id) DO NOTHING`,
+      [event.id, event.type]
+    );
+    if (dedup && dedup.rowCount === 0) {
       return Response.json({ received: true, deduped: true });
     }
-    console.error("[stripe webhook] dedup insert failed:", dedupError);
-    return Response.json(
-      { error: "Webhook dedup failed; will retry" },
-      { status: 500 }
-    );
   }
 
   if (event.type === "checkout.session.completed") {
@@ -71,8 +71,9 @@ export async function POST(req: Request) {
       return Response.json({ error: "User ID not found" }, { status: 400 });
     }
 
+    const supabase = await createClient();
     const { error } = await createTransaction({
-      client,
+      client: supabase,
       userId,
       amount: session.amount_total!,
       tokensPurchased: 100,

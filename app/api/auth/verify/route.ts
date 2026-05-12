@@ -1,6 +1,7 @@
 import { query } from "@/lib/db";
 import { cookies } from "next/headers";
 import { getCodeHash } from "@/lib/accessCode";
+import { hashInviteCode } from "@/lib/inviteHash";
 import { getClientIP } from "@/lib/api/clientIP";
 import crypto from "crypto";
 
@@ -64,10 +65,13 @@ export async function POST(req: Request) {
     });
   }
 
-  // Check invite codes first
+  // Check invite codes first. We look up by SHA-256(code) so the
+  // submitted plaintext never has to be compared against a stored
+  // plaintext — the DB only holds hashes after the refactor.
+  const inviteCodeHash = hashInviteCode(code);
   const inviteResult = await query(
-    "SELECT code, total_uses, used, expires_at FROM invite_codes WHERE code = $1",
-    [code]
+    "SELECT code_hash, total_uses, used, expires_at FROM invite_codes WHERE code_hash = $1",
+    [inviteCodeHash]
   );
 
   if (inviteResult && inviteResult.rows.length > 0) {
@@ -90,9 +94,11 @@ export async function POST(req: Request) {
     }
 
     const sessionId = crypto.randomUUID();
+    // Sessions row carries the hash, not the plaintext, so the
+    // session table is also safe in a DB-breach scenario.
     await query(
-      "INSERT INTO sessions (id, code_hash, invite_code) VALUES ($1, $2, $3)",
-      [sessionId, code, code]
+      "INSERT INTO sessions (id, code_hash, invite_code_hash) VALUES ($1, $2, $3)",
+      [sessionId, inviteCodeHash, inviteCodeHash]
     );
 
     const cookieStore = await cookies();

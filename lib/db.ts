@@ -1,4 +1,5 @@
 import pg from "pg";
+import crypto from "crypto";
 
 const { Pool } = pg;
 
@@ -61,6 +62,54 @@ async function ensureTables() {
   await p.query(`
     ALTER TABLE sessions ADD COLUMN IF NOT EXISTS invite_code TEXT;
   `);
+  // Invite-code hash storage. Plaintext is never persisted going
+  // forward — the admin sees the code once at creation and saves it
+  // themselves. The hash is the lookup key for /api/auth/verify and
+  // for the per-request guard's UPDATE-used counter. Existing
+  // plaintext rows get a code_hash backfilled below so they keep
+  // working through the transition; the plaintext `code` column
+  // becomes vestigial and can be dropped manually once the admin is
+  // confident no row predates the hash refactor.
+  await p.query(`
+    ALTER TABLE invite_codes ADD COLUMN IF NOT EXISTS code_hash TEXT;
+  `);
+  await p.query(`
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS invite_code_hash TEXT;
+  `);
+  // Backfill code_hash for rows that predate the column. Idempotent —
+  // the WHERE clause selects only rows still missing the hash, so on
+  // every subsequent boot this is a no-op SELECT returning zero rows.
+  const legacyInvites = await p.query(
+    `SELECT code FROM invite_codes WHERE code_hash IS NULL AND code IS NOT NULL`
+  );
+  for (const row of legacyInvites?.rows ?? []) {
+    const hash = crypto
+      .createHash("sha256")
+      .update(row.code)
+      .digest("hex");
+    await p.query(
+      `UPDATE invite_codes SET code_hash = $1 WHERE code = $2`,
+      [hash, row.code]
+    );
+  }
+  const legacySessions = await p.query(
+    `SELECT id, invite_code FROM sessions WHERE invite_code IS NOT NULL AND invite_code_hash IS NULL`
+  );
+  for (const row of legacySessions?.rows ?? []) {
+    const hash = crypto
+      .createHash("sha256")
+      .update(row.invite_code)
+      .digest("hex");
+    await p.query(
+      `UPDATE sessions SET invite_code_hash = $1 WHERE id = $2`,
+      [hash, row.id]
+    );
+  }
+  await p.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_invite_codes_hash
+    ON invite_codes(code_hash)
+    WHERE code_hash IS NOT NULL;
+  `);
   await p.query(`
     CREATE TABLE IF NOT EXISTS programs (
       id TEXT NOT NULL,
@@ -90,6 +139,18 @@ async function ensureTables() {
     CREATE TABLE IF NOT EXISTS visits (
       visitor_id TEXT PRIMARY KEY,
       first_seen TIMESTAMP DEFAULT NOW()
+    );
+  `);
+  // Stripe webhook dedup. Inserting event.id is the first DB write
+  // the handler does; PK unique violation on a retry tells the handler
+  // the event was already processed. Self-managed in the app's own
+  // Postgres (not Supabase) so it auto-migrates on deploy without a
+  // separate migration step.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS stripe_events (
+      event_id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      processed_at TIMESTAMP DEFAULT NOW()
     );
   `);
   // Guestbook messages, passed through an AI classifier on submit.
