@@ -28,9 +28,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getPost(slug);
   if (!post) return { title: "Post not found · Daniel Oh" };
   const url = `https://danoh.com/blog/${post.slug}`;
+  // Fall back to the site-wide OG image when a post hasn't set its
+  // own. Without this, posts without an explicit hero would render
+  // with no preview card on X / LinkedIn / Slack — a blank placeholder
+  // where the danoh.com card should be.
   const ogImages = post.image
     ? [{ url: post.image, alt: post.imageAlt || post.title }]
-    : undefined;
+    : [{ url: "/og-image.png", width: 1200, height: 630, alt: "Daniel Oh" }];
   return {
     title: `${post.title} · Daniel Oh`,
     description: post.summary,
