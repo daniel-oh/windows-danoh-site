@@ -33,7 +33,7 @@ export async function checkAccess(
 
   // Check if session exists and whether it's an invite code session
   const sessionResult = await query(
-    "SELECT id, code_hash, invite_code FROM sessions WHERE id = $1",
+    "SELECT id, code_hash, invite_code_hash FROM sessions WHERE id = $1",
     [sessionId]
   );
 
@@ -47,11 +47,13 @@ export async function checkAccess(
 
   const session = sessionResult.rows[0];
 
-  // Invite code session: check total usage against invite limit
-  if (session.invite_code) {
+  // Invite-code session: lookup + increment by hash, not plaintext.
+  // The plaintext code only ever existed in the verify request body
+  // and the admin's clipboard; nothing here re-derives it.
+  if (session.invite_code_hash) {
     const inviteResult = await query(
-      "SELECT total_uses, used, expires_at FROM invite_codes WHERE code = $1",
-      [session.invite_code]
+      "SELECT total_uses, used, expires_at FROM invite_codes WHERE code_hash = $1",
+      [session.invite_code_hash]
     );
 
     if (!inviteResult || inviteResult.rows.length === 0) {
@@ -86,8 +88,8 @@ export async function checkAccess(
       [sessionId, endpoint]
     );
     await query(
-      "UPDATE invite_codes SET used = used + 1 WHERE code = $1",
-      [session.invite_code]
+      "UPDATE invite_codes SET used = used + 1 WHERE code_hash = $1",
+      [session.invite_code_hash]
     );
 
     return null;
