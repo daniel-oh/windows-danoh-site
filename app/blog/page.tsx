@@ -2,6 +2,7 @@ import Link from "next/link";
 import { sortedPosts } from "@/content/blog/posts";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
+import { SkipLink } from "@/components/SkipLink";
 import { BlogIndexContent } from "./BlogIndexContent";
 import styles from "./blog.module.css";
 
@@ -18,6 +19,7 @@ export const metadata = buildMetadata({
 export default function BlogIndex() {
   return (
     <div className={styles.page}>
+      <SkipLink />
       <div className={styles.shell}>
         <div className={styles.titleBar}>
           <div className={styles.titleBarText}>Blog · danoh.com</div>
@@ -33,7 +35,7 @@ export default function BlogIndex() {
             AI, craft, and the work of building things that last.
           </div>
         </header>
-        <div className={styles.body}>
+        <main id="main" className={styles.body}>
           <BlogIndexContent posts={sortedPosts} />
           <p className={styles.copyright}>
             © {new Date().getFullYear()} Daniel Oh · danoh.com
@@ -46,7 +48,7 @@ export default function BlogIndex() {
               RSS<ExternalArrow />
             </a>
           </div>
-        </div>
+        </main>
       </div>
     </div>
   );
