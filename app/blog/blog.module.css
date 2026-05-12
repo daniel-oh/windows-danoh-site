@@ -60,6 +60,16 @@
   overflow-wrap: anywhere;
 }
 
+/* Tighter list indent across viewports. Browser default ~40px makes
+ * bullets float far to the right of their section heading and
+ * breaks the visual hierarchy on /privacy and other shell pages.
+ * 22 px keeps the markers visible while letting bullet text sit
+ * one comfortable indent (≈ one em) right of the heading's left edge. */
+.body ul,
+.body ol {
+  padding-left: 22px;
+}
+
 .tagline {
   padding: 12px 14px;
   background: linear-gradient(to bottom, #000080 0%, #0000c0 100%);
@@ -566,13 +576,6 @@
   }
   .body {
     padding: 16px 14px 20px;
-  }
-  /* Lists on narrow viewports shed their default ~40 px left padding
-   * so bullet content doesn't get pushed into the right-hand edge,
-   * which used to make the /privacy bullet text feel clipped. */
-  .body ul,
-  .body ol {
-    padding-left: 22px;
   }
   /* Inline code in prose needs explicit wrap — long identifiers like
    * VISITOR_LIMIT_MS are indivisible to overflow-wrap: anywhere until
