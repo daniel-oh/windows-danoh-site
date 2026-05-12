@@ -276,6 +276,31 @@ const contentByKey = {
         <h3>Updates</h3>
 
         <div style={{ borderLeft: "2px solid #808080", paddingLeft: 14, marginTop: 8 }}>
+          <h4 style={{ margin: "0 0 4px" }}>May 11, 2026</h4>
+          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
+            Floeberg launch and a security pass
+          </p>
+          <p style={{ margin: "0 0 8px" }}>
+            Two new posts on the work side of my life:{" "}
+            <em>Two sites, one operator</em> (the brand split) and{" "}
+            <em>Building Floeberg</em> (the stack: self-hosted gotrue,
+            idempotent Stripe pipeline, one wave channel projected to
+            both web and Discord).
+          </p>
+          <p style={{ margin: "0 0 12px" }}>
+            Also shipped: a plain-language{" "}
+            <a href="/privacy" style={{ color: "#000080" }}>/privacy</a>{" "}
+            page, contact form that actually sends email from a branded
+            sender with a visitor receipt, a keyboard skip-link on the
+            blog pages, a retro Matrix-green logout screen, copy-paste
+            attribution that auto-appends the source URL when you quote
+            a post, and cost guardrails on every AI endpoint. Under the
+            hood: every CRITICAL and HIGH item from the security audit
+            closed (OAuth open-redirect, Stripe webhook idempotency,
+            invite-code hashing, prompt-injection escape, contact-form
+            spam-relay cap).
+          </p>
+
           <h4 style={{ margin: "0 0 4px" }}>Apr 17, 2026</h4>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>MDX, new programs, mobile polish</p>
           <p style={{ margin: "0 0 8px" }}>

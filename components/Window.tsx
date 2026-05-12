@@ -9,6 +9,7 @@ import {
   useSetAtom,
 } from "jotai";
 import { focusedWindowAtom, zOrderAtom } from "@/state/focusedWindow";
+import { useFocusTrap } from "@/lib/useFocusTrap";
 import { windowsListAtom } from "@/state/windowsList";
 import { MIN_WINDOW_SIZE, windowAtomFamily } from "@/state/window";
 import { WindowBody } from "./WindowBody";
@@ -48,6 +49,14 @@ function WindowInner({ id }: { id: string }) {
 
   const isHidden = state.status === "minimized" && !isMinimizing;
   const windowRef = useRef<HTMLDivElement>(null);
+
+  // Focus trap: when this window is the focused one, Tab cycles
+  // through its controls rather than escaping into another window
+  // or the desktop. Inactive (background) windows don't install the
+  // trap, so click-or-focus on a different window releases it
+  // naturally. Matches the native OS metaphor — Tab moves within
+  // the window; window-switching is a separate gesture.
+  useFocusTrap(windowRef, focusedWindow === id && !isHidden);
 
   // Move focus into newly opened windows so keyboard users can immediately
   // act on them (Tab into controls, Esc to close).
