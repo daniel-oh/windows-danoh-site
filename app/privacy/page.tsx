@@ -21,7 +21,7 @@ export default function Privacy() {
     <div className={styles.page}>
       <SkipLink />
       <div className={styles.shell}>
-        <div className={styles.titleBar}>
+        <div className={`${styles.titleBar} ${styles.titleBarSticky}`}>
           <div className={styles.titleBarText}>Privacy · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />

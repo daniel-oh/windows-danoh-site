@@ -26,6 +26,17 @@
   align-items: center;
 }
 
+/* Opt-in sticky variant used on /privacy. Mirrors a real Win98
+ * window's behavior: title bar stays visible while you scroll inside
+ * the body. Keeps the "Open the desktop" exit one tap away from
+ * anywhere on a long page without adding a modern floating
+ * back-to-top button that would break the OS metaphor. */
+.titleBarSticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
 .titleBarText {
   flex: 1;
   overflow: hidden;
