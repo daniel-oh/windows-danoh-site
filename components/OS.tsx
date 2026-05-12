@@ -4,10 +4,10 @@ import { memo } from "react";
 import styles from "./OS.module.css";
 import cx from "classnames";
 import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { focusedWindowAtom } from "@/state/focusedWindow";
 import { windowsListAtom } from "@/state/windowsList";
-import { windowAtomFamily } from "@/state/window";
+import { windowAtomFamily, type WindowState } from "@/state/window";
 import { createWindow } from "@/lib/createWindow";
 import { Window } from "./Window";
 import { startMenuOpenAtom } from "@/state/startMenu";
@@ -198,15 +198,45 @@ function StartMenu() {
     setStartMenuOpen(false);
   };
 
+  // Resolve the currently-focused window's program type, so the
+  // matching Start-menu entry can carry aria-current="page" for
+  // screen readers. Recomputed only when the focused window changes;
+  // program type doesn't mutate after creation. Reads the atom value
+  // via the default store rather than useAtomValue because the id
+  // is dynamic and hooks require stable shape.
+  const focusedWindowId = useAtomValue(focusedWindowAtom);
+  const focusedProgramType: WindowState["program"]["type"] | null =
+    useMemo(() => {
+      if (!focusedWindowId) return null;
+      try {
+        const state = getDefaultStore().get(
+          windowAtomFamily(focusedWindowId)
+        );
+        return state.program.type;
+      } catch {
+        return null;
+      }
+    }, [focusedWindowId]);
+
   // Audited + reordered by focus. Welcome anchors the top; everything
   // else flows from "read / create / play / configure" so visitors
   // aren't staring at a wall of equally-weighted buttons. Display
   // was folded into Settings; Now was removed as redundant with the
   // Welcome program's own Updates tab and the bio hero.
-  const entries: { label: string; cb: () => void }[] = [
+  //
+  // programType is what the entry's cb opens (matched against the
+  // focused window so the active program reads aria-current="page").
+  // Omitted for entries that don't open an in-OS window — Report a
+  // bug and Privacy are external links.
+  const entries: {
+    label: string;
+    programType?: WindowState["program"]["type"];
+    cb: () => void;
+  }[] = [
     // Anchor
     {
       label: "Welcome",
+      programType: "welcome",
       cb: () => {
         createWindow({
           title: "Welcome to danoh.com",
@@ -218,6 +248,7 @@ function StartMenu() {
     // Read
     {
       label: "Blog",
+      programType: "blog",
       cb: () => {
         createWindow({
           title: "Blog",
@@ -228,6 +259,7 @@ function StartMenu() {
     },
     {
       label: "Resume",
+      programType: "resume",
       cb: () => {
         createWindow({
           title: "Resume - Daniel Oh",
@@ -239,6 +271,7 @@ function StartMenu() {
     // Create
     {
       label: "Run",
+      programType: "run",
       cb: () => {
         createWindow({
           title: "Run",
@@ -249,6 +282,7 @@ function StartMenu() {
     // Connect
     {
       label: "Mail",
+      programType: "mail",
       cb: () => {
         createWindow({
           title: "New Message",
@@ -259,6 +293,7 @@ function StartMenu() {
     },
     {
       label: "Guestbook",
+      programType: "guestbook",
       cb: () => {
         createWindow({
           title: "Guestbook",
@@ -270,6 +305,7 @@ function StartMenu() {
     // Play
     {
       label: "Minesweeper",
+      programType: "minesweeper",
       cb: () => {
         createWindow({
           title: "Minesweeper",
@@ -282,6 +318,7 @@ function StartMenu() {
     // Utility
     {
       label: "Explorer",
+      programType: "explorer",
       cb: () => {
         createWindow({
           title: "Explorer",
@@ -291,6 +328,7 @@ function StartMenu() {
     },
     {
       label: "Settings",
+      programType: "settings",
       cb: () => {
         createWindow({
           title: "Settings",
@@ -302,6 +340,7 @@ function StartMenu() {
     // Help
     {
       label: "Shortcuts",
+      programType: "shortcuts",
       cb: () => {
         createWindow({
           title: "Keyboard Shortcuts",
@@ -333,15 +372,24 @@ function StartMenu() {
       onTouchStart={onMenuTouchStart}
       onTouchMove={onMenuTouchMove}
     >
-      {entries.map((entry) => (
-        <button
-          key={entry.label}
-          role="menuitem"
-          onClick={wrap(entry.cb)}
-        >
-          {entry.label}
-        </button>
-      ))}
+      {entries.map((entry) => {
+        // The entry whose programType matches the focused window is
+        // the "current page" for screen-reader purposes — visitors
+        // exploring the menu hear which program is active.
+        const isActive =
+          entry.programType !== undefined &&
+          entry.programType === focusedProgramType;
+        return (
+          <button
+            key={entry.label}
+            role="menuitem"
+            aria-current={isActive ? "page" : undefined}
+            onClick={wrap(entry.cb)}
+          >
+            {entry.label}
+          </button>
+        );
+      })}
       <button role="menuitem" onClick={wrap(() => confirmLogout(logout))}>
         Log Off...
       </button>
