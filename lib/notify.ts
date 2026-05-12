@@ -12,11 +12,11 @@
 //
 // Configure in the environment:
 //   RESEND_API_KEY     — required; without it sends silently no-op
-//   ADMIN_EMAIL        — admin recipient (defaults to danohwebsite@gmail.com)
+//   ADMIN_EMAIL        — admin recipient (defaults to hello@danoh.com)
 //   NOTIFY_FROM_EMAIL  — sender address (defaults to noreply@danoh.com)
 //   NOTIFY_FROM_NAME   — friendly From-name (defaults to "danoh.com")
 
-const ADMIN_EMAIL_DEFAULT = "danohwebsite@gmail.com";
+const ADMIN_EMAIL_DEFAULT = "hello@danoh.com";
 const FROM_EMAIL_DEFAULT = "noreply@danoh.com";
 const FROM_NAME_DEFAULT = "danoh.com";
 

@@ -136,7 +136,7 @@ export default function Privacy() {
             <p>
               Questions, corrections, or deletion requests: open the Mail
               program on the desktop, or email{" "}
-              <a href="mailto:danohwebsite@gmail.com">danohwebsite@gmail.com</a>
+              <a href="mailto:hello@danoh.com">hello@danoh.com</a>
               .
             </p>
           </Section>
