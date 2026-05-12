@@ -53,10 +53,20 @@ Rules:
 
 Respond with EXACTLY one word, nothing else: "approved" or "rejected".`;
 
-// Strip the message tag sentinel out of any user input so a visitor can't
-// break out of the <message>...</message> frame.
+// Prepare untrusted input for inclusion inside the <message>...</message>
+// frame the moderator LLM reads. Two layers:
+//   1. Escape angle brackets so a hostile message can't introduce ANY
+//      tag the classifier might honor (not just <message>). Defense
+//      in depth; the system prompt already tells the model to treat
+//      tag contents as data, but adversarial LLM behavior is real.
+//   2. Cap length so an enormous message can't blow the token budget
+//      or push the system prompt out of the context window.
 function sanitizeForClassifier(s: string): string {
-  return s.replace(/<\/?message>/gi, "").slice(0, MAX_MESSAGE);
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .slice(0, MAX_MESSAGE);
 }
 
 type ModResult = { status: "approved" | "rejected" | "pending"; reason?: string };
