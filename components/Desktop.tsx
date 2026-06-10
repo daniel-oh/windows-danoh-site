@@ -57,9 +57,6 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   if (!positions[MINESWEEPER_ICON_ID]) {
     positions[MINESWEEPER_ICON_ID] = { col: 0, row: 2 };
   }
-  if (!positions[RECYCLE_ICON_ID]) {
-    positions[RECYCLE_ICON_ID] = { col: 0, row: 3 };
-  }
   const occupied = new Set(
     Object.values(positions).map((p) => `${p.col},${p.row}`)
   );
@@ -67,19 +64,34 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
     ? Math.floor((window.innerHeight - 80) / getGridSize())
     : 6;
 
-  for (const program of programs) {
-    if (positions[program.id]) continue;
-    let placed = false;
-    for (let col = 0; col < 20 && !placed; col++) {
-      for (let row = 0; row < maxRows && !placed; row++) {
+  const placeInFirstFree = (id: string) => {
+    for (let col = 0; col < 20; col++) {
+      for (let row = 0; row < maxRows; row++) {
         const key = `${col},${row}`;
         if (!occupied.has(key)) {
-          positions[program.id] = { col, row };
+          positions[id] = { col, row };
           occupied.add(key);
-          placed = true;
+          return;
         }
       }
     }
+  };
+
+  // The Recycle Bin anchors to the BOTTOM of the first column (like
+  // the real desktop) rather than the next free slot — programs seed
+  // asynchronously, so "after the programs" would race them and end
+  // up above Snake.exe. Placed before the program loop so the slot is
+  // reserved in the occupied set.
+  if (!positions[RECYCLE_ICON_ID]) {
+    const bottomRow = Math.max(4, maxRows - 1);
+    positions[RECYCLE_ICON_ID] = { col: 0, row: bottomRow };
+    occupied.add(`0,${bottomRow}`);
+  }
+
+  // Programs (Snake.exe, anything generated) stack under the built-ins.
+  for (const program of programs) {
+    if (positions[program.id]) continue;
+    placeInFirstFree(program.id);
   }
   return positions;
 }
@@ -88,7 +100,9 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
 // where you put your icons on refresh. getOnInit so the first
 // drag of a session doesn't clobber the stored layout.
 const iconPositionsAtom = atomWithStorage<IconPositions>(
-  "danoh_icon_positions",
+  // v2: key bumped when the default order changed (Recycle Bin last)
+  // so recently-stored layouts pick up the new arrangement.
+  "danoh_icon_positions_v2",
   {},
   undefined,
   { getOnInit: true }
