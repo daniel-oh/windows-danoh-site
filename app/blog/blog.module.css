@@ -64,9 +64,13 @@
 
 @media (max-width: 768px), (pointer: coarse) {
   .titleBarLink {
-    /* 18px-tall was the first interactive element on the page and
-     * far under the touch-target floor. */
-    min-height: 28px;
+    /* 18px-tall was the first interactive element on the page and far
+     * under the touch-target floor. 32px + wider padding clears WCAG
+     * AA (24px min) comfortably and matches the 30px mobile OS title
+     * bar; a full 44px would balloon this Win98 caption bar, so the
+     * larger hit area is bought horizontally instead. */
+    min-height: 32px;
+    padding: 4px 12px;
     display: inline-flex;
     align-items: center;
   }
@@ -290,8 +294,12 @@
 }
 
 .privacySectionBody {
-  font-size: 13px;
-  line-height: 1.55;
+  /* 15px (not the 13px it was) brings the legal pages' reading comfort
+   * closer to the blog body's 16px. Scoped to .privacySectionBody so
+   * the blog index's summary lines (.indexSummary) stay their size.
+   * Child ul/li inherit this — .body ul/ol only set padding. */
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .postCta {
