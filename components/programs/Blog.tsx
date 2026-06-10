@@ -8,9 +8,9 @@ import {
   BlogPost,
   getRelatedPosts,
   getAdjacentPosts,
-} from "@/content/blog/posts";
+} from "@/content/blog/registry";
 import { ReactionBar } from "@/components/ReactionBar";
-import { getPostComponent } from "@/content/blog/posts-content";
+import { PostBody } from "@/content/blog/registry";
 import styles from "./Blog.module.css";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { CopyAttribution } from "@/components/CopyAttribution";
@@ -332,13 +332,5 @@ function PostActions({ slug }: { slug: string }) {
   );
 }
 
-function PostBody({ slug }: { slug: string }) {
-  // getPostComponent LOOKS UP a statically-defined MDX component from
-  // a module-level map — identity is stable per slug, so this is not
-  // the create-components-during-render hazard the rule targets.
-  const Component = getPostComponent(slug);
-  if (!Component) return <p>Post content not found.</p>;
-  // eslint-disable-next-line react-hooks/static-components
-  return <Component />;
-}
+
 

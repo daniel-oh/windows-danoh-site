@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { type BlogPost } from "@/content/blog/posts";
+import { useMemo, useRef, useState } from "react";
+import { type BlogPost } from "@/content/blog/registry";
 import styles from "./blog.module.css";
 
 // Client-island for the /blog index. Page shell + metadata stay on
@@ -40,6 +40,7 @@ function matches(post: BlogPost, query: string): boolean {
 
 export function BlogIndexContent({ posts }: { posts: BlogPost[] }) {
   const [query, setQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const trimmed = query.trim();
 
   const filtered = useMemo(() => {
@@ -66,6 +67,7 @@ export function BlogIndexContent({ posts }: { posts: BlogPost[] }) {
           Search
         </label>
         <input
+          ref={searchRef}
           id="blog-search"
           type="search"
           value={query}
@@ -77,7 +79,13 @@ export function BlogIndexContent({ posts }: { posts: BlogPost[] }) {
         {trimmed && (
           <button
             type="button"
-            onClick={() => setQuery("")}
+            onClick={() => {
+              setQuery("");
+              // The button unmounts with the query — without this,
+              // keyboard focus falls to <body> and the user is dumped
+              // to the top of the tab order.
+              searchRef.current?.focus();
+            }}
             className={styles.searchClear}
             aria-label="Clear search"
           >
@@ -112,14 +120,15 @@ export function BlogIndexContent({ posts }: { posts: BlogPost[] }) {
                     )}
                     <Link
                       href={`/blog/${post.slug}`}
-                      className={styles.footerLink}
+                      className={styles.indexTitleLink}
                     >
                       {post.title}
                     </Link>
                   </div>
                   <p className={styles.indexSummary}>{post.summary}</p>
                   <div className={styles.indexMeta}>
-                    {post.date} · {post.author}
+                    <time dateTime={post.date}>{post.date}</time> ·{" "}
+                    {post.author} · {post.readingTime} read
                   </div>
                 </li>
               ))}

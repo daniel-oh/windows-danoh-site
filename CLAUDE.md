@@ -30,7 +30,7 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 
 | Task                                  | Path                                      |
 | ------------------------------------- | ----------------------------------------- |
-| Add a blog post                       | `content/blog/posts/<slug>.mdx` + add metadata to `content/blog/posts.ts` + `content/blog/posts-content.tsx` |
+| Add a blog post                       | `content/blog/posts/<slug>.mdx` with an `export const meta` + one import pair in `content/blog/registry.tsx` (prebuild check enforces consistency) |
 | Add a desktop program                 | `components/programs/<Name>.tsx`, wire into `components/WindowBody.tsx`, add a `type` to `state/window.tsx` |
 | Add a Start-menu entry                | `components/OS.tsx` → `entries` array     |
 | Add an AI endpoint                    | `app/api/<name>/route.ts` → call `checkAccess` + `costGuard` + `capture` |

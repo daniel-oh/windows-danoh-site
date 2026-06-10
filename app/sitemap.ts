@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { sortedPosts } from "@/content/blog/posts";
+import { sortedPosts } from "@/content/blog/registry";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://danoh.com";

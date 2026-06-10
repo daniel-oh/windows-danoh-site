@@ -7,13 +7,14 @@ import {
   getAdjacentPosts,
   getRelatedPosts,
   type BlogPost,
-} from "@/content/blog/posts";
-import { getPostComponent } from "@/content/blog/posts-content";
+} from "@/content/blog/registry";
+import { getPostComponent, PostBody } from "@/content/blog/registry";
 import { CopyAttribution } from "@/components/CopyAttribution";
 import { ReactionBar } from "@/components/ReactionBar";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import styles from "../blog.module.css";
+import { CaptionIcon } from "../CaptionIcon";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -34,6 +35,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // own. Without this, posts without an explicit hero would render
   // with no preview card on X / LinkedIn / Slack — a blank placeholder
   // where the danoh.com card should be.
+  // JSON-LD and the twitter images array are hand-built strings, so
+  // unlike the openGraph block they don't get metadataBase resolution —
+  // a relative post.image would ship invalid schema. Absolutize here.
+  const absoluteImage = post.image
+    ? post.image.startsWith("http")
+      ? post.image
+      : `https://danoh.com${post.image}`
+    : "https://danoh.com/og-image.png";
   const ogImages = post.image
     ? [{ url: post.image, alt: post.imageAlt || post.title }]
     : [{ url: "/og-image.png", width: 1200, height: 630, alt: "Daniel Oh" }];
@@ -58,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       creator: "@danohstudio",
       title: post.title,
       description: post.summary,
-      images: post.image ? [post.image] : undefined,
+      images: [absoluteImage],
     },
   };
 }
@@ -67,6 +76,9 @@ export default async function Post({ params }: Props) {
   const { slug } = await params;
   const post = getPost(slug);
   if (!post) notFound();
+  // A meta without a component (drift the prebuild check should have
+  // caught) must hard-404, not ship an indexed page with an empty body.
+  if (!getPostComponent(slug)) notFound();
 
   const postYear = post.date.slice(0, 4);
   const authorPerson = {
@@ -91,18 +103,34 @@ export default async function Post({ params }: Props) {
     dateModified: post.date,
     // Always provide an image — required for Discover/article rich
     // treatment; the shared OG card is the fallback.
-    image: [post.image ?? "https://danoh.com/og-image.png"],
+    image: [
+      post.image
+        ? post.image.startsWith("http")
+          ? post.image
+          : `https://danoh.com${post.image}`
+        : "https://danoh.com/og-image.png",
+    ],
     author: authorPerson,
     keywords: post.tags.join(", "),
     url: `https://danoh.com/blog/${post.slug}`,
     mainEntityOfPage: `https://danoh.com/blog/${post.slug}`,
     publisher: authorPerson,
     copyrightHolder: authorPerson,
-    copyrightYear: postYear,
+    copyrightYear: Number(postYear),
     // CC-style implicit terms: byline + canonical link required on
     // reposts; we treat the CopyAttribution snippet as the
     // machine-readable expression of the same.
     creditText: `${post.author} · danoh.com/blog/${post.slug}`,
+  };
+
+  const breadcrumbs = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: "https://danoh.com" },
+      { "@type": "ListItem", position: 2, name: "Blog", item: "https://danoh.com/blog" },
+      { "@type": "ListItem", position: 3, name: post.title },
+    ],
   };
 
   return (
@@ -112,8 +140,13 @@ export default async function Post({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      />
       <div className={styles.shell}>
         <div className={styles.titleBar}>
+          <CaptionIcon />
           <div className={styles.titleBarText}>{post.title} · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
@@ -121,14 +154,16 @@ export default async function Post({ params }: Props) {
         </div>
         <article id="main" className={styles.body}>
           <div className={styles.meta}>
-            <span>{post.date}</span>
+            <time dateTime={post.date}>{post.date}</time>
             <span>·</span>
             <span>{post.author}</span>
+            <span>·</span>
+            <span>{post.readingTime} read</span>
           </div>
           <h1 className={styles.postHeading}>{post.title}</h1>
           <p className={styles.summary}>{post.summary}</p>
           {post.tags.length > 0 && (
-            <div className={styles.tags}>
+            <div className={styles.tags} aria-label="Tags">
               {post.tags.map((tag) => (
                 <span key={tag} className={styles.tag}>
                   {tag}
@@ -161,7 +196,6 @@ export default async function Post({ params }: Props) {
             <PostBody slug={post.slug} />
           </CopyAttribution>
           <ReactionBar slug={post.slug} />
-          <RelatedAndAdjacent slug={post.slug} />
           <div className={styles.postCta}>
             Enjoyed this? I write a few times a month. Follow along via{" "}
             <a href="/feed.xml" className={styles.footerLink}>
@@ -173,6 +207,7 @@ export default async function Post({ params }: Props) {
             </a>
             .
           </div>
+          <RelatedAndAdjacent slug={post.slug} />
           <p className={styles.copyright}>
             © {postYear} {post.author} ·{" "}
             <a
@@ -197,20 +232,18 @@ export default async function Post({ params }: Props) {
             </span>
           </div>
         </article>
+        <div className={styles.statusBar}>
+          <span className={`${styles.statusCell} ${styles.grow}`}>
+            {post.readingTime} read
+          </span>
+          <span className={styles.statusCell}>danoh.com</span>
+        </div>
       </div>
     </div>
   );
 }
 
-function PostBody({ slug }: { slug: string }) {
-  // getPostComponent LOOKS UP a statically-defined MDX component from
-  // a module-level map — identity is stable per slug, so this is not
-  // the create-components-during-render hazard the rule targets.
-  const Component = getPostComponent(slug);
-  if (!Component) return <p>Post content not found.</p>;
-  // eslint-disable-next-line react-hooks/static-components
-  return <Component />;
-}
+
 
 function RelatedAndAdjacent({ slug }: { slug: string }) {
   const related = getRelatedPosts(slug, 3);

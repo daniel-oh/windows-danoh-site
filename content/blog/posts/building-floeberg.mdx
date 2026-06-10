@@ -1,5 +1,15 @@
-{/* Metadata lives in content/blog/posts.ts — keep them in sync when you
- * create a new post. Body below is pure markdown + MDX (JSX allowed). */}
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "building-floeberg",
+  title: "Self-hosting Supabase Auth (gotrue): the Floeberg build log",
+  date: "2026-05-11",
+  author: "Daniel Oh",
+  summary:
+    "Build log for floeberg.com. Why I self-hosted gotrue, how Stripe → DB → Discord stays idempotent, and one chat table projected to two surfaces.",
+  tags: ["engineering", "infrastructure", "ai", "consulting"],
+  readingTime: "4 min",
+};
 
 I shipped a new site this month: [floeberg.com](https://floeberg.com). New brand, new reader, new work. This is the build log. ([Two sites, one operator](/blog/two-sites-one-operator) covers why the brand split was necessary; this post is the technical companion.)
 

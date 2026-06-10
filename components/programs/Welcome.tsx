@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import styles from "./Welcome.module.css";
 import check from "@/components/assets/check.png";
-import { sortedPosts } from "@/content/blog/posts";
+import { sortedPosts } from "@/content/blog/registry";
 import { createWindow } from "@/lib/createWindow";
 import { useVisitorCount } from "@/lib/useVisitorCount";
 

@@ -1,5 +1,15 @@
-{/* Metadata lives in content/blog/posts.ts — keep them in sync when you
- * create a new post. Body below is pure markdown + MDX (JSX allowed). */}
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "mdx-rive-demo",
+  title: "Rive in MDX: live React components in a Next.js blog",
+  date: "2026-04-17",
+  author: "Daniel Oh",
+  summary:
+    "The blog migrated to MDX so posts can include real React. Here is a 4 KB Rive animation rendered inline as proof.",
+  tags: ["engineering", "mdx", "rive"],
+  readingTime: "2 min",
+};
 
 import { Rive } from "@/components/mdx/Rive";
 

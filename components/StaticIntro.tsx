@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { sortedPosts } from "@/content/blog/posts";
+import { sortedPosts } from "@/content/blog/registry";
 
 // Server-rendered boot screen. This is the SEO fix for the SPA problem:
 // the raw homepage HTML previously contained ~41 characters of icon

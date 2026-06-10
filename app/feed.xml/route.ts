@@ -1,6 +1,6 @@
 import { createElement } from "react";
-import { sortedPosts } from "@/content/blog/posts";
-import { getPostComponent } from "@/content/blog/posts-content";
+import { sortedPosts } from "@/content/blog/registry";
+import { getPostComponent } from "@/content/blog/registry";
 
 const SITE = "https://danoh.com";
 const TITLE = "Daniel Oh · Blog";

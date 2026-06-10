@@ -1,41 +1,61 @@
-{/* Metadata lives in content/blog/posts.ts — keep them in sync when you
- * create a new post. Body below is pure markdown + MDX (JSX allowed). */}
+{/* Metadata is the `meta` export below — one file, one source. */}
 
-Ever wondered how typing "paint app" into a text box creates a fully functional painting application? Here's what happens behind the scenes. (If you're brand new to danoh.com, [the launch post](/blog/welcome-to-danoh) explains what the desktop is and what you can do with it.)
+export const meta = {
+  slug: "ai-app-generation",
+  title: "How AI app generation works",
+  date: "2026-04-10",
+  author: "Daniel Oh",
+  summary:
+    "Behind the Run program: how a sentence becomes a working HTML/CSS/JS app in seconds, and where the AI takes shortcuts you would never notice.",
+  tags: ["engineering", "ai"],
+  readingTime: "3 min",
+};
 
-## The Pipeline
+Ever wondered how typing "paint app" into a text box creates a working painting application? Here is what happens behind the scenes, end to end. (If you are brand new to danoh.com, [the launch post](/blog/welcome-to-danoh) explains what the desktop is and what you can do with it.)
 
-### 1. Prompt Engineering
+## The pipeline
 
-Your description gets wrapped in a carefully crafted system prompt that instructs Claude to generate a complete, standalone HTML application. The prompt includes:
+### 1. The prompt does most of the steering
 
-- Rules for responsive design (relative units, overflow handling)
-- The 98.css library for Windows 98 styling
-- OS APIs for file access, registry, and chat capabilities
-- Guidelines for making apps genuinely functional, not just mockups
+Your description gets wrapped in a system prompt that turns a general model into a very specific kind of machine: one that emits a single, complete, standalone HTML document and nothing else. The rules in that prompt are where most of the quality comes from:
 
-### 2. Streaming Generation
+- Output only raw HTML. No commentary, no markdown fences, no "here is your app".
+- The app runs inside a resizable window, so layout must use relative units. Fixed pixel layouts get you an app that breaks the moment someone drags a corner.
+- 98.css is preloaded for the retro chrome, so the model spends its effort on logic instead of reinventing buttons.
+- No external images. Assets get drawn with CSS, SVG, or canvas.
+- The OS injects a small API surface (a per-program key-value registry, file open and save hooks, an optional chat bridge) and the prompt documents exactly what is available.
 
-The AI response streams directly into an iframe: you literally watch the app build itself in real-time as HTML chunks arrive over the network. No loading spinner, no waiting for the full response. The app appears piece by piece.
+### 2. Streaming, visibly
 
-### 3. Code Capture & Caching
+The browser fetches the generation as a stream and forwards each chunk into the program's window as it arrives. You watch the document assemble itself: head, styles, markup, then the scripts that make it interactive. The loading overlay drops at the first byte because the build *is* the show.
 
-Once streaming completes, the generated HTML is captured from the iframe's DOM and cached. The next time you open that app, it loads instantly: no AI call needed.
+One detail I care about: the window the code streams into is sandboxed from the very first chunk. Generated code never shares an origin with the site, which means a prompt like "make a calculator that also reads my keys" produces a calculator that physically cannot.
 
-### 4. Live Iteration
+### 3. Persistence and versions
 
-The **?** button on any app window opens a chat where the AI has full context of your app's source code. You can:
+When the stream completes, the raw HTML is saved as the program's code in a virtual filesystem that lives in your browser (IndexedDB underneath). The desktop gets an icon, and the next launch loads instantly with no AI call. Every regeneration writes a new version, so the File menu has real history you can roll back through.
 
-- Report bugs: *"The canvas doesn't respond to touch"*
-- Request features: *"Add a color picker"*
-- Ask questions: *"How does the undo system work?"*
+Two small calls round it out: one names the program (so "an app that tracks how many cups of coffee I drink" becomes something that fits a title bar) and one draws its icon.
 
-The AI responds with updated code that's applied live: the app changes in front of your eyes.
+### 4. Fix and iterate
 
-## Security & Safety
+The **?** button on any generated window opens a chat where the model has the app's full source as context. Report a bug, ask for a feature, or ask how something works. Fixes come back as a fresh version of the whole document and the window reloads into it. It is the same loop a developer runs, compressed to one text box.
 
-Generated apps run in sandboxed iframes with restricted permissions. They can execute JavaScript but can't access the parent page, make cross-origin requests, or access your data outside the provided OS APIs.
+## Where the AI takes shortcuts
 
----
+The summary of this post promises shortcuts you would never notice, so here are the honest ones:
 
-*Have questions about how danoh.com works? Open a **Run** dialog and ask the AI to build you something.*
+- **It fakes persistence until you ask for it.** A todo app will happily hold state in memory. Ask it to "remember my list" and it reaches for the registry API.
+- **It draws instead of fetching.** Every icon, sprite, and texture is CSS or SVG because the rules forbid external images. You read that as "clean retro style". It is also a constraint doing the work of a design system.
+- **Responsive by decree, not by testing.** The model never sees the app render. The relative-units rule is doing the job a QA pass would.
+- **98.css is a crutch and a costume.** Native-looking widgets for free means the model rarely writes custom controls, which is exactly why the apps feel coherent.
+
+## Security, because someone always asks
+
+Generated code is untrusted by definition, so it runs in an opaque-origin iframe with scripts allowed and nothing else. It cannot read the parent page, your storage, or your API key if you brought one. The only bridge is a message channel with an allowlisted set of operations, and each program's registry keys are namespaced so one app cannot read another's data. On the server side, generation sits behind layered rate limits with a global daily ceiling, because a fun demo should not become someone else's free compute.
+
+## Try it
+
+Hit **Start > Run** and describe something small and weird. A unit converter for recipe measurements. A typing test that insults you gently. If you do not have an access code yet, Snake.exe on the desktop is a real output of this exact pipeline, saved as a program like any other.
+
+*Questions about how it works? The Mail program goes straight to my inbox.*

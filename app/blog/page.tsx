@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { sortedPosts } from "@/content/blog/posts";
+import { sortedPosts } from "@/content/blog/registry";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import { BlogIndexContent } from "./BlogIndexContent";
 import styles from "./blog.module.css";
+import { CaptionIcon } from "./CaptionIcon";
 
 export const metadata = buildMetadata({
   title: "Blog · Daniel Oh",
@@ -25,7 +26,11 @@ export default function BlogIndex() {
     "@id": "https://danoh.com/blog#blog",
     name: "Daniel Oh · Blog",
     url: "https://danoh.com/blog",
-    author: { "@id": "https://danoh.com/#person" },
+    author: {
+      "@type": "Person",
+      name: "Daniel Oh",
+      url: "https://danoh.com",
+    },
     blogPost: sortedPosts.map((p) => ({
       "@type": "BlogPosting",
       headline: p.title,
@@ -42,6 +47,7 @@ export default function BlogIndex() {
       />
       <div className={styles.shell}>
         <div className={styles.titleBar}>
+          <CaptionIcon />
           <div className={styles.titleBarText}>Blog · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
@@ -75,6 +81,12 @@ export default function BlogIndex() {
             </span>
           </div>
         </main>
+        <div className={styles.statusBar}>
+          <span className={`${styles.statusCell} ${styles.grow}`}>
+            {sortedPosts.length} posts
+          </span>
+          <span className={styles.statusCell}>danoh.com</span>
+        </div>
       </div>
     </div>
   );
