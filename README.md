@@ -3,6 +3,15 @@
 Personal website of Daniel Oh: a Windows 98 desktop where you describe an app
 and the AI builds it in your browser. Live at [danoh.com](https://danoh.com).
 
+![The danoh.com desktop](docs/screenshot.png)
+
+What's inside:
+
+- **Run**: describe any app and Claude streams it into a window, fully sandboxed
+- **Fix & Iterate**: chat with the AI to debug or extend a generated program, with version history
+- **A real (virtual) filesystem**: programs persist to IndexedDB; mount actual folders via the File System Access API
+- **The rest of the OS**: MDX blog, pirate Minesweeper, guestbook, mail, recycle bin that restores closed windows
+
 Built on [windows9x](https://github.com/SawyerHood/windows9x) by Sawyer Hood.
 
 ## Getting started

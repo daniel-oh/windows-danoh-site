@@ -1,5 +1,6 @@
 import { RealFs } from "./RealFs";
 import { readFileAsText } from "./readFileAsText";
+import { readFileAsArrayBuffer } from "./readFileAsArrayBuffer";
 
 export interface StubFile {
   type: "file";
@@ -136,7 +137,8 @@ export class Drive {
     }
 
     if (item.kind === "file") {
-      const content = await readFileAsText(
+      // Byte-exact copy: move/rename must not assume the file is text.
+      const content = await readFileAsArrayBuffer(
         await (item as FileSystemFileHandle).getFile()
       );
       await this.writeFile(newPath, content);

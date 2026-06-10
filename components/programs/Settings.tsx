@@ -10,7 +10,7 @@ import {
 import styles from "./Settings.module.css";
 import cx from "classnames";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import posthog from "posthog-js";
 import {
   isAnalyticsOptedOut,
@@ -150,13 +150,10 @@ export function Settings({ id }: { id: string }) {
 }
 
 function AnalyticsSection() {
-  // Read the opt-out flag once on mount (localStorage is client-only).
-  // Flips call posthog.opt_in/out_capturing so the change takes effect
-  // without a reload for the rest of the session.
-  const [optedOut, setOptedOut] = useState(false);
-  useEffect(() => {
-    setOptedOut(isAnalyticsOptedOut());
-  }, []);
+  // Lazy initializer instead of read-in-effect: the Settings program
+  // only ever renders client-side (windows mount after hydration), so
+  // localStorage is available on first render.
+  const [optedOut, setOptedOut] = useState(() => isAnalyticsOptedOut());
 
   const toggle = () => {
     const next = !optedOut;

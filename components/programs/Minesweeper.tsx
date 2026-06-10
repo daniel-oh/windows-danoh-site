@@ -198,6 +198,9 @@ export function Minesweeper() {
     if (status === "idle") {
       next = placeMines(board, difficulty.mines, r, c);
       nextStatus = "playing";
+      // handleReveal is an event handler, never called during render —
+      // the purity rule just can't prove it.
+      // eslint-disable-next-line react-hooks/purity
       nextStartedAt = Date.now();
     }
 

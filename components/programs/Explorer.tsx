@@ -41,9 +41,14 @@ export function Explorer({ id }: { id: string }) {
   const [inputPath, setInputPath] = useState(state.program.currentPath || "");
   const currentFolder = useAtomValue(fs.getFolderAtom(currentPath, "shallow"));
 
-  useEffect(() => {
+  // "Adjust state when props change" per the React docs: a render-phase
+  // setState (not an effect) so the address bar resyncs to navigation
+  // without an extra commit.
+  const [prevPath, setPrevPath] = useState(currentPath);
+  if (prevPath !== currentPath) {
+    setPrevPath(currentPath);
     setInputPath(currentPath || "/");
-  }, [currentPath]);
+  }
 
   const handleDoubleClick = async (path: string) => {
     const fs = await getFsManager();

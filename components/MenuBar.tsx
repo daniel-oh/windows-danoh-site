@@ -76,31 +76,34 @@ function MenuBarButton({
     };
   }, [closeMenu]);
 
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  // Anchor rect captured at click time, not read from a ref during
+  // render — same visual result, and the dropdown position can't go
+  // stale mid-render.
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
 
   return (
     <div className={styles.menuBarButtonContainer} ref={ref}>
       <button
-        ref={buttonRef}
         className={cx(styles.menuBarButton, {
           [styles.isOpen]: openMenuLabel === optionGroup.label,
         })}
         aria-haspopup="true"
         aria-expanded={openMenuLabel === optionGroup.label}
-        onClick={() =>
+        onClick={(e) => {
+          setAnchorRect(e.currentTarget.getBoundingClientRect());
           setOpenMenuLabel(
             openMenuLabel === optionGroup.label ? null : optionGroup.label
-          )
-        }
+          );
+        }}
       >
         {optionGroup.label}
       </button>
-      {openMenuLabel === optionGroup.label && buttonRef.current &&
+      {openMenuLabel === optionGroup.label && anchorRect &&
         createPortal(
           <MenuBarDropdown
             optionGroup={optionGroup}
             closeMenu={closeMenu}
-            anchorRect={buttonRef.current.getBoundingClientRect()}
+            anchorRect={anchorRect}
           />,
           document.body
         )

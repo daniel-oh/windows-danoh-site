@@ -189,8 +189,12 @@ export default async function Post({ params }: Props) {
 }
 
 function PostBody({ slug }: { slug: string }) {
+  // getPostComponent LOOKS UP a statically-defined MDX component from
+  // a module-level map — identity is stable per slug, so this is not
+  // the create-components-during-render hazard the rule targets.
   const Component = getPostComponent(slug);
   if (!Component) return <p>Post content not found.</p>;
+  // eslint-disable-next-line react-hooks/static-components
   return <Component />;
 }
 

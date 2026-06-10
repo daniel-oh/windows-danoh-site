@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useSyncExternalStore, type CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { EventType, RuntimeLoader } from "@rive-app/canvas";
 
@@ -37,6 +37,14 @@ export type RiveProps = {
   loop?: boolean;
 };
 
+const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+
+function subscribeReducedMotion(onChange: () => void) {
+  const mq = window.matchMedia(REDUCED_MOTION_QUERY);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
 export function RiveInner({
   src,
   height = 300,
@@ -48,16 +56,13 @@ export function RiveInner({
 }: RiveProps) {
   // Respect prefers-reduced-motion — skip autoplay if the visitor has
   // it set. Readers can still interact with the canvas if the Rive
-  // file responds to state machines.
-  const [reducedMotion, setReducedMotion] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReducedMotion(mq.matches);
-    const listener = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
-    mq.addEventListener("change", listener);
-    return () => mq.removeEventListener("change", listener);
-  }, []);
+  // file responds to state machines. useSyncExternalStore because the
+  // media query IS an external store; the server snapshot is false.
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false
+  );
 
   const { rive, RiveComponent } = useRive({
     src,

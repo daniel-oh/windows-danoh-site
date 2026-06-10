@@ -21,6 +21,10 @@ export function useReactions(slug: string) {
   const [visitorId, setVisitorId] = useState<string>("");
 
   useEffect(() => {
+    // getVisitorId() also WRITES (localStorage + mirror cookie), so it
+    // must run post-render; the sync setState here is the documented
+    // price of that, not an accidental cascade.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisitorId(getVisitorId());
   }, []);
 
