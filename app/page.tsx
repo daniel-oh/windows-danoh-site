@@ -39,6 +39,7 @@ const personLd = {
       sameAs: [
         "https://www.linkedin.com/in/daniel-oh/",
         "https://github.com/daniel-oh",
+        "https://x.com/danohstudio",
       ],
     },
     {

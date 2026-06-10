@@ -38,6 +38,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@danohstudio",
+    creator: "@danohstudio",
     title: "Daniel Oh · Engineer who designs. Operator who writes.",
     description:
       "AI, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",

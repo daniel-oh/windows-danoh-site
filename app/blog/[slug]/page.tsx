@@ -54,6 +54,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
+      site: "@danohstudio",
+      creator: "@danohstudio",
       title: post.title,
       description: post.summary,
       images: post.image ? [post.image] : undefined,

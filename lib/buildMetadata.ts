@@ -48,6 +48,8 @@ export function buildMetadata({
     },
     twitter: {
       card: "summary_large_image",
+      site: "@danohstudio",
+      creator: "@danohstudio",
       title,
       description,
       images: ["/og-image.png"],
