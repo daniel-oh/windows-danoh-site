@@ -12,6 +12,31 @@ import wrappedFetch from "@/lib/wrappedFetch";
 import { alert } from "@/lib/alert";
 import { useServerPrograms } from "@/lib/useServerPrograms";
 
+// Shell document for live generation. The parent fetches the program
+// stream itself and forwards chunks here via postMessage; this script
+// document.write()s them so the app still renders progressively. That
+// indirection is the security boundary: the old approach pointed the
+// iframe straight at /api/program with `allow-same-origin`, which let
+// freshly generated (untrusted, prompt-injectable) code read the
+// parent's localStorage — including a visitor's own Anthropic API key.
+// With srcDoc + allow-scripts only, the generated code runs in an
+// opaque origin from the very first byte, exactly like saved programs.
+const STREAM_BOOTSTRAP = `<!doctype html><html><head><meta charset="utf-8"></head><body><script>
+(function () {
+  var started = false;
+  window.addEventListener("message", function (e) {
+    var d = e.data || {};
+    if (d.op === "danoh-stream-chunk") {
+      if (!started) { started = true; document.open(); }
+      document.write(d.html);
+    } else if (d.op === "danoh-stream-end") {
+      if (started) document.close();
+    }
+  });
+  window.parent.postMessage({ operation: "danoh-stream-ready" }, "*");
+})();
+</${"script"}></body></html>`;
+
 export function Iframe({ id }: { id: string }) {
   const window = useAtomValue(windowAtomFamily(id));
   assert(window.program.type === "iframe", "Window is not an iframe");
@@ -208,6 +233,10 @@ function IframeInner({ id }: { id: string }) {
           // Handled in Window.tsx
           break;
         }
+        case "danoh-stream-ready": {
+          // Generation handshake — consumed by the streaming effect below.
+          break;
+        }
 
         default:
           console.error("Unsupported operation");
@@ -220,55 +249,121 @@ function IframeInner({ id }: { id: string }) {
 
   // Key changes when code updates, forcing iframe to remount with new content
   const codeVersion = program?.currentVersion || 0;
+  const hasCode = !!program?.code;
+
+  // Live generation: fetch the program stream in the parent and forward
+  // chunks into the sandboxed bootstrap iframe (see STREAM_BOOTSTRAP for
+  // why). The parent accumulates the raw stream and persists that — a
+  // cleaner artifact than the old DOM snapshot, which baked in whatever
+  // mutations the app's init code had already made.
+  useEffect(() => {
+    if (hasCode) return;
+    const iframe = ref.current;
+    if (!iframe) return;
+
+    const controller = new AbortController();
+    let html = "";
+    let buffered: string[] = [];
+    let ready = false;
+    let ended = false;
+    let revealed = false;
+
+    const post = (msg: object) =>
+      iframe.contentWindow?.postMessage(msg, "*");
+    const sendChunk = (chunk: string) => {
+      post({ op: "danoh-stream-chunk", html: chunk });
+      if (!revealed) {
+        revealed = true;
+        // Drop the loading overlay at first byte so the visitor watches
+        // the app stream in — that's the whole show.
+        dispatch({ type: "SET_LOADING", payload: false });
+      }
+    };
+
+    const onReady = (e: MessageEvent) => {
+      if (e.source !== iframe.contentWindow) return;
+      if (e.data?.operation !== "danoh-stream-ready") return;
+      ready = true;
+      for (const c of buffered) sendChunk(c);
+      buffered = [];
+      if (ended) post({ op: "danoh-stream-end" });
+    };
+    window.addEventListener("message", onReady);
+
+    (async () => {
+      try {
+        const res = await fetch(url, { signal: controller.signal });
+        const reader = res.body?.getReader();
+        const decoder = new TextDecoder();
+        if (reader) {
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            html += chunk;
+            if (ready) sendChunk(chunk);
+            else buffered.push(chunk);
+          }
+          const tail = decoder.decode();
+          if (tail) {
+            html += tail;
+            if (ready) sendChunk(tail);
+            else buffered.push(tail);
+          }
+        }
+        ended = true;
+        if (ready) post({ op: "danoh-stream-end" });
+        dispatch({ type: "SET_LOADING", payload: false });
+        // Persist only real generations. Error pages (rate limit,
+        // upstream failure) carry the danoh-error meta marker and a
+        // non-2xx status; freezing one as the program's code would
+        // make the failure permanent.
+        if (res.ok && html && !html.includes('name="danoh-error"')) {
+          dispatchPrograms({
+            type: "UPDATE_PROGRAM",
+            payload: { id: programID, code: html },
+          });
+          saveProgram({
+            id: programID,
+            name: state.title,
+            prompt: program?.prompt ?? "",
+            code: html,
+          });
+        }
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
+        dispatch({ type: "SET_LOADING", payload: false });
+        // A fetch error is a network/server failure, not a billing
+        // state — don't diagnose it as "out of tokens".
+        alert({
+          message:
+            "This program couldn't load. Check your connection, then use File > Reload to try again.",
+          icon: "x",
+        });
+      }
+    })();
+
+    return () => {
+      controller.abort();
+      window.removeEventListener("message", onReady);
+    };
+    // url/state.title/program.prompt are intentionally captured per
+    // generation: a registry write mid-stream must not abort and
+    // restart a paid generation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasCode, programID, codeVersion]);
 
   return (
     <iframe
       key={codeVersion}
       ref={ref}
       id={getIframeID(id)}
-      sandbox={program?.code ? "allow-scripts" : "allow-scripts allow-same-origin"}
-      src={!program?.code ? url : undefined}
-      srcDoc={program?.code || undefined}
+      // allow-scripts WITHOUT allow-same-origin, in both modes: the
+      // generated code is untrusted (built from an arbitrary visitor
+      // prompt) and must never share the parent's origin/storage.
+      sandbox="allow-scripts"
+      srcDoc={program?.code || STREAM_BOOTSTRAP}
       style={{ width: "100%", height: "100%", flex: "1 1 0", minHeight: 0, border: "none" }}
-      onError={() => {
-        // A load error is a network/server failure, not a billing state —
-        // don't diagnose it as "out of tokens".
-        alert({
-          message:
-            "This program couldn't load. Check your connection, then use File > Reload to try again.",
-          icon: "x",
-        });
-      }}
-      onLoad={() => {
-        assert(state.program.type === "iframe", "Program is not an iframe");
-
-        if (program?.code) {
-          return;
-        }
-
-        dispatch({ type: "SET_LOADING", payload: false });
-        if (ref.current) {
-          const doc = ref.current.contentDocument;
-          // Server error pages (rate limit, upstream failure) mark
-          // themselves with this meta tag. Persisting them here would
-          // freeze the error page as the program's code forever — skip
-          // the save so a retry actually regenerates.
-          if (doc?.querySelector('meta[name="danoh-error"]')) {
-            return;
-          }
-          const outerHTML = doc?.documentElement.outerHTML;
-          assert(outerHTML, "Outer HTML of iframe content is undefined");
-          assert(state.program.type === "iframe", "Program is not an iframe");
-          dispatchPrograms({
-            type: "UPDATE_PROGRAM",
-            payload: {
-              id: programID,
-              code: outerHTML,
-            },
-          });
-          saveProgram({ id: programID, name: state.title, prompt: program?.prompt ?? "", code: outerHTML });
-        }
-      }}
     />
   );
 }

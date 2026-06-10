@@ -1,7 +1,8 @@
 import { assert } from "@/lib/assert";
 import { assertNever } from "@/lib/assertNever";
 import { getDefaultStore } from "jotai";
-import { atomFamily, atomWithReducer } from "jotai/utils";
+import { atomWithReducer } from "jotai/utils";
+import { atomFamily } from "jotai-family";
 import { programAtomFamily, programsAtom } from "./programs";
 import { ReactNode } from "react";
 
@@ -25,7 +26,7 @@ export type Program =
       icon?: "x";
       actions?: AlertAction[];
     }
-  | { type: "blog" }
+  | { type: "blog"; initialSlug?: string }
   | { type: "resume" }
   | { type: "shortcuts" }
   | { type: "mail" }
@@ -334,15 +335,15 @@ export async function reloadIframe(id: string) {
   const program = await store.get(programAtomFamily(window.program.programID));
   assert(program, "Program not found");
 
+  // Clearing the code flips Iframe back into generation mode and bumps
+  // currentVersion, which remounts the (sandboxed, opaque-origin)
+  // iframe and re-runs the streaming fetch. No direct contentWindow
+  // access — that would throw cross-origin against the sandbox.
   store.set(programsAtom, {
     type: "UPDATE_PROGRAM",
     payload: { id: program.id, code: undefined },
   });
-
-  const iframe = getIframe(id);
-  if (iframe) {
-    iframe.contentWindow?.location.reload();
-  }
+  store.set(windowAtomFamily(id), { type: "SET_LOADING", payload: true });
 }
 
 export function getIframe(id: string): HTMLIFrameElement | null {

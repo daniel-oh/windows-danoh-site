@@ -75,7 +75,10 @@ const CSP = [
   // and the zone's RUM data collects nothing.
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://*.i.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com https://analytics.wuxiamaxxing.com https://js.stripe.com https://unpkg.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  // unpkg: 98.css inside generated-program iframes (which inherit this
+  // CSP) pulls ms_sans_serif.woff2 from unpkg — without the allowance
+  // every generated app silently loses the retro font.
+  "font-src 'self' data: https://fonts.gstatic.com https://unpkg.com",
   "img-src 'self' data: blob: https:",
   // unpkg in connect-src because some Rive runtimes fetch the WASM
   // from unpkg at runtime depending on bundler config.
