@@ -9,26 +9,15 @@ import { createWindow } from "./createWindow";
 // static HTML, so every visitor gets the demo at zero marginal AI
 // cost — and the gate can point at it.
 const SNAKE_ID = "Snake";
-// v2: proper rules (walls kill, tail-vacate move is legal) + neon
-// theme. Bumping the flag migrates browsers that seeded v1.
-const SEEDED_FLAG = "danoh_demo_seeded_v2";
+// v3: hand-made icon artwork. Each bump migrates browsers that
+// seeded an earlier version (upsert refreshes code + icon).
+const SEEDED_FLAG = "danoh_demo_seeded_v3";
 
-// Chunky Win98-style pixel art, neon palette: cyan-headed snake on a
-// dark tile with a magenta apple. crispEdges keeps it pixelated at
-// desktop (24px) and mobile (56px) icon sizes. Pre-set so opening the
-// demo never calls the paid /api/icon endpoint.
-const SNAKE_ICON =
-  "data:image/svg+xml," +
-  encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">` +
-      `<rect width="16" height="16" fill="#0b0b1e"/>` +
-      `<rect width="16" height="1" fill="#1a1a3a"/><rect width="1" height="16" fill="#1a1a3a"/>` +
-      `<rect y="15" width="16" height="1" fill="#050510"/><rect x="15" width="1" height="16" fill="#050510"/>` +
-      `<path d="M3 12h7v-3H6V6h7V3h-3v1H5v3h4v2H3z" fill="#00ff84"/>` +
-      `<rect x="3" y="11" width="2" height="2" fill="#00ffd5"/>` +
-      `<rect x="12" y="3" width="2" height="2" fill="#ff2bd6"/>` +
-    `</svg>`
-  );
+// Hand-made artwork (public/icons/snake-neon.png): a Win98 beveled
+// tile with the neon snake, background removed. A path, not a data
+// URI, so the stored program entry stays small and the file caches.
+// Pre-set so opening the demo never calls the paid /api/icon endpoint.
+const SNAKE_ICON = "/icons/snake-neon.png";
 
 const SNAKE_HTML = `<!doctype html>
 <html>
