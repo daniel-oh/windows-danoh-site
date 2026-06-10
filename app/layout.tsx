@@ -49,6 +49,11 @@ export const metadata: Metadata = {
   },
   keywords: ["Daniel Oh", "platform engineer", "Nike", "cybersecurity", "DevOps", "Kubernetes", "cloud infrastructure", "Michigan Engineering"],
   authors: [{ name: "Daniel Oh", url: "https://danoh.com" }],
+  icons: {
+    // iOS ignores manifest icons; without this, add-to-home-screen
+    // falls back to a page screenshot.
+    apple: "/apple-touch-icon.png",
+  },
   creator: "Daniel Oh",
   publisher: "Daniel Oh",
 };
@@ -56,6 +61,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1.0,
+  // cover + safe-area padding on the taskbar handles notched iPhones
+  // in installed-PWA mode; themeColor tints browser chrome Win98 teal.
+  viewportFit: "cover",
+  themeColor: "#008080",
 };
 
 export default function RootLayout({

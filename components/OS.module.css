@@ -2,6 +2,12 @@
   position: absolute;
   bottom: 0;
   width: 100%;
+  /* Installed-PWA on notched iPhones: keep the Start button and window
+   * buttons above the home indicator. The inset is also baked into
+   * --taskbar-height (globals.css) so the Start menu and maximized
+   * windows anchor above the whole bar. */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
   border-bottom: 0;
   border-left: 0;
   border-right: 0;
@@ -109,6 +115,15 @@
   flex: 1;
 }
 
+/* On narrow phones the logo + clock were eating ~43% of the taskbar,
+ * squeezing window buttons to slivers. The clock is the authentic
+ * Win98 element; the logo is decoration. */
+@media (max-width: 480px) {
+  .taskbarLogo {
+    display: none;
+  }
+}
+
 .taskbarLogo {
   height: 28px;
   width: auto;
@@ -118,7 +133,11 @@
   opacity: 0.8;
 }
 
-@media (max-width: 768px) {
+/* Matches MOBILE_QUERY in lib/isMobile.ts — width OR coarse pointer.
+   Without the pointer clause, landscape phones (>768px wide) got
+   maximized windows with desktop-sized 16px controls and 11px inputs
+   (the iOS zoom-on-focus bug back through the side door). */
+@media (max-width: 768px), (pointer: coarse) {
   .taskbar {
     /* Taskbar height is driven by --taskbar-height (40px on mobile)
      * for all dependents (start menu anchor, OS layout). */
@@ -161,4 +180,17 @@
   white-space: nowrap;
   user-select: none;
   align-self: center;
+}
+
+.taskbarLogoButton {
+  /* The easter egg is interactive; a real button makes it reachable by
+   * keyboard without inheriting 98.css button chrome. */
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
 }

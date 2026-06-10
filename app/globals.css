@@ -41,12 +41,16 @@ a {
 }
 
 :root {
-  --taskbar-height: 32px;
+  --taskbar-height: calc(32px + env(safe-area-inset-bottom, 0px));
 }
 
-@media (max-width: 768px) {
+/* Matches MOBILE_QUERY in lib/isMobile.ts — width OR coarse pointer.
+   Without the pointer clause, landscape phones (>768px wide) got
+   maximized windows with desktop-sized 16px controls and 11px inputs
+   (the iOS zoom-on-focus bug back through the side door). */
+@media (max-width: 768px), (pointer: coarse) {
   :root {
-    --taskbar-height: 40px;
+    --taskbar-height: calc(40px + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -110,7 +114,11 @@ figcaption {
  * 98.css ships with desktop-sized controls. On touch viewports we enlarge
  * the tap hit-area of the most-tapped controls (window title-bar buttons
  * and form action buttons) without changing the retro visual language. */
-@media (max-width: 768px) {
+/* Matches MOBILE_QUERY in lib/isMobile.ts — width OR coarse pointer.
+   Without the pointer clause, landscape phones (>768px wide) got
+   maximized windows with desktop-sized 16px controls and 11px inputs
+   (the iOS zoom-on-focus bug back through the side door). */
+@media (max-width: 768px), (pointer: coarse) {
   /* Title-bar tuned toward 98.css's actual proportions. 30 px bar
    * and 26×26 controls keep the aesthetic while staying tappable
    * (~27 px is the de-facto iOS floor for secondary icon buttons).
@@ -153,7 +161,8 @@ figcaption {
    * the primary affordance. */
   .window .window-body form button,
   .window .window-body .field-row > button,
-  .window-body > div > button {
+  .window-body > div > button,
+  .window-body div > div > button {
     min-height: 40px;
     padding: 6px 14px;
   }
@@ -191,4 +200,25 @@ td {
 th {
   background: #dfdfdf;
   font-weight: bold;
+}
+
+/* Global reduced-motion kill switch for the remaining decorative
+ * animations (body fade, Start-menu slide, icon hover scale). The
+ * window open/minimize animations and TerminalScreen already have
+ * their own guards; confetti is guarded in lib/confetti.ts. */
+@media (prefers-reduced-motion: reduce) {
+  body,
+  [class*="startMenu"],
+  [class*="programIcon"] img {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* 98.css's inactive title bar runs white text over a light grey
+ * gradient (~2:1 at the bright end). Darken the gradient — same retro
+ * idea, AA-compliant. */
+.window .title-bar.inactive {
+  background: linear-gradient(90deg, #5a5a5a, #7a7a7a);
 }
