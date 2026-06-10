@@ -490,6 +490,11 @@ function BuiltInIcon({
   onMove: (col: number, row: number) => void;
   mobile: boolean;
 }) {
+  const createContextMenu = useCreateContextMenu();
+  const contextMenuHandlers = createContextMenu([
+    { label: "Open", onClick: onOpen },
+  ]);
+
   const lastClickRef = useRef(0);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
@@ -609,6 +614,7 @@ function BuiltInIcon({
       }}
       aria-label={`Open ${name}`}
       onClick={handleClick}
+      onContextMenu={contextMenuHandlers.onContextMenu}
       onMouseDown={(e) => {
         if (e.button === 0) {
           e.preventDefault();
@@ -618,7 +624,11 @@ function BuiltInIcon({
       onTouchStart={(e) => {
         const t = e.touches[0];
         if (t) startDrag(t.clientX, t.clientY, true);
+        // long-press context menu, same as generated-program icons
+        contextMenuHandlers.onTouchStart?.(e);
       }}
+      onTouchEnd={contextMenuHandlers.onTouchEnd}
+      onTouchMove={contextMenuHandlers.onTouchMove}
     >
       <Image
         unoptimized

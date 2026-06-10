@@ -3,6 +3,8 @@ import { atomWithStorage, createJSONStorage } from "jotai/utils";
 export type Settings = {
   apiKey: string | null;
   model?: "cheap" | "best";
+  /** CRT monitor mode: scanlines + vignette overlay on the desktop. */
+  crt?: boolean;
 };
 
 // Persist in sessionStorage (cleared when the tab closes) rather than

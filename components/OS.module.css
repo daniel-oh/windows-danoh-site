@@ -213,3 +213,40 @@
 .startMenu:focus-visible {
   outline: none;
 }
+
+.crtOverlay {
+  /* Opt-in from Settings > Display. Scanlines + vignette + a faint
+   * phosphor flicker. Sits above the desktop but below the boot
+   * curtain and screensaver. pointer-events: none — purely glass. */
+  position: absolute;
+  inset: 0;
+  z-index: 15000;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.16) 0px,
+      rgba(0, 0, 0, 0.16) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(
+      ellipse at center,
+      transparent 58%,
+      rgba(0, 0, 0, 0.28) 100%
+    );
+  animation: crtFlicker 4s steps(60) infinite;
+}
+
+@keyframes crtFlicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.94; }
+  52% { opacity: 1; }
+  78% { opacity: 0.97; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crtOverlay {
+    animation: none;
+  }
+}

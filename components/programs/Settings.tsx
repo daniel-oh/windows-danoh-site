@@ -144,12 +144,37 @@ export function Settings({ id }: { id: string }) {
 
       <DirectorySection />
 
+      <DisplaySection />
       <AnalyticsSection />
 
       <button onClick={() => windowsDispatch({ type: "REMOVE", payload: id })} className={styles.submit}>
         Done
       </button>
     </div>
+  );
+}
+
+function DisplaySection() {
+  const [settings, setSettings] = useAtom(settingsAtom);
+  return (
+    <fieldset>
+      <legend>Display</legend>
+      <div className={cx("field-row")}>
+        <input
+          id="crt-mode"
+          type="checkbox"
+          checked={!!settings.crt}
+          onChange={(e) =>
+            setSettings({ ...settings, crt: e.target.checked })
+          }
+        />
+        <label htmlFor="crt-mode">CRT monitor mode</label>
+      </div>
+      <p className={styles.note} style={{ fontSize: 11 }}>
+        Scanlines and a little glass curvature, like the monitor this
+        site remembers running on.
+      </p>
+    </fieldset>
   );
 }
 

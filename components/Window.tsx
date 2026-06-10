@@ -230,10 +230,60 @@ function WindowInner({ id }: { id: string }) {
           <button
             aria-label="Minimize"
             onClick={() => {
-              dispatch({ type: "TOGGLE_MINIMIZE" });
-              if (focusedWindow === id) {
-                setFocusedWindow(null);
+              const finish = () => {
+                dispatch({ type: "TOGGLE_MINIMIZE" });
+                if (focusedWindow === id) {
+                  setFocusedWindow(null);
+                }
+              };
+              const el = windowRef.current;
+              const btn = document.querySelector(
+                `[data-taskbar-for="${id}"]`
+              );
+              if (
+                !el ||
+                !btn ||
+                window.matchMedia("(prefers-reduced-motion: reduce)").matches
+              ) {
+                finish();
+                return;
               }
+              // Genie effect: shrink toward this window's taskbar
+              // button. We tween a plain object and write the NATIVE
+              // standalone `translate`/`scale` CSS properties by hand —
+              // they compose with the React-managed `transform`, and
+              // GSAP's own transform pipeline (which would clobber it)
+              // never gets involved.
+              void import("gsap").then(({ gsap }) => {
+                const er = el.getBoundingClientRect();
+                const br = btn.getBoundingClientRect();
+                const v = { x: 0, y: 0, s: 1, o: 1 };
+                const dx = br.left + br.width / 2 - (er.left + er.width / 2);
+                const dy = br.top + br.height / 2 - (er.top + er.height / 2);
+                gsap.to(v, {
+                  x: dx,
+                  y: dy,
+                  s: 0.04,
+                  o: 0.4,
+                  duration: 0.26,
+                  ease: "power3.in",
+                  onUpdate: () => {
+                    el.style.translate = `${v.x}px ${v.y}px`;
+                    el.style.scale = String(v.s);
+                    el.style.opacity = String(v.o);
+                  },
+                  onComplete: () => {
+                    finish();
+                    // Clear after the minimize-fade window has passed
+                    // so the full-size frame never flashes.
+                    setTimeout(() => {
+                      el.style.translate = "";
+                      el.style.scale = "";
+                      el.style.opacity = "";
+                    }, 150);
+                  },
+                });
+              });
             }}
           ></button>
           <button

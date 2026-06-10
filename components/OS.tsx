@@ -20,6 +20,9 @@ import { WIDTH } from "./programs/Welcome";
 import { fsManagerAtom } from "@/state/fsManager";
 import { burstConfetti } from "@/lib/confetti";
 import { alert } from "@/lib/alert";
+import { BootScreen } from "./boot/BootScreen";
+import { Screensaver } from "./Screensaver";
+import { settingsAtom } from "@/state/settings";
 
 export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   // Eager-subscribe to fsManagerAtom so the async chain
@@ -35,6 +38,44 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   const registry = useAtomValue(registryAtom);
 
   const publicDesktopUrl = registry[DESKTOP_URL_KEY] ?? "/bg.jpg";
+  const { crt } = useAtomValue(settingsAtom);
+
+  // Wallpaper parallax: the background sits on its own slightly
+  // oversized layer and drifts a few pixels against the cursor,
+  // lerped on rAF. Desktop pointers only; reduced-motion gets a
+  // static wallpaper. Cheap depth, no library.
+  const parallaxRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = parallaxRef.current;
+    if (!el) return;
+    if (
+      !window.matchMedia("(pointer: fine)").matches ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    let tx = 0, ty = 0, cx = 0, cy = 0;
+    let raf = 0;
+    const onMove = (e: PointerEvent) => {
+      tx = (e.clientX / window.innerWidth - 0.5) * -14;
+      ty = (e.clientY / window.innerHeight - 0.5) * -10;
+      if (!raf) raf = requestAnimationFrame(step);
+    };
+    const step = () => {
+      cx += (tx - cx) * 0.06;
+      cy += (ty - cy) * 0.06;
+      el.style.transform = `translate3d(${cx.toFixed(2)}px, ${cy.toFixed(2)}px, 0)`;
+      raf =
+        Math.abs(tx - cx) > 0.05 || Math.abs(ty - cy) > 0.05
+          ? requestAnimationFrame(step)
+          : 0;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
 
   // The server-rendered intro stays up until the first window opens
   // (initState runs right after hydration), then never comes back —
@@ -157,15 +198,25 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
         height: "100dvh",
         width: "100vw",
         position: "relative",
-        backgroundImage: `url(${publicDesktopUrl})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        background: "#008080",
         overflow: "hidden",
       }}
       onContextMenu={(e) => {
         e.preventDefault();
       }}
     >
+      <div
+        ref={parallaxRef}
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: -20,
+          backgroundImage: `url(${publicDesktopUrl})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          willChange: "transform",
+        }}
+      />
       <Desktop />
       {!booted && staticIntro}
       {windows.map((id) => (
@@ -174,6 +225,9 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
 
       <TaskBar />
       <ContextMenu />
+      {crt && <div className={styles.crtOverlay} aria-hidden="true" />}
+      <Screensaver />
+      <BootScreen />
     </div>
   );
 }
@@ -603,11 +657,52 @@ const WindowTaskBarItem = memo(function WindowTaskBarItem({ id }: { id: string }
         state.status === "minimized" ? `${state.title}, minimized` : state.title
       }
       title={state.title}
+      data-taskbar-for={id}
       onClick={(e) => {
         e.stopPropagation();
         setFocusedWindow(id);
         if (state.status === "minimized") {
+          const btnRect = e.currentTarget.getBoundingClientRect();
           dispatch({ type: "RESTORE" });
+          // Reverse genie: grow back out of the taskbar button. Runs
+          // after React has made the window visible again.
+          if (
+            !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ) {
+            void import("gsap").then(({ gsap }) => {
+              requestAnimationFrame(() => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const er = el.getBoundingClientRect();
+                const v = {
+                  x: btnRect.left + btnRect.width / 2 - (er.left + er.width / 2),
+                  y: btnRect.top + btnRect.height / 2 - (er.top + er.height / 2),
+                  s: 0.04,
+                  o: 0.4,
+                };
+                // Native translate/scale props, hand-written — see the
+                // minimize handler in Window.tsx for why.
+                gsap.to(v, {
+                  x: 0,
+                  y: 0,
+                  s: 1,
+                  o: 1,
+                  duration: 0.26,
+                  ease: "power3.out",
+                  onUpdate: () => {
+                    el.style.translate = `${v.x}px ${v.y}px`;
+                    el.style.scale = String(v.s);
+                    el.style.opacity = String(v.o);
+                  },
+                  onComplete: () => {
+                    el.style.translate = "";
+                    el.style.scale = "";
+                    el.style.opacity = "";
+                  },
+                });
+              });
+            });
+          }
         }
       }}
       style={{
