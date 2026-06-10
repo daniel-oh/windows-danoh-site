@@ -388,6 +388,20 @@ export function Mail({ id }: { id: string }) {
             }
           }}
         />
+        {/* Counter appears only when the 4000 cap is in sight —
+         * permanent counters read as bureaucracy on a contact form. */}
+        {body.length >= 3500 && (
+          <div
+            aria-live="polite"
+            style={{
+              fontSize: 11,
+              color: body.length >= 3900 ? "#800000" : "#444",
+              textAlign: "right",
+            }}
+          >
+            {body.length}/4000
+          </div>
+        )}
       </div>
 
       {/* Honeypot — visually hidden + autocomplete off. Humans leave blank. */}

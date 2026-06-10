@@ -177,7 +177,7 @@ export function Run({ id }: { id: string }) {
       </div>
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button type="submit" disabled={isLoading}>
-          Open
+          {isLoading ? "Opening…" : "Open"}
         </button>
         <button
           type="button"

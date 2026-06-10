@@ -32,7 +32,16 @@ export type TerminalLine = {
 
 export type TerminalAction =
   | { kind: "link"; label: string; href: string; primary?: boolean }
-  | { kind: "button"; label: string; onClick: () => void; primary?: boolean };
+  | { kind: "button"; label: string; onClick: () => void; primary?: boolean }
+  /** Submit button wired to a server action — used by /login, where
+   * redirect() only auto-dispatches from a form's action (see the
+   * server-actions note in CLAUDE.md). */
+  | {
+      kind: "submit";
+      label: string;
+      action: (formData: FormData) => void | Promise<void>;
+      primary?: boolean;
+    };
 
 export function TerminalScreen({
   variant,
@@ -112,6 +121,17 @@ export function TerminalScreen({
                 <Link key={i} href={action.href} className={cls}>
                   {action.label}
                 </Link>
+              );
+            }
+            if (action.kind === "submit") {
+              // display:contents so the form wrapper doesn't break the
+              // .actions flex row.
+              return (
+                <form key={i} action={action.action} style={{ display: "contents" }}>
+                  <button type="submit" className={cls}>
+                    {action.label}
+                  </button>
+                </form>
               );
             }
             return (

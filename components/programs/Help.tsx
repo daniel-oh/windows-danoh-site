@@ -32,6 +32,9 @@ type Message = {
 
 type Messages = Message[];
 
+// Attachment ceiling — see attachImage() for the rationale.
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
 const makePrompt = (program: ProgramEntry, keys: string[]) => {
   return `You are the developer of this danoh.com application. Here is its current source:
 
@@ -119,6 +122,7 @@ export function Help({ id }: { id: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachment, setAttachment] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
 
   const doSend = async (allMessages: Messages) => {
@@ -220,34 +224,39 @@ export function Help({ id }: { id: string }) {
     await doSend([...messages, newMessage]);
   };
 
+  const attachImage = (file: File) => {
+    // Cap before reading: a phone photo can be 20MB+, which base64s
+    // to ~1.33x in the JSON body the server has to parse before any
+    // rate limit sees it. 5MB is plenty for a bug screenshot.
+    if (file.size > MAX_IMAGE_BYTES) {
+      setUploadError("That image is too big. 5 MB max.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAttachment(event.target?.result as string);
+      setUploadError(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handlePaste = async (e: React.ClipboardEvent<HTMLInputElement>) => {
     const items = e.clipboardData.items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf("image") !== -1) {
         e.preventDefault();
         const blob = items[i].getAsFile();
-        if (blob) {
-          const reader = new FileReader();
-          reader.onload = async (event) => {
-            const base64data = event.target?.result as string;
-            setAttachment(base64data);
-          };
-          reader.readAsDataURL(blob);
-        }
+        if (blob) attachImage(blob);
       }
     }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const base64data = event.target?.result as string;
-        setAttachment(base64data);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (file) attachImage(file);
+    // Reset so picking the same file again (after removing it) refires
+    // the change event.
+    e.target.value = "";
   };
 
   return (
@@ -303,23 +312,44 @@ export function Help({ id }: { id: string }) {
           />
         </div>
       ) : (
-      <div className={styles.chatInput}>
+      <>
+      {uploadError && (
         <div
-          role="button"
-          tabIndex={0}
-          title="Attach image"
-          onClick={() => fileInputRef.current?.click()}
-          style={{ marginRight: 5 }}
+          role="alert"
+          style={{ padding: "0 10px 4px", fontSize: 11, color: "#800000" }}
+        >
+          {uploadError}
+        </div>
+      )}
+      <div className={styles.chatInput}>
+        {/* One real <button>, one state-dependent action. The old
+         * div+img pair had onClick on both layers, so tapping the
+         * thumbnail cleared the attachment AND bubbled up to reopen
+         * the file picker — and as a div it had no keyboard support. */}
+        <button
+          type="button"
+          aria-label={attachment ? "Remove attached image" : "Attach image"}
+          title={attachment ? "Remove attached image" : "Attach image"}
+          onClick={() => {
+            if (attachment) setAttachment(null);
+            else fileInputRef.current?.click();
+          }}
+          style={{
+            marginRight: 5,
+            minWidth: 0,
+            minHeight: 0,
+            padding: 2,
+            display: "inline-flex",
+          }}
         >
           <img
             src={attachment ? attachment : imageIcon.src}
-            alt="Attached Image"
+            alt=""
             width={24}
             height={24}
             className={styles.thumbnail}
-            onClick={() => setAttachment(null)}
           />
-        </div>
+        </button>
         <input
           type="text"
           aria-label="Message"
@@ -342,6 +372,7 @@ export function Help({ id }: { id: string }) {
           Send
         </button>
       </div>
+      </>
       )}
     </div>
   );

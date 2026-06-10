@@ -51,6 +51,9 @@ export function AccessCodePrompt({
           disabled={loading}
           style={{ flex: 1 }}
           placeholder="Access code"
+          /* Not a credential — stops password managers offering to
+           * save "a password for danoh.com" over a shared invite code. */
+          autoComplete="one-time-code"
         />
         <button type="submit" disabled={loading || !code}>
           {loading ? "..." : "OK"}

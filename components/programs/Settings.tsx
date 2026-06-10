@@ -137,7 +137,9 @@ export function Settings({ id }: { id: string }) {
               Anthropic API key
             </a>{" "}
             to use AI features with no access code or rate limit.
-            Your key is stored only in your browser and never leaves your device.
+            Your key is stored only in your browser. It travels with your
+            own generation requests, is used for that call, and is never
+            stored on the server.
           </p>
         </div>
       </fieldset>
