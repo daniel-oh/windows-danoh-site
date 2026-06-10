@@ -55,15 +55,26 @@ function WindowInner({ id }: { id: string }) {
   useFocusTrap(windowRef, focusedWindow === id && !isHidden);
 
   // Move focus into newly opened windows so keyboard users can immediately
-  // act on them (Tab into controls, Esc to close).
+  // act on them (Tab into controls, Esc to close). Scoped to the window
+  // BODY: searching the whole window made the title-bar Help button the
+  // first match for iframe programs, so pressing Space right after
+  // opening a game launched Fix & Iterate instead of playing. For
+  // iframe programs the iframe itself takes focus — keys reach the app
+  // immediately.
   useEffect(() => {
     if (isHidden) return;
     const el = windowRef.current;
     if (!el) return;
+    const body = el.querySelector<HTMLElement>(".window-body") ?? el;
+    // The iframe outranks everything: program windows also contain the
+    // File menu button, and "first button wins" would aim Space/Enter
+    // at the menu instead of the app.
     const focusTarget =
-      el.querySelector<HTMLElement>(
+      body.querySelector<HTMLElement>("iframe") ??
+      body.querySelector<HTMLElement>(
         "input, textarea, [autofocus], button:not([aria-label='Close'])"
-      ) ?? el;
+      ) ??
+      el;
     focusTarget.focus({ preventScroll: true });
     // Run only once on mount (and when restoring from minimized).
     // eslint-disable-next-line react-hooks/exhaustive-deps

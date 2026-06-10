@@ -273,14 +273,13 @@ function StartMenu() {
   const setStartMenuOpen = useSetAtom(startMenuOpenAtom);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // role="menu" promises keyboard semantics: focus lands on the first
-  // item when the menu opens, and arrow keys move between items.
-  // Without this the role is a lie — SR users hear "menu" but Tab is
-  // the only way through it.
+  // Focus the menu CONTAINER on open, not the first item: arrow keys
+  // and Tab work immediately, but the visible focus box only appears
+  // once the user actually starts navigating. Auto-focusing an item
+  // painted a ring on "Welcome" the instant the menu opened, which
+  // read as a rendering glitch to mouse users.
   useEffect(() => {
-    menuRef.current
-      ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
-      ?.focus();
+    menuRef.current?.focus({ preventScroll: true });
   }, []);
 
   const onMenuKeyDown = (e: React.KeyboardEvent) => {
@@ -294,8 +293,11 @@ function StartMenu() {
     e.preventDefault();
     const idx = items.indexOf(document.activeElement as HTMLButtonElement);
     let next: number;
-    if (e.key === "ArrowDown") next = (idx + 1) % items.length;
-    else if (e.key === "ArrowUp") next = (idx - 1 + items.length) % items.length;
+    // idx === -1 means focus is still on the container (menu just
+    // opened): Down enters at the top, Up enters at the bottom.
+    if (e.key === "ArrowDown") next = idx === -1 ? 0 : (idx + 1) % items.length;
+    else if (e.key === "ArrowUp")
+      next = idx === -1 ? items.length - 1 : (idx - 1 + items.length) % items.length;
     else if (e.key === "Home") next = 0;
     else next = items.length - 1;
     items[next].focus();
@@ -502,6 +504,7 @@ function StartMenu() {
     <div
       id="start-menu"
       ref={menuRef}
+      tabIndex={-1}
       className={cx("window", styles.startMenu)}
       role="menu"
       aria-label="Start menu"

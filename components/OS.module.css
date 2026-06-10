@@ -194,3 +194,22 @@
   align-items: center;
   cursor: pointer;
 }
+
+/* Menu items sit flush in a clipped, scrollable column: the global
+ * focus ring (2px OUTSIDE the button) gets cut off by the container
+ * edges and overpainted by the next sibling, which reads as a broken/
+ * layered box. Draw it inset instead, and lift the focused item above
+ * its siblings. */
+.startMenu button:focus-visible {
+  outline-offset: -2px;
+  position: relative;
+  z-index: 1;
+}
+
+/* The container itself takes initial focus on open (so arrow keys and
+ * Tab work immediately) but must never show a ring — the visible box
+ * belongs to items only, and only once the user starts navigating. */
+.startMenu:focus,
+.startMenu:focus-visible {
+  outline: none;
+}

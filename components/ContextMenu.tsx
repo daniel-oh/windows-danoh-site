@@ -31,9 +31,10 @@ export function ContextMenu() {
   useEffect(() => {
     if (!contextMenu) return;
     triggerRef.current = document.activeElement as HTMLElement | null;
-    menuRef.current
-      ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
-      ?.focus();
+    // Container focus, not first-item focus — same reasoning as the
+    // Start menu: keyboard works immediately, but the focus box only
+    // appears once the user navigates.
+    menuRef.current?.focus({ preventScroll: true });
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -52,9 +53,9 @@ export function ContextMenu() {
       e.preventDefault();
       const idx = items.indexOf(document.activeElement as HTMLButtonElement);
       let next: number;
-      if (e.key === "ArrowDown") next = (idx + 1) % items.length;
+      if (e.key === "ArrowDown") next = idx === -1 ? 0 : (idx + 1) % items.length;
       else if (e.key === "ArrowUp")
-        next = (idx - 1 + items.length) % items.length;
+        next = idx === -1 ? items.length - 1 : (idx - 1 + items.length) % items.length;
       else if (e.key === "Home") next = 0;
       else next = items.length - 1;
       items[next].focus();
@@ -71,12 +72,14 @@ export function ContextMenu() {
   return (
     <div
       ref={menuRef}
+      tabIndex={-1}
       className="window"
       style={{
         position: "absolute",
         top: y,
         left: x,
         zIndex: 1000,
+        outline: "none",
       }}
     >
       <div className={styles.contextMenu} role="menu" aria-label="Context menu">
