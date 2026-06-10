@@ -9,7 +9,6 @@ import "98.css";
 import "highlight.js/styles/github-dark.css";
 import "./globals.css";
 import { CSPostHogProvider } from "@/lib/CSPosthogProvider";
-import { APIProvider } from "@/lib/api/APIProvider";
 import { ChunkReloadGuard } from "@/components/ChunkReloadGuard";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
@@ -95,12 +94,10 @@ export default function RootLayout({
         />
       </head>
       <CSPostHogProvider>
-        <APIProvider>
-          <body className={inter.className}>
-            <ChunkReloadGuard />
-            {children}
-          </body>
-        </APIProvider>
+        <body className={inter.className}>
+          <ChunkReloadGuard />
+          {children}
+        </body>
       </CSPostHogProvider>
     </html>
   );

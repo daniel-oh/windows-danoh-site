@@ -1,24 +1,70 @@
 "use client";
 
 import { memo } from "react";
+import dynamic from "next/dynamic";
 import { assertNever } from "@/lib/assertNever";
 import { Program, windowAtomFamily } from "@/state/window";
 import { useSetAtom } from "jotai";
+
+// Eager: instant-critical programs that must paint the moment they
+// open, so a chunk fetch can't delay them.
+//   - Alert  — modal confirmations (logout, close-guards) must appear now.
+//   - Iframe — hosts generated apps; lazy-loading it would stall the
+//              streaming generation flow on first open.
+//   - Welcome — auto-opens for first-time visitors; keep the marquee snappy.
 import { Iframe } from "./programs/Iframe";
-import { Welcome } from "./programs/Welcome";
-import { Run } from "./programs/Run";
-import { Help } from "./programs/Help";
-import { Explorer } from "./programs/Explorer";
-import { Settings } from "./programs/Settings";
-import { History } from "./programs/History";
 import { Alert } from "./programs/Alert";
-import { Blog } from "./programs/Blog";
-import { Resume } from "./programs/Resume";
-import { Shortcuts } from "./programs/Shortcuts";
-import { Mail } from "./programs/Mail";
-import { Minesweeper } from "./programs/Minesweeper";
-import { Guestbook } from "./programs/Guestbook";
-import { Recycle } from "./programs/Recycle";
+import { Welcome } from "./programs/Welcome";
+
+// Everything else loads on first open. None of these render at boot
+// (the desktop opens with no window), and the window-open animation
+// covers the brief chunk fetch — so the program tree (and notably
+// react-markdown via Help and the compiled MDX bodies via Blog) no
+// longer ships in the initial bundle. A null loading state is invisible
+// behind the already-painted window chrome.
+// Direct dynamic() calls (not a generic wrapper) so each component's
+// own prop type is inferred. A null loading state is invisible behind
+// the already-painted window chrome.
+const loading = () => null;
+const Run = dynamic(() => import("./programs/Run").then((m) => m.Run), { loading });
+const Help = dynamic(() => import("./programs/Help").then((m) => m.Help), { loading });
+const Explorer = dynamic(
+  () => import("./programs/Explorer").then((m) => m.Explorer),
+  { loading }
+);
+const Settings = dynamic(
+  () => import("./programs/Settings").then((m) => m.Settings),
+  { loading }
+);
+const History = dynamic(
+  () => import("./programs/History").then((m) => m.History),
+  { loading }
+);
+const Blog = dynamic(() => import("./programs/Blog").then((m) => m.Blog), {
+  loading,
+});
+const Resume = dynamic(() => import("./programs/Resume").then((m) => m.Resume), {
+  loading,
+});
+const Shortcuts = dynamic(
+  () => import("./programs/Shortcuts").then((m) => m.Shortcuts),
+  { loading }
+);
+const Mail = dynamic(() => import("./programs/Mail").then((m) => m.Mail), {
+  loading,
+});
+const Minesweeper = dynamic(
+  () => import("./programs/Minesweeper").then((m) => m.Minesweeper),
+  { loading }
+);
+const Guestbook = dynamic(
+  () => import("./programs/Guestbook").then((m) => m.Guestbook),
+  { loading }
+);
+const Recycle = dynamic(
+  () => import("./programs/Recycle").then((m) => m.Recycle),
+  { loading }
+);
 
 // Memoised so window-drag pos updates don't re-render the program
 // tree. Props are sliced primitives — React.memo's shallow compare

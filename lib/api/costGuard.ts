@@ -40,8 +40,19 @@ const PER_IP_HOURLY_NO_VISITOR = 12;
 const PER_VISITOR_HOURLY = 10;
 const PER_VISITOR_DAILY = 40;
 const GLOBAL_DAILY_DEFAULT = 500;
+// The own-key bypass is gated only on the key's SHAPE (hasOwnAnthropicKey
+// pattern-matches sk-ant-…), not on a proven-valid key — so a script can
+// forge a well-formed-but-fake key to skip every budget cap. The
+// downstream Anthropic call 401s (no bill to us), but the request still
+// burns work: JSON parse, getUser, a Supabase round trip, an outbound
+// request. This per-IP ceiling on the own-key path bounds that flood. A
+// real own-key user generating constantly won't approach it; a forged-key
+// abuser from one IP gets stopped. Separate bucket so own-key and
+// anonymous traffic from the same IP don't limit each other.
+const OWN_KEY_PER_IP_HOURLY = 120;
 
 const ipBucket = createRateLimitBucket();
+const ownKeyIpBucket = createRateLimitBucket();
 const visitorHourBucket = createRateLimitBucket();
 const visitorDayBucket = createRateLimitBucket();
 // Same bucket pattern as the others; keyed by the UTC day string so
@@ -122,10 +133,31 @@ async function tripGlobalDailyInDb(cap: number): Promise<boolean | null> {
 }
 
 export async function costGuard(req: Request): Promise<Response | null> {
-  // Visitor bringing their own key pays their own bill — skip.
-  if (await hasOwnAnthropicKey(req)) return null;
-
   const ip = getClientIP(req);
+
+  // Visitor bringing their own key pays their own bill, so the
+  // per-visitor / global budget caps don't apply. But keep a generous
+  // per-IP ceiling on this path (see OWN_KEY_PER_IP_HOURLY) so a forged
+  // key can't be used to bypass rate limiting entirely.
+  if (await hasOwnAnthropicKey(req)) {
+    if (ownKeyIpBucket.tripAndRecord(ip, OWN_KEY_PER_IP_HOURLY, HOUR_MS)) {
+      console.warn("[costGuard] rejected own_key_ip_hour");
+      void captureServerEvent(
+        "cost_guard_hit",
+        { reason: "own_key_ip_hour", path: new URL(req.url).pathname },
+        req
+      );
+      return new Response(
+        JSON.stringify({
+          error: "Too many requests from your network. Try again shortly.",
+          reason: "own_key_ip_hour",
+        }),
+        { status: 429, headers: { "content-type": "application/json" } }
+      );
+    }
+    return null;
+  }
+
   const visitorId = getVisitorId(req);
   const ipCap = visitorId ? PER_IP_HOURLY : PER_IP_HOURLY_NO_VISITOR;
   if (ipBucket.tripAndRecord(ip, ipCap, HOUR_MS)) {
