@@ -35,7 +35,7 @@ export function History({ id }: { id: string }) {
     <div className={styles.historyContainer}>
       <h4>Version History</h4>
       {versions.length === 0 ? (
-        <p style={{ padding: 8, fontSize: 12, color: "#555" }}>
+        <p style={{ padding: 8, fontSize: 12, color: "#444" }}>
           No version history available yet. Versions are saved when you use Fix &amp; Iterate to update the app.
         </p>
       ) : (

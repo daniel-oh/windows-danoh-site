@@ -20,7 +20,17 @@ export type WindowsListAction =
 // Program types that should NOT be resurrected from the Recycle Bin —
 // transient dialogs and help/chat overlays that only make sense in
 // their moment. Closing one of these cleans it up fully.
-const NON_RECYCLABLE = new Set<string>(["alert", "help", "history"]);
+// run/settings joined the set: restoring a cancelled Run gate or a
+// Settings panel from the "trash" is noise, not resurrection. Explorer
+// windows carrying an action closure (Save/Open pickers) are excluded
+// in the REMOVE handler since closures don't survive storage.
+const NON_RECYCLABLE = new Set<string>([
+  "alert",
+  "help",
+  "history",
+  "run",
+  "settings",
+]);
 
 const _listAtom = atom<WindowsListState>([]);
 
@@ -45,7 +55,9 @@ export const windowsListAtom = atom(
         if (!action.force && !runCloseGuard(id)) return;
         const wasFocused = get(focusedWindowAtom) === id;
         const win = get(windowAtomFamily(id));
-        if (win && !NON_RECYCLABLE.has(win.program.type)) {
+        const isActionPicker =
+          win?.program.type === "explorer" && !!win.program.action;
+        if (win && !NON_RECYCLABLE.has(win.program.type) && !isActionPicker) {
           const entry: RecycleBinEntry = {
             binId:
               typeof crypto !== "undefined" && "randomUUID" in crypto

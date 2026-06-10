@@ -427,6 +427,13 @@ export function Explorer({ id }: { id: string }) {
           </thead>
           <tbody>
             {renderItems(currentItems, currentPath)}
+            {Object.keys(currentItems).length === 0 && !isCreatingFolder && (
+              <tr>
+                <td colSpan={2} style={{ color: "#666", padding: "10px 8px" }}>
+                  This folder is empty.
+                </td>
+              </tr>
+            )}
             {isCreatingFolder && (
               <tr>
                 <td>📁</td>

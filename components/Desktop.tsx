@@ -1,4 +1,5 @@
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import styles from "./Desktop.module.css";
 import { ProgramEntry, programsAtom } from "@/state/programs";
 import defaultIcon from "./assets/window.png";
@@ -83,13 +84,23 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   return positions;
 }
 
+// Persisted: an OS whose whole bit is statefulness shouldn't forget
+// where you put your icons on refresh. getOnInit so the first
+// drag of a session doesn't clobber the stored layout.
+const iconPositionsAtom = atomWithStorage<IconPositions>(
+  "danoh_icon_positions",
+  {},
+  undefined,
+  { getOnInit: true }
+);
+
 export const Desktop = () => {
   const { programs } = useAtomValue(programsAtom);
   const dispatch = useSetAtom(programsAtom);
   const { fetchPrograms } = useServerPrograms();
   const didSync = useRef(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
-  const [iconPositions, setIconPositions] = useState<IconPositions>({});
+  const [iconPositions, setIconPositions] = useAtom(iconPositionsAtom);
   const mobile = useIsMobile();
 
   useEffect(() => {
@@ -117,11 +128,11 @@ export const Desktop = () => {
   }, []);
 
   useEffect(() => {
-    setIconPositions((prev) => getDefaultPositions(programs, prev));
+    setIconPositions((prev: IconPositions) => getDefaultPositions(programs, prev));
   }, [programs]);
 
   const moveIcon = useCallback((id: string, col: number, row: number) => {
-    setIconPositions((prev) => ({ ...prev, [id]: { col, row } }));
+    setIconPositions((prev: IconPositions) => ({ ...prev, [id]: { col, row } }));
   }, []);
 
   const openBlog = useCallback(() => {
@@ -144,7 +155,7 @@ export const Desktop = () => {
     createWindow({
       title: "Minesweeper",
       program: { type: "minesweeper" },
-      size: { width: 280, height: 360 },
+      size: { width: 320, height: 440 },
       icon: "/icons/pirate-playing.png",
     });
   }, []);

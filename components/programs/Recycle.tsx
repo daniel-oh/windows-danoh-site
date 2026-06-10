@@ -67,7 +67,7 @@ export function Recycle() {
         />
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: "bold" }}>Recycle Bin</div>
-          <div style={{ fontSize: 11, color: "#555" }}>
+          <div style={{ fontSize: 11, color: "#444" }}>
             Recently closed windows. Restore to bring them back.
           </div>
         </div>
@@ -94,7 +94,7 @@ export function Recycle() {
             style={{
               padding: "24px 8px",
               fontSize: 12,
-              color: "#555",
+              color: "#444",
               textAlign: "center",
             }}
           >
@@ -157,7 +157,7 @@ export function Recycle() {
                   >
                     {entry.title}
                   </div>
-                  <div style={{ fontSize: 11, color: "#555" }}>
+                  <div style={{ fontSize: 11, color: "#444" }}>
                     closed {relTime(entry.closedAt)}
                   </div>
                 </div>

@@ -61,7 +61,7 @@ export function AccessCodePrompt({
           {error}
         </div>
       )}
-      <div style={{ fontSize: 11, color: "#555" }}>
+      <div style={{ fontSize: 11, color: "#444" }}>
         No code? Send me a quick{" "}
         <a
           href="https://www.linkedin.com/in/daniel-oh/"

@@ -21,12 +21,13 @@ export async function showRateLimited(
   }
 
   alert({
+    title: "Slow down",
     alertId: `RATE_LIMIT_${status}`,
     icon: "x",
     message: (
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <p style={{ margin: 0 }}>{serverMessage}</p>
-        <p style={{ margin: 0, fontSize: 11, color: "#555" }}>
+        <p style={{ margin: 0, fontSize: 11, color: "#444" }}>
           Want to keep running now? Drop your own Anthropic API key in
           Settings and we&apos;ll step out of the way.
         </p>

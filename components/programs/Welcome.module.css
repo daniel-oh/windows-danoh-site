@@ -57,7 +57,7 @@
 }
 
 .sidebarTitle {
-  font-size: 1rem;
+  font-size: 12px;
   background-color: black;
   color: white;
   padding: 4px;
@@ -86,7 +86,7 @@
   & li {
     display: flex;
     justify-content: space-between;
-    font-size: 1.1rem;
+    font-size: 12px;
     border-left: 4px solid transparent;
     padding: 4px;
     border: 1px solid grey;
@@ -103,7 +103,9 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  font-size: 1.2rem;
+  /* 13px joins the 11/12/13 scale the rest of the OS uses — the
+   * flagship window was rendering ~19px body copy. */
+  font-size: 13px;
   gap: 20px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -112,8 +114,8 @@
     padding-left: 20px;
   }
 
-  @media (max-width: 768px) {
-    font-size: 1rem;
+  @media (max-width: 768px), (pointer: coarse) {
+    font-size: 14px;
   }
 }
 

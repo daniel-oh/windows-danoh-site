@@ -5,6 +5,7 @@ import { alert } from "./alert";
 export function showUpsell() {
   alert({
     alertId: "OUT_OF_CREDITS",
+    title: "Out of tokens",
     message: (
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         <p>You&apos;re out of tokens for full-quality generations.</p>

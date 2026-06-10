@@ -9,9 +9,12 @@ type AlertOptions = {
   alertId?: string;
   icon?: "x";
   actions?: AlertAction[];
+  /** Window title. Win98 titled dialogs by context ("Log Off Windows"),
+   * not generically. */
+  title?: string;
 };
 
-export function alert({ message, alertId, icon, actions }: AlertOptions) {
+export function alert({ message, alertId, icon, actions, title }: AlertOptions) {
   const store = getDefaultStore();
   const existingWindows = store.get(allWindowsAtom);
 
@@ -27,7 +30,7 @@ export function alert({ message, alertId, icon, actions }: AlertOptions) {
   }
 
   createWindow({
-    title: "Alert",
+    title: title ?? "Alert",
     size: {
       width: 400,
       height: "auto",
