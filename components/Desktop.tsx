@@ -338,24 +338,38 @@ export const Desktop = () => {
   );
 };
 
-function ProgramIcon({
-  program,
+// Shared desktop icon: owns the drag-drop + click/double-click state
+// machine and the button render. The two variants below differ only in
+// their context-menu items, icon source/style, and open action — this
+// is where the ~160 lines of duplicated drag logic that used to live in
+// both ProgramIcon and BuiltInIcon now live once.
+type ContextItem = { label: string; onClick: () => void };
+
+function DesktopIcon({
+  name,
+  iconSrc,
+  iconStyle,
+  onOpen,
   isSelected,
   onSelect,
   position,
   onMove: onMoveIcon,
   mobile,
+  contextItems,
 }: {
-  program: ProgramEntry;
+  name: string;
+  iconSrc: typeof defaultIcon | string;
+  iconStyle?: React.CSSProperties;
+  onOpen: () => void;
   isSelected: boolean;
   onSelect: () => void;
   position: IconPosition;
   onMove: (col: number, row: number) => void;
   mobile: boolean;
+  contextItems: ContextItem[];
 }) {
   const createContextMenu = useCreateContextMenu();
-  const dispatch = useSetAtom(programsAtom);
-  const { deleteProgram } = useServerPrograms();
+  const contextMenuHandlers = createContextMenu(contextItems);
   const lastClickRef = useRef(0);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
@@ -366,32 +380,22 @@ function ProgramIcon({
     return () => { cleanupRef.current?.(); };
   }, []);
 
-  const runProgram = useCallback(() => {
-    createWindow({
-      title: program.name,
-      program: { type: "iframe", programID: program.id },
-      icon: program.icon ?? undefined,
-      size: { width: 700, height: 550 },
-    });
-  }, [program]);
-
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDraggingRef.current) return;
-
     if (mobile) {
-      // Mobile: single tap opens
-      runProgram();
+      // Mobile: single tap opens.
+      onOpen();
+      return;
+    }
+    // Desktop: double-click opens, single click selects.
+    const now = Date.now();
+    if (now - lastClickRef.current < DOUBLE_CLICK_MS) {
+      onOpen();
+      lastClickRef.current = 0;
     } else {
-      // Desktop: double-click opens, single click selects
-      const now = Date.now();
-      if (now - lastClickRef.current < DOUBLE_CLICK_MS) {
-        runProgram();
-        lastClickRef.current = 0;
-      } else {
-        onSelect();
-        lastClickRef.current = now;
-      }
+      onSelect();
+      lastClickRef.current = now;
     }
   };
 
@@ -403,192 +407,6 @@ function ProgramIcon({
     const onPointerMove = (moveX: number, moveY: number) => {
       const dx = moveX - startX;
       const dy = moveY - startY;
-
-      if (!isDraggingRef.current && Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) {
-        isDraggingRef.current = true;
-        setDragging(true);
-        onSelect();
-      }
-
-      if (isDraggingRef.current) {
-        setDragOffset({ x: dx, y: dy });
-      }
-    };
-
-    const onEnd = (endX: number, endY: number) => {
-      cleanup();
-      if (isDraggingRef.current) {
-        const dx = endX - startX;
-        const dy = endY - startY;
-        const snapped = snapToGrid(origin.x + dx, origin.y + dy, gridSize);
-        onMoveIcon(snapped.col, snapped.row);
-      }
-      setDragging(false);
-      setDragOffset(null);
-      setTimeout(() => { isDraggingRef.current = false; }, 50);
-    };
-
-    const cancel = () => {
-      cleanup();
-      setDragging(false);
-      setDragOffset(null);
-      isDraggingRef.current = false;
-    };
-
-    let onMouseMove: ((e: MouseEvent) => void) | null = null;
-    let onMouseUp: ((e: MouseEvent) => void) | null = null;
-    let onTouchMoveHandler: ((e: TouchEvent) => void) | null = null;
-    let onTouchEndHandler: ((e: TouchEvent) => void) | null = null;
-
-    const cleanup = () => {
-      if (onMouseMove) window.removeEventListener("mousemove", onMouseMove);
-      if (onMouseUp) window.removeEventListener("mouseup", onMouseUp);
-      if (onTouchMoveHandler) window.removeEventListener("touchmove", onTouchMoveHandler);
-      if (onTouchEndHandler) window.removeEventListener("touchend", onTouchEndHandler);
-      window.removeEventListener("blur", cancel);
-      cleanupRef.current = null;
-    };
-
-    cleanupRef.current = cleanup;
-    window.addEventListener("blur", cancel);
-
-    if (isTouch) {
-      onTouchMoveHandler = (e: TouchEvent) => onPointerMove(e.touches[0].clientX, e.touches[0].clientY);
-      onTouchEndHandler = (e: TouchEvent) => onEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
-      window.addEventListener("touchmove", onTouchMoveHandler);
-      window.addEventListener("touchend", onTouchEndHandler);
-    } else {
-      onMouseMove = (e: MouseEvent) => onPointerMove(e.clientX, e.clientY);
-      onMouseUp = (e: MouseEvent) => onEnd(e.clientX, e.clientY);
-      window.addEventListener("mousemove", onMouseMove);
-      window.addEventListener("mouseup", onMouseUp);
-    }
-  };
-
-  const gridSize = getGridSize();
-  const basePos = gridToPixels(position.col, position.row, gridSize);
-  const pixelPos = dragging && dragOffset
-    ? { x: basePos.x + dragOffset.x, y: basePos.y + dragOffset.y }
-    : basePos;
-
-  const contextMenuHandlers = createContextMenu([
-    { label: "Run", onClick: runProgram },
-    {
-      label: "Delete",
-      onClick: () => {
-        dispatch({ type: "REMOVE_PROGRAM", payload: program.name });
-        deleteProgram(program.id);
-      },
-    },
-  ]);
-
-  return (
-    <button
-      className={cx(styles.programIcon, {
-        [styles.selected]: isSelected,
-        [styles.dragging]: dragging,
-      })}
-      style={{
-        position: "absolute",
-        left: pixelPos.x,
-        top: pixelPos.y,
-        width: gridSize,
-        height: gridSize,
-      }}
-      aria-label={`Open ${program.name}`}
-      onContextMenu={contextMenuHandlers.onContextMenu}
-      onClick={handleClick}
-      onMouseDown={(e) => {
-        if (e.button === 0) {
-          e.preventDefault();
-          startDrag(e.clientX, e.clientY, false);
-        }
-      }}
-      onTouchStart={(e) => {
-        // Start drag tracking on touch — context menu long-press
-        // will still work because drag only activates after movement
-        const touch = e.touches[0];
-        startDrag(touch.clientX, touch.clientY, true);
-        // Also let context menu handler track for long-press
-        contextMenuHandlers.onTouchStart?.(e);
-      }}
-      onTouchEnd={contextMenuHandlers.onTouchEnd}
-      onTouchMove={contextMenuHandlers.onTouchMove}
-    >
-      <Image
-        unoptimized
-        src={program.icon ?? defaultIcon}
-        alt={program.name}
-        width={24}
-        height={24}
-        draggable={false}
-      />
-      <div className={styles.programName}>{program.name}</div>
-    </button>
-  );
-}
-
-function BuiltInIcon({
-  id: _id,
-  name,
-  icon,
-  onOpen,
-  isSelected,
-  onSelect,
-  position,
-  onMove: onMoveIcon,
-  mobile,
-}: {
-  id: string;
-  name: string;
-  icon?: typeof defaultIcon | string;
-  onOpen: () => void;
-  isSelected: boolean;
-  onSelect: () => void;
-  position: IconPosition;
-  onMove: (col: number, row: number) => void;
-  mobile: boolean;
-}) {
-  const createContextMenu = useCreateContextMenu();
-  const contextMenuHandlers = createContextMenu([
-    { label: "Open", onClick: onOpen },
-  ]);
-
-  const lastClickRef = useRef(0);
-  const [dragging, setDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
-  const isDraggingRef = useRef(false);
-  const cleanupRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    return () => { cleanupRef.current?.(); };
-  }, []);
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isDraggingRef.current) return;
-    if (mobile) {
-      onOpen();
-    } else {
-      const now = Date.now();
-      if (now - lastClickRef.current < DOUBLE_CLICK_MS) {
-        onOpen();
-        lastClickRef.current = 0;
-      } else {
-        onSelect();
-        lastClickRef.current = now;
-      }
-    }
-  };
-
-  const startDrag = (startX: number, startY: number, isTouch = false) => {
-    const gridSize = getGridSize();
-    const origin = gridToPixels(position.col, position.row, gridSize);
-    isDraggingRef.current = false;
-
-    const onPointerMove = (moveX: number, moveY: number) => {
-      const dx = moveX - startX;
-      const dy = moveY - startY;
       if (!isDraggingRef.current && Math.abs(dx) + Math.abs(dy) > DRAG_THRESHOLD) {
         isDraggingRef.current = true;
         setDragging(true);
@@ -609,6 +427,8 @@ function BuiltInIcon({
       }
       setDragging(false);
       setDragOffset(null);
+      // Brief delay so the click that fires on mouseup/touchend after a
+      // drag doesn't read as a select/open.
       setTimeout(() => { isDraggingRef.current = false; }, 50);
     };
 
@@ -631,6 +451,9 @@ function BuiltInIcon({
     };
 
     const cleanup = () => {
+      // removeEventListener on a never-added listener is a no-op, so the
+      // unconditional removals here are safe whether this was a mouse or
+      // a touch drag.
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("touchmove", onTouchMove);
@@ -640,16 +463,14 @@ function BuiltInIcon({
     };
 
     cleanupRef.current = cleanup;
-    // Same touch wiring as ProgramIcon — without it the built-in icons
-    // (Blog, Resume, Minesweeper, Recycle) were immovable on phones.
+    window.addEventListener("blur", cancel);
     if (isTouch) {
-      window.addEventListener("touchmove", onTouchMove, { passive: true });
+      window.addEventListener("touchmove", onTouchMove);
       window.addEventListener("touchend", onTouchEnd);
     } else {
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("mouseup", onMouseUp);
     }
-    window.addEventListener("blur", cancel);
   };
 
   const gridSize = getGridSize();
@@ -677,13 +498,15 @@ function BuiltInIcon({
       onMouseDown={(e) => {
         if (e.button === 0) {
           e.preventDefault();
-          startDrag(e.clientX, e.clientY);
+          startDrag(e.clientX, e.clientY, false);
         }
       }}
       onTouchStart={(e) => {
+        // Start drag tracking AND the context-menu long-press timer.
+        // Drag only activates past the movement threshold, so a
+        // stationary long-press still opens the context menu.
         const t = e.touches[0];
         if (t) startDrag(t.clientX, t.clientY, true);
-        // long-press context menu, same as generated-program icons
         contextMenuHandlers.onTouchStart?.(e);
       }}
       onTouchEnd={contextMenuHandlers.onTouchEnd}
@@ -691,14 +514,105 @@ function BuiltInIcon({
     >
       <Image
         unoptimized
-        src={icon || defaultIcon}
+        src={iconSrc}
         alt={name}
         width={24}
         height={24}
         draggable={false}
-        style={icon ? { imageRendering: "auto", borderRadius: 4 } : undefined}
+        style={iconStyle}
       />
       <div className={styles.programName}>{name}</div>
     </button>
+  );
+}
+
+// A generated/saved program's icon: opens the iframe, Run + Delete menu.
+function ProgramIcon({
+  program,
+  isSelected,
+  onSelect,
+  position,
+  onMove,
+  mobile,
+}: {
+  program: ProgramEntry;
+  isSelected: boolean;
+  onSelect: () => void;
+  position: IconPosition;
+  onMove: (col: number, row: number) => void;
+  mobile: boolean;
+}) {
+  const dispatch = useSetAtom(programsAtom);
+  const { deleteProgram } = useServerPrograms();
+
+  const runProgram = useCallback(() => {
+    createWindow({
+      title: program.name,
+      program: { type: "iframe", programID: program.id },
+      icon: program.icon ?? undefined,
+      size: { width: 700, height: 550 },
+    });
+  }, [program]);
+
+  return (
+    <DesktopIcon
+      name={program.name}
+      iconSrc={program.icon ?? defaultIcon}
+      onOpen={runProgram}
+      isSelected={isSelected}
+      onSelect={onSelect}
+      position={position}
+      onMove={onMove}
+      mobile={mobile}
+      contextItems={[
+        { label: "Run", onClick: runProgram },
+        {
+          label: "Delete",
+          onClick: () => {
+            dispatch({ type: "REMOVE_PROGRAM", payload: program.name });
+            deleteProgram(program.id);
+          },
+        },
+      ]}
+    />
+  );
+}
+
+// A built-in icon (Blog, Resume, Minesweeper, Recycle): opens via the
+// passed callback, single Open menu item. Non-default raster icons get
+// smooth scaling + a slight radius; the pixel-art default stays crisp.
+function BuiltInIcon({
+  name,
+  icon,
+  onOpen,
+  isSelected,
+  onSelect,
+  position,
+  onMove,
+  mobile,
+}: {
+  id: string;
+  name: string;
+  icon?: typeof defaultIcon | string;
+  onOpen: () => void;
+  isSelected: boolean;
+  onSelect: () => void;
+  position: IconPosition;
+  onMove: (col: number, row: number) => void;
+  mobile: boolean;
+}) {
+  return (
+    <DesktopIcon
+      name={name}
+      iconSrc={icon || defaultIcon}
+      iconStyle={icon ? { imageRendering: "auto", borderRadius: 4 } : undefined}
+      onOpen={onOpen}
+      isSelected={isSelected}
+      onSelect={onSelect}
+      position={position}
+      onMove={onMove}
+      mobile={mobile}
+      contextItems={[{ label: "Open", onClick: onOpen }]}
+    />
   );
 }
