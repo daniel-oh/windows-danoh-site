@@ -7,6 +7,7 @@ import styles from "./Welcome.module.css";
 import check from "@/components/assets/check.png";
 import { sortedPosts } from "@/content/blog/registry";
 import { createWindow } from "@/lib/createWindow";
+import { SETTINGS_WIDTH, SETTINGS_HEIGHT } from "./Settings";
 import { useVisitorCount } from "@/lib/useVisitorCount";
 
 type TableOfContentsEntry = {
@@ -154,7 +155,7 @@ const contentByKey = {
         </p>
         <p style={{ fontSize: 11, color: "#444" }}>
           To try the AI, bring your own Anthropic API key in{" "}
-          <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" } }); }} style={{ color: "#000080" }}><strong>Settings</strong></a>,
+          <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" }, size: { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT } }); }} style={{ color: "#000080" }}><strong>Settings</strong></a>,
           or{" "}
           <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
             message me on LinkedIn
@@ -354,9 +355,9 @@ const contentByKey = {
             passes (accessibility, SEO, mobile, security) closed out.
             Most of this batch was built with Claude&apos;s new Fable
             5 model. Field notes:{" "}
-            <a href="/blog/letting-fable-5-loose" style={{ color: "#000080" }}>
+            <Link href="/blog/letting-fable-5-loose" style={{ color: "#000080" }}>
               Letting Fable 5 loose on this site
-            </a>.
+            </Link>.
           </p>
 
           <h4 style={{ margin: "0 0 4px" }}>May 11, 2026</h4>

@@ -17,6 +17,7 @@ import { ContextMenu } from "./ContextMenu";
 import { useActions } from "@/lib/actions/ActionsProvider";
 import { initState } from "@/lib/initState";
 import { WIDTH } from "./programs/Welcome";
+import { SETTINGS_WIDTH, SETTINGS_HEIGHT } from "./programs/Settings";
 import { fsManagerAtom } from "@/state/fsManager";
 import { burstConfetti } from "@/lib/confetti";
 import { alert } from "@/lib/alert";
@@ -523,7 +524,7 @@ function StartMenu() {
         createWindow({
           title: "Settings",
           program: { type: "settings" },
-          size: { width: 440, height: 520 },
+          size: { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
         });
       },
     },

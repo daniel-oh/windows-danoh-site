@@ -175,12 +175,25 @@ figcaption {
     padding: 6px 8px;
     font-size: 16px; /* prevents iOS Safari zoom-on-focus */
   }
-  /* Radios + their labels: expand the clickable area so the whole
-   * label reads as the tap target. */
+  /* Radios + checkboxes: expand the clickable area so the whole label
+   * reads as the tap target. 98.css uses the sibling pattern
+   * (input THEN label, the box drawn via `+ label::before`); the
+   * `:has(> input)` arm covers any legacy nested markup too. */
+  .window .window-body input[type="radio"] + label,
+  .window .window-body input[type="checkbox"] + label,
   .window .window-body label:has(> input[type="radio"]),
   .window .window-body label:has(> input[type="checkbox"]) {
     min-height: 40px;
     padding: 6px 8px;
+  }
+  /* The box/dot are absolutely positioned, so a taller row would leave
+   * them stranded at the top — pin them to the row's vertical center. */
+  .window .window-body input[type="radio"] + label::before,
+  .window .window-body input[type="radio"] + label::after,
+  .window .window-body input[type="checkbox"] + label::before,
+  .window .window-body input[type="checkbox"] + label::after {
+    top: 50%;
+    transform: translateY(-50%);
   }
 }
 

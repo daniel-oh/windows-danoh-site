@@ -11,6 +11,7 @@ import wrappedFetch from "@/lib/wrappedFetch";
 
 import { AccessCodePrompt } from "../AccessCodePrompt";
 import { ByokPrompt } from "../ByokPrompt";
+import { SETTINGS_WIDTH, SETTINGS_HEIGHT } from "./Settings";
 import { openDemoProgram } from "@/lib/demoPrograms";
 
 function hasSession() {
@@ -271,6 +272,7 @@ export function Run({ id }: { id: string }) {
                   createWindow({
                     title: "Settings",
                     program: { type: "settings" },
+                    size: { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
                   });
                 }}
               >

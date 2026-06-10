@@ -24,6 +24,13 @@ import {
 
 type KeyStatus = "idle" | "testing" | "valid" | "invalid" | "saved" | "cleared";
 
+// One source for the window size so every entry point (Start menu,
+// the Welcome link, a generated app's "Manage" link) opens Settings at
+// the same comfortable width instead of the 300px MIN_WINDOW_SIZE
+// default. ~370-400px is the Win98 settings-dialog norm.
+export const SETTINGS_WIDTH = 420;
+export const SETTINGS_HEIGHT = 520;
+
 export function Settings({ id }: { id: string }) {
   const [settings, setSettings] = useAtom(settingsAtom);
   const windowsDispatch = useSetAtom(windowsListAtom);
@@ -39,8 +46,18 @@ export function Settings({ id }: { id: string }) {
     setKeyStatus(await testAnthropicKey(keyInput.trim()));
   };
 
-  const saveKey = () => {
-    setSettings({ ...settings, apiKey: keyInput.trim() || null });
+  const saveKey = async () => {
+    const trimmed = keyInput.trim();
+    if (!trimmed) return;
+    // Validate before storing — saving a key that fails auth is never
+    // what anyone wants, and it would silently break the next
+    // generation. Test stays available as the standalone check.
+    setKeyStatus("testing");
+    if ((await testAnthropicKey(trimmed)) !== "valid") {
+      setKeyStatus("invalid");
+      return;
+    }
+    setSettings({ ...settings, apiKey: trimmed });
     setKeyStatus("saved");
     setTimeout(() => setKeyStatus("idle"), 2000);
   };
@@ -78,6 +95,13 @@ export function Settings({ id }: { id: string }) {
             onChange={(e) => {
               setKeyInput(e.target.value);
               setKeyStatus("idle");
+            }}
+            onKeyDown={(e) => {
+              // Enter is the obvious, safe default: validate the key.
+              if (e.key === "Enter" && keyInput.trim()) {
+                e.preventDefault();
+                void testKey();
+              }
             }}
             placeholder="sk-ant-..."
             className={styles.input}
@@ -203,18 +227,19 @@ function AnalyticsSection() {
   return (
     <fieldset>
       <legend>Analytics</legend>
-      {/* Input nested inside the label so globals.css's mobile rule
-       * (label:has(> input[type="checkbox"]) { min-height: 40px })
-       * enlarges the whole row to a 40 px tap target — otherwise the
-       * visitor has a ~18 px checkbox and misses it on touch. */}
+      {/* Sibling pattern (input THEN label), not nested: 98.css draws
+       * the checkbox via `input[type=checkbox] + label::before`, which
+       * a nested input never matches — that's why this box used to
+       * render invisibly. The mobile 40px tap target is handled by the
+       * same sibling selector in globals.css. */}
       <div className={cx("field-row")}>
+        <input
+          id="analytics-opt-out"
+          type="checkbox"
+          checked={optedOut}
+          onChange={toggle}
+        />
         <label htmlFor="analytics-opt-out">
-          <input
-            id="analytics-opt-out"
-            type="checkbox"
-            checked={optedOut}
-            onChange={toggle}
-          />{" "}
           Opt out of analytics (PostHog)
         </label>
       </div>
@@ -261,7 +286,11 @@ function DirectorySection() {
         <button onClick={handleChooseDirectory} className={styles.button}>
           Choose Directory
         </button>
-        <button onClick={handleClearDirectory} className={styles.button}>
+        <button
+          onClick={handleClearDirectory}
+          className={styles.button}
+          disabled={!isRootDirectorySet}
+        >
           Clear
         </button>
       </div>

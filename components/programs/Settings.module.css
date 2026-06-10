@@ -27,6 +27,21 @@
   white-space: nowrap;
 }
 
+/* Explanatory hint text under each setting. Was referenced throughout
+ * Settings.tsx but never defined — the sizing leaned on inline styles
+ * and 98.css inheritance, so notes drifted between 11px and the 12px
+ * default. This pins them. */
+.note {
+  font-size: 11px;
+  color: #444;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.button {
+  min-width: 110px;
+}
+
 .highlight {
   color: green;
 }
