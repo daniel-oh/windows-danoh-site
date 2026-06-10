@@ -1,7 +1,8 @@
 import { assertNever } from "@/lib/assertNever";
 import { atom } from "jotai";
 import { windowAtomFamily } from "./window";
-import { pruneWindowFocusAtom } from "./focusedWindow";
+import { focusedWindowAtom, pruneWindowFocusAtom, zOrderAtom } from "./focusedWindow";
+import { runCloseGuard, clearCloseGuard } from "@/lib/windowCloseGuards";
 import {
   recycleBinAtom,
   RECYCLE_BIN_LIMIT,
@@ -12,7 +13,9 @@ export type WindowsListState = string[];
 
 export type WindowsListAction =
   | { type: "ADD"; payload: string }
-  | { type: "REMOVE"; payload: string };
+  // force skips the window's close guard — used by the guard's own
+  // "Discard" confirmation so it doesn't re-veto itself.
+  | { type: "REMOVE"; payload: string; force?: boolean };
 
 // Program types that should NOT be resurrected from the Recycle Bin —
 // transient dialogs and help/chat overlays that only make sense in
@@ -37,6 +40,10 @@ export const windowsListAtom = atom(
         // repeat re-snapshots the stale window atom into the Recycle
         // Bin as a duplicate entry.
         if (!get(_listAtom).includes(id)) return;
+        // Programs with unsaved state (Mail drafts) register a guard
+        // that can veto the close and show its own confirm dialog.
+        if (!action.force && !runCloseGuard(id)) return;
+        const wasFocused = get(focusedWindowAtom) === id;
         const win = get(windowAtomFamily(id));
         if (win && !NON_RECYCLABLE.has(win.program.type)) {
           const entry: RecycleBinEntry = {
@@ -56,6 +63,28 @@ export const windowsListAtom = atom(
         }
         set(_listAtom, (prev) => prev.filter((v) => v !== id));
         set(pruneWindowFocusAtom, id);
+        clearCloseGuard(id);
+        // Focus restore: closing the focused window otherwise strands
+        // keyboard/screen-reader users on <body>. Hand focus to the
+        // top remaining non-minimized window, both in the atom and in
+        // the DOM (deferred so React has committed the removal).
+        if (wasFocused) {
+          const remaining = get(_listAtom).filter(
+            (w) => get(windowAtomFamily(w)).status !== "minimized"
+          );
+          if (remaining.length) {
+            const z = get(zOrderAtom);
+            const top = remaining.reduce((a, b) =>
+              (z[a] ?? 0) >= (z[b] ?? 0) ? a : b
+            );
+            set(focusedWindowAtom, top);
+            setTimeout(
+              () =>
+                document.getElementById(top)?.focus({ preventScroll: true }),
+              0
+            );
+          }
+        }
         // Window ids are random and never reused, so the per-window
         // atom can be dropped once closed — atomFamily retains every
         // member forever otherwise (alert ReactNodes, explorer action

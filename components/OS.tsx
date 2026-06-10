@@ -4,7 +4,7 @@ import { memo } from "react";
 import styles from "./OS.module.css";
 import cx from "classnames";
 import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { focusedWindowAtom } from "@/state/focusedWindow";
 import { windowsListAtom } from "@/state/windowsList";
 import { windowAtomFamily, type WindowState } from "@/state/window";
@@ -37,9 +37,14 @@ export function OS() {
 
   const publicDesktopUrl = registry[DESKTOP_URL_KEY] ?? "/bg.jpg";
 
-  // Keep latest windows in a ref so listeners don't need to resubscribe
+  // Keep latest windows in a ref so listeners don't need to resubscribe.
+  // Synced in an effect (not during render) per the react-hooks purity
+  // rules; the global listeners only read it from event callbacks,
+  // which always run after the commit.
   const windowsRef = useRef(windows);
-  windowsRef.current = windows;
+  useEffect(() => {
+    windowsRef.current = windows;
+  }, [windows]);
 
   useEffect(() => {
     const onPointerDown = (e: MouseEvent | TouchEvent) => {
@@ -60,14 +65,44 @@ export function OS() {
       setFocusedWindow(windowID ?? null);
     };
     const onKeyDown = (e: KeyboardEvent) => {
+      const store = getDefaultStore();
+      // Ctrl+` cycles focus through open windows (Shift reverses) —
+      // the desktop's Alt-Tab. Alt+Tab itself belongs to the real OS,
+      // and without some window-switching gesture the desktop is
+      // single-window-only for keyboard users.
+      if (e.key === "`" && e.ctrlKey) {
+        e.preventDefault();
+        const list = store
+          .get(windowsListAtom)
+          .filter(
+            (id) => store.get(windowAtomFamily(id)).status !== "minimized"
+          );
+        if (!list.length) return;
+        const current = store.get(focusedWindowAtom);
+        const idx = current ? list.indexOf(current) : -1;
+        const step = e.shiftKey ? -1 : 1;
+        const next = list[(idx + step + list.length) % list.length];
+        store.set(focusedWindowAtom, next);
+        document.getElementById(next)?.focus({ preventScroll: true });
+        return;
+      }
       if (e.key !== "Escape") return;
+      // The Start menu swallows Escape first, like the real shell —
+      // otherwise Esc would close the focused window underneath it.
+      if (store.get(startMenuOpenAtom)) {
+        store.set(startMenuOpenAtom, false);
+        document
+          .querySelector<HTMLButtonElement>("[data-start-button]")
+          ?.focus();
+        return;
+      }
       // Don't steal Escape from inputs/textareas or iframes
       const active = document.activeElement;
       const tag = active?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "IFRAME") return;
-      const focusedId = getDefaultStore().get(focusedWindowAtom);
+      const focusedId = store.get(focusedWindowAtom);
       if (!focusedId) return;
-      getDefaultStore().set(windowsListAtom, {
+      store.set(windowsListAtom, {
         type: "REMOVE",
         payload: focusedId,
       });
@@ -84,6 +119,30 @@ export function OS() {
 
   useEffect(() => {
     initState();
+  }, []);
+
+  // The Win98 startup sound, once per browser session, on the first
+  // user gesture (autoplay policy forbids sooner). Skipped for
+  // reduced-motion users — they opted out of theatrics.
+  useEffect(() => {
+    if (sessionStorage.getItem("danoh_boot_sound")) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const playBootSound = () => {
+      sessionStorage.setItem("danoh_boot_sound", "1");
+      const audio = new Audio("/start.mp3");
+      audio.volume = 0.35;
+      audio.play().catch(() => {
+        /* blocked or missing — stay silent */
+      });
+      cleanup();
+    };
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", playBootSound);
+      window.removeEventListener("keydown", playBootSound);
+    };
+    window.addEventListener("pointerdown", playBootSound);
+    window.addEventListener("keydown", playBootSound);
+    return cleanup;
   }, []);
 
   return (
@@ -120,6 +179,9 @@ function TaskBar() {
       <button
         className={styles.startButton}
         aria-label="Start menu"
+        aria-haspopup="menu"
+        aria-expanded={startMenuOpen}
+        aria-controls="start-menu"
         data-start-button
         onClick={(e) => {
           e.stopPropagation();
@@ -134,7 +196,38 @@ function TaskBar() {
         <WindowTaskBarItem key={id} id={id} />
       ))}
       <div className={styles.taskbarSpacer} />
+      <TaskbarClock />
       <LogoEasterEgg />
+    </div>
+  );
+}
+
+function formatClock() {
+  return new Date().toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function subscribeClock(onTick: () => void) {
+  const t = setInterval(onTick, 30_000);
+  return () => clearInterval(t);
+}
+
+// The tray clock — the most-remembered piece of Win98 chrome.
+// useSyncExternalStore instead of setState-in-effect: the server
+// snapshot is empty (a server-rendered time would be a guaranteed
+// hydration mismatch) and the value ticks every 30s after hydration.
+function TaskbarClock() {
+  const time = useSyncExternalStore(subscribeClock, formatClock, () => "");
+  if (!time) return null;
+  return (
+    <div
+      className={styles.taskbarClock}
+      title={new Date().toDateString()}
+      aria-label={`Clock: ${time}`}
+    >
+      {time}
     </div>
   );
 }
@@ -169,6 +262,36 @@ function LogoEasterEgg() {
 function StartMenu() {
   const { logout } = useActions();
   const setStartMenuOpen = useSetAtom(startMenuOpenAtom);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // role="menu" promises keyboard semantics: focus lands on the first
+  // item when the menu opens, and arrow keys move between items.
+  // Without this the role is a lie — SR users hear "menu" but Tab is
+  // the only way through it.
+  useEffect(() => {
+    menuRef.current
+      ?.querySelector<HTMLButtonElement>('[role="menuitem"]')
+      ?.focus();
+  }, []);
+
+  const onMenuKeyDown = (e: React.KeyboardEvent) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) return;
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLButtonElement>(
+        '[role="menuitem"]'
+      ) ?? []
+    );
+    if (!items.length) return;
+    e.preventDefault();
+    const idx = items.indexOf(document.activeElement as HTMLButtonElement);
+    let next: number;
+    if (e.key === "ArrowDown") next = (idx + 1) % items.length;
+    else if (e.key === "ArrowUp") next = (idx - 1 + items.length) % items.length;
+    else if (e.key === "Home") next = 0;
+    else next = items.length - 1;
+    items[next].focus();
+  };
+
   // Suppress synthetic click on a button if the user was scrolling
   // the menu (iOS fires click on touchend even after a small drag).
   // Track touch start Y, flip a ref on touchmove past a threshold,
@@ -365,12 +488,15 @@ function StartMenu() {
 
   return (
     <div
+      id="start-menu"
+      ref={menuRef}
       className={cx("window", styles.startMenu)}
       role="menu"
       aria-label="Start menu"
       data-start-menu
       onTouchStart={onMenuTouchStart}
       onTouchMove={onMenuTouchMove}
+      onKeyDown={onMenuKeyDown}
     >
       {entries.map((entry) => {
         // The entry whose programType matches the focused window is

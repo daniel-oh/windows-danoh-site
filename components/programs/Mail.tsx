@@ -10,6 +10,7 @@ import {
 } from "@/content/contact";
 import { getVisitorId } from "@/lib/visitorId";
 import { alert } from "@/lib/alert";
+import { registerCloseGuard } from "@/lib/windowCloseGuards";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -62,7 +63,9 @@ export function Mail({ id }: { id: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [copied, setCopied] = useState(false);
-  const mountedAtRef = useRef(Date.now());
+  // Set in the mount effect below — Date.now() in the initializer is
+  // an impure render per the react-hooks purity rules.
+  const mountedAtRef = useRef(0);
 
   const emailValid = replyTo === "" || EMAIL_RE.test(replyTo.trim());
   const emailSuggestion = suggestEmailFix(replyTo.trim());
@@ -72,11 +75,15 @@ export function Mail({ id }: { id: string }) {
     mountedAtRef.current = Date.now();
   }, []);
 
-  const close = () => {
-    if (status !== "sent" && hasDraft) {
-      // In-house dialog, not window.confirm — the native chrome is the
-      // one place the Win98 costume would slip, and it happens mid-
-      // contact-flow.
+  // Draft protection as a registered close guard, not logic inside a
+  // local close() — the title-bar X, Esc, and every other close path
+  // dispatch REMOVE directly and would otherwise bypass the confirm.
+  // The dialog is the in-house one, not window.confirm: native chrome
+  // is the one place the Win98 costume would slip, and it happens
+  // mid-contact-flow.
+  useEffect(() => {
+    if (status === "sent" || !hasDraft) return;
+    return registerCloseGuard(id, () => {
       alert({
         alertId: `mail-discard-${id}`,
         icon: "x",
@@ -87,13 +94,16 @@ export function Mail({ id }: { id: string }) {
             label: "Discard",
             callback: (closeAlert) => {
               closeAlert();
-              windowsDispatch({ type: "REMOVE", payload: id });
+              windowsDispatch({ type: "REMOVE", payload: id, force: true });
             },
           },
         ],
       });
-      return;
-    }
+      return false;
+    });
+  }, [id, status, hasDraft, windowsDispatch]);
+
+  const close = () => {
     windowsDispatch({ type: "REMOVE", payload: id });
   };
 
