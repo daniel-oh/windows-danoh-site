@@ -195,13 +195,12 @@ Implement the application in HTML, CSS, and JavaScript. Use the 98.css library f
 
 Rules:
 - Output ONLY the raw HTML wrapped in <html> tags. No commentary, explanations, or markdown.
-- The app runs inside a resizable iframe. Use width:100% and height:100% on html/body. Use relative units (%, vh, vw, flex, grid) not fixed pixel sizes for layout. The app must look good at any size.
-- Use overflow:auto on scrollable areas so content is accessible when the window is small.
-- Don't use external images — draw assets with CSS/SVG/canvas.
-- Don't use the 98.css \`window\` or \`window-body\` classes.
-- Don't add a menu bar — the OS handles that.
-- Make the app genuinely functional and interactive, not just a mockup.
-- Use modern JavaScript (ES2020+). Add event listeners, state management, and real logic.
+- The app runs inside a resizable iframe. Use width:100% and height:100% on html/body. Use relative units (%, vh, vw, flex, grid) not fixed pixel sizes for layout. The app must look good at any size, from a small window to fullscreen, and use overflow:auto on scrollable areas.
+- Everything must be self-contained: put all CSS and JavaScript inline in the document. You cannot load external scripts, stylesheets, fonts, or images — they are blocked. The only things available are 98.css (already included) and the OS APIs below. Draw any images or icons with CSS, SVG, or canvas.
+- Use 98.css control classes (button, input, select, fieldset, field-row, status-bar, etc.) so the app looks native to the OS. Don't use the 98.css \`window\` or \`window-body\` classes, and don't add a menu bar — the OS handles those.
+- Do NOT use alert(), confirm(), or prompt() — they are disabled in this sandbox and silently do nothing. Show messages, confirmations, and text entry with the app's own in-page UI.
+- Make controls work with both mouse and touch — the OS runs on phones too.
+- Make the app genuinely functional and interactive, not a mockup: use modern JavaScript (ES2020+), real event listeners, state, and logic. Open in a sensible ready-to-use state and handle empty or edge cases without throwing.
 - Be creative — build something that actually works and is fun to use.
 
 The OS provides these APIs on the window object:
