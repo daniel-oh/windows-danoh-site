@@ -35,22 +35,19 @@ type Messages = Message[];
 // Attachment ceiling — see attachImage() for the rationale.
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
+// The app context only — the behavioral rules + guardrails live
+// server-side (lib/helpPrompt.ts), which wraps this as untrusted data so
+// a client can't substitute its own system prompt. Sent as the first
+// "system" message; the server re-frames it.
 const makePrompt = (program: ProgramEntry, keys: string[]) => {
-  return `You are the developer of this danoh.com application. Here is its current source:
+  return `Here is the app's current source:
 
 \`\`\`html
 ${program.code}
 \`\`\`
 
 OS APIs available on window:
-${getApiText(keys)}
-
-Rules:
-- ALWAYS return the COMPLETE updated HTML wrapped in \`\`\`html markers when the user reports any bug, issue, or requests any change. Do not just explain. Fix it and return the full code.
-- Only omit code if the user is asking a pure question with no change requested.
-- Keep explanations brief. Focus on returning working code.
-- The returned HTML must be a complete standalone document wrapped in <html> tags.
-`;
+${getApiText(keys)}`;
 };
 
 function extractHtmlFromResponse(str: string): string | null {

@@ -12,7 +12,8 @@ import { insertGeneration } from "@/server/usage/insertGeneration";
 import { createPaymentRequiredResponse } from "@/server/paymentRequiredResponse";
 import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
-import { sanitizeWithSystem } from "@/lib/sanitizeMessages";
+import { sanitizeUserMessages } from "@/lib/sanitizeMessages";
+import { buildHelpSystem, extractAppContext } from "@/lib/helpPrompt";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
 export async function POST(req: Request) {
@@ -49,8 +50,18 @@ export async function POST(req: Request) {
 
   const { messages: rawMessages } = body;
 
-  // Keep only the first system message (server-set prompt) and recent user/assistant messages
-  const messages = sanitizeWithSystem(rawMessages);
+  // The system prompt (behavioral rules + guardrails) is built SERVER-SIDE.
+  // The client's "system" message is treated as untrusted app-context data
+  // and wrapped inside it — a client can't substitute its own system
+  // prompt to repurpose this endpoint. Conversation turns are role-filtered
+  // and length-capped as before.
+  const messages = [
+    {
+      role: "system" as const,
+      content: buildHelpSystem(extractAppContext(rawMessages)),
+    },
+    ...sanitizeUserMessages(rawMessages),
+  ];
 
   log(messages);
 

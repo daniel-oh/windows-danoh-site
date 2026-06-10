@@ -33,21 +33,3 @@ export function sanitizeUserMessages(
     .map((m) => ({ ...m, content: truncateContent(m.content) }));
 }
 
-export function sanitizeWithSystem(
-  messages: RawMessage[],
-  maxCount = 20
-): SanitizedMessage[] {
-  const systemMsg = messages.find(
-    (m): m is SanitizedMessage => m.role === "system"
-  );
-  const conversationMsgs = messages
-    .filter(
-      (m): m is SanitizedMessage =>
-        m.role === "user" || m.role === "assistant"
-    )
-    .slice(-maxCount)
-    .map((m) => ({ ...m, content: truncateContent(m.content) }));
-  return systemMsg
-    ? [{ ...systemMsg, content: truncateContent(systemMsg.content) }, ...conversationMsgs]
-    : conversationMsgs;
-}
