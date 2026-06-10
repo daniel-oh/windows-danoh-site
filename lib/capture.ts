@@ -28,7 +28,12 @@ export async function captureServerEvent(
   req: Request,
   options?: { distinctId?: string }
 ): Promise<void> {
-  if (isLocal()) return;
+  // Gate on key presence, NOT isLocal(): the deployed container runs
+  // with NEXT_PUBLIC_LOCAL_MODE=true (that flag selects the auth
+  // layer, not the environment), and gating on it silently disabled
+  // all server telemetry in prod — including cost_guard_hit, the one
+  // signal that says someone is hammering the AI endpoints. Dev boxes
+  // without PostHog keys still no-op here.
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
   if (!key || !host) return;
@@ -60,11 +65,20 @@ export async function captureServerEvent(
  * stays consistent across /api/program, /chat, /help, /name, /icon.
  */
 export async function capture(event: AIEvent, req: Request): Promise<void> {
-  if (isLocal()) return;
-  const supabase = await createClient();
-  const user = await supabase.auth.getUser();
+  // The Supabase user lookup only exists outside local mode; the
+  // deployed container runs in local mode where auth is bypassed, so
+  // fall back to IP grouping there instead of skipping the event.
+  let userId: string | undefined;
+  if (!isLocal()) {
+    const supabase = await createClient();
+    const user = await supabase.auth.getUser();
+    userId = user.data.user?.id;
+  }
   const { type, ...props } = event;
-  await captureServerEvent(type, props, req, {
-    distinctId: user.data.user?.id ?? "null",
-  });
+  await captureServerEvent(
+    type,
+    props,
+    req,
+    userId ? { distinctId: userId } : undefined
+  );
 }

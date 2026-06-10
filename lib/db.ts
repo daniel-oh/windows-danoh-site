@@ -153,6 +153,15 @@ async function ensureTables() {
       processed_at TIMESTAMP DEFAULT NOW()
     );
   `);
+  // Global AI cost-guard counter, one row per UTC day. In Postgres
+  // rather than memory because Watchtower recreates the container on
+  // every deploy, and an in-memory counter would reset with it.
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS cost_guard_daily (
+      day TEXT PRIMARY KEY,
+      count INT NOT NULL DEFAULT 0
+    );
+  `);
   // Guestbook messages, passed through an AI classifier on submit.
   // status: 'pending' (AI unavailable) | 'approved' | 'rejected' | 'spam'.
   // Only 'approved' messages are rendered on the wall.
@@ -212,6 +221,8 @@ async function runCleanup() {
     await p.query(`DELETE FROM sessions WHERE created_at < NOW() - INTERVAL '90 days'`);
     // Delete generations older than 7 days (rate limit only needs 1 hour, keep 7 days for analytics)
     await p.query(`DELETE FROM generations WHERE created_at < NOW() - INTERVAL '7 days'`);
+    // Cost-guard day rows are only read for today; keep a week for eyeballing
+    await p.query(`DELETE FROM cost_guard_daily WHERE day < to_char(NOW() - INTERVAL '7 days', 'YYYY-MM-DD')`);
   } catch (err) {
     console.error("Cleanup error:", err);
   }

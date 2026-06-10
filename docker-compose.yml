@@ -8,6 +8,8 @@ services:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - NEXT_PUBLIC_LOCAL_MODE=true
       - ACCESS_CODE=${ACCESS_CODE}
+      - NEXT_PUBLIC_POSTHOG_KEY=${NEXT_PUBLIC_POSTHOG_KEY:-}
+      - NEXT_PUBLIC_POSTHOG_HOST=${NEXT_PUBLIC_POSTHOG_HOST:-}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.danoh.rule=Host(`danoh.com`) || Host(`www.danoh.com`)"

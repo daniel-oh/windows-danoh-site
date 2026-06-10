@@ -26,11 +26,17 @@ import { getClientIP } from "@/lib/api/clientIP";
 import { hasOwnAnthropicKey } from "@/lib/api/hasOwnAnthropicKey";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { captureServerEvent } from "@/lib/capture";
+import { query, hasDatabase } from "@/lib/db";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
 
 const PER_IP_HOURLY = 30;
+// Requests without the danoh_visitor cookie get a tighter per-IP cap.
+// Every real browser visit mirrors the cookie (lib/visitorId.ts), so a
+// missing cookie means a script — which would otherwise dodge the
+// per-visitor limits entirely by simply not sending one.
+const PER_IP_HOURLY_NO_VISITOR = 12;
 const PER_VISITOR_HOURLY = 10;
 const PER_VISITOR_DAILY = 40;
 const GLOBAL_DAILY_DEFAULT = 500;
@@ -91,16 +97,41 @@ function reject(
   );
 }
 
+// Global daily counter persisted in Postgres. Watchtower recreates the
+// container on every deploy (often several times a day), which resets
+// the in-memory buckets — without this, the global kill-switch was
+// effectively "per deploy" rather than per UTC day. Returns null when
+// the DB is unavailable so the caller can fall back to the in-memory
+// bucket (fail-open to memory, never fail-closed on a DB blip).
+async function tripGlobalDailyInDb(cap: number): Promise<boolean | null> {
+  if (!hasDatabase()) return null;
+  try {
+    const res = await query(
+      `INSERT INTO cost_guard_daily (day, count) VALUES ($1, 1)
+       ON CONFLICT (day) DO UPDATE SET count = cost_guard_daily.count + 1
+       RETURNING count`,
+      [todayKey()]
+    );
+    const count = Number(res?.rows?.[0]?.count);
+    if (!Number.isFinite(count)) return null;
+    return count > cap;
+  } catch (err) {
+    console.warn("[costGuard] global counter DB error:", err);
+    return null;
+  }
+}
+
 export async function costGuard(req: Request): Promise<Response | null> {
   // Visitor bringing their own key pays their own bill — skip.
   if (await hasOwnAnthropicKey(req)) return null;
 
   const ip = getClientIP(req);
-  if (ipBucket.tripAndRecord(ip, PER_IP_HOURLY, HOUR_MS)) {
+  const visitorId = getVisitorId(req);
+  const ipCap = visitorId ? PER_IP_HOURLY : PER_IP_HOURLY_NO_VISITOR;
+  if (ipBucket.tripAndRecord(ip, ipCap, HOUR_MS)) {
     return reject("ip_hour", "Try again in an hour.", req);
   }
 
-  const visitorId = getVisitorId(req);
   if (visitorId) {
     if (
       visitorHourBucket.tripAndRecord(visitorId, PER_VISITOR_HOURLY, HOUR_MS)
@@ -112,7 +143,12 @@ export async function costGuard(req: Request): Promise<Response | null> {
     }
   }
 
-  if (globalBucket.tripAndRecord(todayKey(), globalCap(), DAY_MS)) {
+  const dbTripped = await tripGlobalDailyInDb(globalCap());
+  const globalTripped =
+    dbTripped !== null
+      ? dbTripped
+      : globalBucket.tripAndRecord(todayKey(), globalCap(), DAY_MS);
+  if (globalTripped) {
     console.warn("[costGuard] global daily cap reached");
     void captureServerEvent(
       "cost_guard_hit",

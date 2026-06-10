@@ -63,6 +63,10 @@ export async function POST(req: Request) {
     }
   }
 
+  // One product, one price, quantity 1 (see /api/checkout) — so a
+  // completed session is always worth exactly this many tokens.
+  const TOKENS_PER_PURCHASE = 100;
+
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
     const userId = session.metadata?.userId;
@@ -71,16 +75,32 @@ export async function POST(req: Request) {
       return Response.json({ error: "User ID not found" }, { status: 400 });
     }
 
+    // checkout.session.completed also fires for delayed payment methods
+    // before the money clears (payment_status: "unpaid"). Only credit
+    // tokens for settled payments; async methods would need a separate
+    // async_payment_succeeded handler, which this flow doesn't offer.
+    if (session.payment_status !== "paid") {
+      return Response.json({ received: true, ignored: "not paid" });
+    }
+
     const supabase = await createClient();
     const { error } = await createTransaction({
       client: supabase,
       userId,
       amount: session.amount_total!,
-      tokensPurchased: 100,
+      tokensPurchased: TOKENS_PER_PURCHASE,
     });
 
     if (error) {
       console.error("Error updating user tokens:", error);
+      // Release the dedup row: the event was recorded before processing,
+      // so without this a Stripe retry would be treated as a replay and
+      // the tokens would never be credited.
+      if (hasDatabase()) {
+        await query(`DELETE FROM stripe_events WHERE event_id = $1`, [
+          event.id,
+        ]);
+      }
       return Response.json(
         { error: "Error updating user tokens" },
         { status: 500 }

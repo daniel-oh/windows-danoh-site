@@ -73,7 +73,7 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | Layer                      | Mechanism                                      |
 | -------------------------- | ---------------------------------------------- |
 | CSP                        | Enforced via `next.config.mjs` (see `CSP` const) |
-| AI cost ceiling (prod)     | `lib/api/costGuard.ts` (per-IP, per-visitor, global daily) |
+| AI cost ceiling (always on)| `lib/api/costGuard.ts` (per-IP, per-visitor, global daily in Postgres) |
 | AI access gate (local)     | `lib/apiGuard.ts` (invite codes, session cookie) |
 | Guestbook spam             | honeypot + min-elapsed + rate limits + AI moderation |
 | Contact form spam          | honeypot + URL count cap + rate limits         |
@@ -121,7 +121,8 @@ In local mode:
 - Supabase auth is bypassed — `getUser()` returns `null`.
 - `checkAccess` gates on an `ACCESS_CODE` env var (optional) + a
   `DATABASE_URL` for tracking sessions.
-- `costGuard` does NOT run (it's prod-only).
+- `costGuard` ALWAYS runs (it has no environment gate); only its
+  telemetry needs PostHog keys to fire.
 - PostHog + Plausible + Resend are all no-ops without their env keys.
 
 ---
