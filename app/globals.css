@@ -10,6 +10,13 @@ body {
   overflow-x: hidden;
   font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
   touch-action: manipulation;
+  /* Teal desktop base from the very first paint. html isn't animated,
+   * so it paints instantly — no white flash before the OS mounts and
+   * sets its own #008080. The cloud wallpaper (preloaded in layout)
+   * then sits on this same teal, so its arrival reads as detail filling
+   * in, not a background popping from nothing. Content pages (/blog,
+   * /privacy, …) cover this with their own full-viewport backgrounds. */
+  background: #008080;
   animation: bodyFadeIn 300ms ease-out both;
 
   & .title-bar,

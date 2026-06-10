@@ -58,6 +58,13 @@ export default async function Home() {
   return (
     <FlagsProvider flags={getFlagsForUser(user)}>
       <ActionsProvider actions={{ login, logout }}>
+        {/* Preload the cloud wallpaper so it's cached by the time the OS
+         * mounts its parallax layer — otherwise the 58KB image is only
+         * requested after hydration and visibly pops in over the teal
+         * base (the first-load "jerky background"). Scoped to this route
+         * (React 19 hoists it to <head>); the content pages don't use
+         * the wallpaper, so the layout must not preload it globally. */}
+        <link rel="preload" as="image" href="/bg.jpg" fetchPriority="high" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }}
