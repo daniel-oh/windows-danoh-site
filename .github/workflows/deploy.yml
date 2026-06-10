@@ -25,5 +25,11 @@ jobs:
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          # NEXT_PUBLIC_* values are baked into the client bundle at build
+          # time; the compose file's runtime env can't provide them. Unset
+          # secrets pass through as empty and the client code no-ops.
+          build-args: |
+            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

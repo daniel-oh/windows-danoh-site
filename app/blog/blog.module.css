@@ -242,6 +242,18 @@
   line-height: 1.55;
 }
 
+.postCta {
+  /* The one conversion moment on the SEO surface: a reader who finished
+   * a post is the highest-intent visitor the site gets. One quiet line,
+   * not a newsletter modal — sunken-panel styling keeps it retro. */
+  margin-top: 28px;
+  padding: 12px 14px;
+  border: 1px solid #808080;
+  background: #f5f4ef;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
 .copyright {
   /* Quiet legal byline. Sits above the action footer so the credit is
    * the last bit of *content* a reader sees, distinct from the next-

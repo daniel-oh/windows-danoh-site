@@ -1,6 +1,7 @@
 # danoh.com
 
-Personal website of Daniel Oh — an AI-powered retro OS experience.
+Personal website of Daniel Oh: a Windows 98 desktop where you describe an app
+and the AI builds it in your browser. Live at [danoh.com](https://danoh.com).
 
 Built on [windows9x](https://github.com/SawyerHood/windows9x) by Sawyer Hood.
 

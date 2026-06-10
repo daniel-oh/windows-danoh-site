@@ -57,8 +57,23 @@ export function AccessCodePrompt({
         </button>
       </div>
       {error && (
-        <div style={{ color: "red", fontSize: 11 }}>{error}</div>
+        <div role="alert" style={{ color: "red", fontSize: 11 }}>
+          {error}
+        </div>
       )}
+      <div style={{ fontSize: 11, color: "#555" }}>
+        No code? Send me a quick{" "}
+        <a
+          href="https://www.linkedin.com/in/daniel-oh/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#000080" }}
+        >
+          message on LinkedIn
+        </a>{" "}
+        and I&apos;ll get you one, or bring your own Anthropic API key in
+        Settings.
+      </div>
     </form>
   );
 }

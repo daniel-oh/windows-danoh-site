@@ -39,11 +39,18 @@ export function buildMetadata({
       description,
       url,
       type: "website",
+      // Next.js replaces (not merges) the parent openGraph block, so
+      // without an explicit image these pages would ship imageless
+      // cards while still declaring summary_large_image below.
+      images: [
+        { url: "/og-image.png", width: 1200, height: 630, alt: "Daniel Oh" },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: ["/og-image.png"],
     },
   };
 }

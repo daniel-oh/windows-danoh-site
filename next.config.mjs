@@ -70,13 +70,16 @@ const CSP = [
   "default-src 'self'",
   // 'wasm-unsafe-eval' is required for Rive's WebAssembly runtime;
   // 'unsafe-eval' covers Next.js's webpack runtime.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://*.i.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com https://analytics.wuxiamaxxing.com https://js.stripe.com https://unpkg.com",
+  // cloudflareinsights: Cloudflare auto-injects its Web Analytics beacon
+  // at the edge; without the allowance every pageview logs a CSP error
+  // and the zone's RUM data collects nothing.
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://*.i.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com https://analytics.wuxiamaxxing.com https://js.stripe.com https://unpkg.com https://static.cloudflareinsights.com",
   "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   // unpkg in connect-src because some Rive runtimes fetch the WASM
   // from unpkg at runtime depending on bundler config.
-  "connect-src 'self' https://*.i.posthog.com https://us.i.posthog.com https://eu.i.posthog.com https://api.stripe.com https://analytics.wuxiamaxxing.com https://unpkg.com",
+  "connect-src 'self' https://*.i.posthog.com https://us.i.posthog.com https://eu.i.posthog.com https://api.stripe.com https://analytics.wuxiamaxxing.com https://unpkg.com https://cloudflareinsights.com",
   "frame-src 'self' blob: data:",
   "worker-src 'self' blob:",
   "object-src 'none'",

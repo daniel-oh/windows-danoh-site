@@ -154,6 +154,17 @@ export default async function Post({ params }: Props) {
             <PostBody slug={post.slug} />
           </CopyAttribution>
           <RelatedAndAdjacent slug={post.slug} />
+          <div className={styles.postCta}>
+            Enjoyed this? I write a few times a month. Follow along via{" "}
+            <a href="/feed.xml" className={styles.footerLink}>
+              RSS
+            </a>
+            , or just say hello:{" "}
+            <a href="mailto:hello@danoh.com" className={styles.footerLink}>
+              hello@danoh.com
+            </a>
+            .
+          </div>
           <p className={styles.copyright}>
             © {postYear} {post.author} ·{" "}
             <a

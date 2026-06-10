@@ -161,7 +161,7 @@ function LogoEasterEgg() {
       className={styles.taskbarLogo}
       onClick={onClick}
       style={{ cursor: "pointer" }}
-      title="Psst — try clicking me three times"
+      title="Psst. Try clicking me three times"
     />
   );
 }

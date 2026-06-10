@@ -150,6 +150,18 @@ const contentByKey = {
             LinkedIn
           </button>
           <button onClick={openResume}>Resume</button>
+          <button
+            type="button"
+            onClick={() =>
+              createWindow({
+                title: "New Message",
+                program: { type: "mail" },
+                size: { width: 460, height: 400 },
+              })
+            }
+          >
+            Email me
+          </button>
         </div>
       </>
     );

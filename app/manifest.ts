@@ -4,7 +4,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Daniel Oh",
     short_name: "danoh.com",
-    description: "Engineer, builder, and curious person. Chicago.",
+    description:
+      "Engineer who designs. Operator who writes. A Win98 desktop, a blog, and a few experiments.",
     start_url: "/",
     display: "standalone",
     background_color: "#008080",

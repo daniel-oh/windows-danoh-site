@@ -84,7 +84,7 @@ export function Guestbook() {
         setName("");
         setMessage("");
         if (data.status === "approved") {
-          setFeedback("Posted! Thanks for signing in.");
+          setFeedback("Posted! Thanks for signing the book.");
           load();
         } else {
           setFeedback("Thanks. Your message has been received.");
@@ -195,7 +195,11 @@ export function Guestbook() {
         >
           <span>{message.length}/{MAX_MESSAGE}</span>
           <div>
-            {feedback && <span style={{ marginRight: 8 }}>{feedback}</span>}
+            {feedback && (
+              <span role="status" style={{ marginRight: 8 }}>
+                {feedback}
+              </span>
+            )}
             <button type="submit" disabled={submitting}>
               {submitting ? "Sending…" : "Sign the guestbook"}
             </button>

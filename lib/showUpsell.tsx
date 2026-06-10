@@ -7,14 +7,11 @@ export function showUpsell() {
     alertId: "OUT_OF_CREDITS",
     message: (
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-        <p>
-          You&apos;ve used all your available tokens for high-quality
-          generations with Claude 3.5 Sonnet.
-        </p>
-        <p>To continue using danoh.com, you have two options:</p>
+        <p>You&apos;re out of tokens for full-quality generations.</p>
+        <p>To keep going, you have two options:</p>
         <ul style={{ paddingLeft: "20px", marginTop: "4px" }}>
-          <li>Purchase additional quality tokens</li>
-          <li>Switch to our free model (with reduced capabilities)</li>
+          <li>Buy more tokens</li>
+          <li>Switch to the free model (smaller, scrappier)</li>
         </ul>
       </div>
     ),

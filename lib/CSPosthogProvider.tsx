@@ -10,8 +10,12 @@ import { isAnalyticsOptedOut } from "@/lib/analyticsOptOut";
 // stops events from being sent but keeps the instance alive for a
 // later opt-in. This avoids the earlier "opt back in after an opted-
 // out page load = silent no-op because posthog was never init'd" trap.
-if (typeof window !== "undefined" && !isLocal()) {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+// NEXT_PUBLIC_POSTHOG_KEY is baked at build time; the CI image build
+// doesn't always have it. Init'ing without a key logs a console error
+// on every page and captures nothing — skip cleanly instead.
+const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+if (typeof window !== "undefined" && !isLocal() && POSTHOG_KEY) {
+  posthog.init(POSTHOG_KEY, {
     api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     person_profiles: "identified_only",
   });

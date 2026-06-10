@@ -20,6 +20,8 @@ export function Resume() {
           Chicago, IL
         </div>
         <div className={styles.contact}>
+          <a href="mailto:hello@danoh.com">hello@danoh.com</a>
+          {" · "}
           <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           {" · "}
           <a href="https://github.com/daniel-oh" target="_blank" rel="noopener noreferrer">GitHub</a>
