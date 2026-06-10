@@ -585,6 +585,15 @@ function StartMenu() {
       onTouchMove={onMenuTouchMove}
       onKeyDown={onMenuKeyDown}
     >
+      {/* Decorative brand strip down the left edge — the Win98 banner,
+       * rebadged. aria-hidden so screen readers jump straight to the
+       * menu items. */}
+      <div className={styles.startBanner} aria-hidden="true">
+        <span>
+          danoh<span className={styles.tld}>.com</span>
+        </span>
+      </div>
+      <div className={styles.startItems}>
       {entries.map((entry) => {
         // The entry whose programType matches the focused window is
         // the "current page" for screen-reader purposes — visitors
@@ -611,6 +620,7 @@ function StartMenu() {
       <button role="menuitem" onClick={wrap(() => confirmLogout(logout))}>
         Log Off...
       </button>
+      </div>
     </div>
   );
 }
