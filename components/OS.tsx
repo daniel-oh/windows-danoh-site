@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { Fragment, memo, useState } from "react";
 import styles from "./OS.module.css";
 import cx from "classnames";
 import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -103,9 +103,14 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
       const insideStartSurface = target.closest(
         "[data-start-menu], [data-start-button]"
       );
-      if (!insideStartSurface) {
-        getDefaultStore().set(startMenuOpenAtom, false);
-      }
+      // Opening/scrolling the Start menu must not blur the current
+      // window: real Windows keeps the active window active, and the
+      // menu's aria-current="page" active-program hint is computed from
+      // the focused window — clearing it here left that hint perpetually
+      // empty. So bail before touching focus when the press is on the
+      // Start surface.
+      if (insideStartSurface) return;
+      getDefaultStore().set(startMenuOpenAtom, false);
       const windowID = windowsRef.current.find((windowId) => {
         const windowElement = document.getElementById(windowId);
         return windowElement && windowElement.contains(target);
@@ -420,6 +425,9 @@ function StartMenu() {
     label: string;
     programType?: WindowState["program"]["type"];
     cb: () => void;
+    // First entry of a logical group renders an etched separator above
+    // it, the way the real Win98 Start menu chunked its sections.
+    separatorBefore?: boolean;
   }[] = [
     // Anchor
     {
@@ -437,6 +445,7 @@ function StartMenu() {
     {
       label: "Blog",
       programType: "blog",
+      separatorBefore: true,
       cb: () => {
         createWindow({
           title: "Blog",
@@ -460,6 +469,7 @@ function StartMenu() {
     {
       label: "Run",
       programType: "run",
+      separatorBefore: true,
       cb: () => {
         createWindow({
           title: "Run",
@@ -509,6 +519,7 @@ function StartMenu() {
     {
       label: "Explorer",
       programType: "explorer",
+      separatorBefore: true,
       cb: () => {
         createWindow({
           title: "Explorer",
@@ -532,6 +543,7 @@ function StartMenu() {
     {
       label: "Shortcuts",
       programType: "shortcuts",
+      separatorBefore: true,
       cb: () => {
         createWindow({
           title: "Keyboard Shortcuts",
@@ -581,16 +593,21 @@ function StartMenu() {
           entry.programType !== undefined &&
           entry.programType === focusedProgramType;
         return (
-          <button
-            key={entry.label}
-            role="menuitem"
-            aria-current={isActive ? "page" : undefined}
-            onClick={wrap(entry.cb)}
-          >
-            {entry.label}
-          </button>
+          <Fragment key={entry.label}>
+            {entry.separatorBefore && (
+              <div role="separator" className={styles.menuSeparator} />
+            )}
+            <button
+              role="menuitem"
+              aria-current={isActive ? "page" : undefined}
+              onClick={wrap(entry.cb)}
+            >
+              {entry.label}
+            </button>
+          </Fragment>
         );
       })}
+      <div role="separator" className={styles.menuSeparator} />
       <button role="menuitem" onClick={wrap(() => confirmLogout(logout))}>
         Log Off...
       </button>

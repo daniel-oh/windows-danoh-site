@@ -67,6 +67,17 @@
   }
 }
 
+/* Etched two-tone divider between Start-menu groups — the dark line on
+ * top, the white highlight under it, the way the real shell drew its
+ * separators. Thin margins keep the added height down on mobile. */
+.menuSeparator {
+  height: 0;
+  margin: 3px 4px;
+  border-top: 1px solid #808080;
+  border-bottom: 1px solid #ffffff;
+  flex-shrink: 0;
+}
+
 .startButton {
   font-weight: bold;
   min-width: inherit;
@@ -149,7 +160,11 @@
     width: 170px;
   }
   .startMenu button {
-    padding: 12px 14px;
+    /* 14px vertical lands the items at ~40px, the touch-target floor
+     * used elsewhere. With the group separators the menu now scrolls on
+     * a phone (it's overflow-y:auto), which is the right trade for
+     * comfortable taps on the primary nav. */
+    padding: 14px 14px;
   }
 
   .startButton {
