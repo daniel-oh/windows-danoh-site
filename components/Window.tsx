@@ -93,8 +93,11 @@ function WindowInner({ id }: { id: string }) {
         [styles.windowOpen]: state.status !== "minimized" && !isMinimizing,
         [styles.windowMinimize]: isMinimizing,
       })}
-      role="dialog"
+      role={state.program.type === "alert" ? "alertdialog" : "dialog"}
       aria-label={state.title}
+      aria-describedby={
+        state.program.type === "alert" ? `alert-message-${id}` : undefined
+      }
       ref={windowRef}
       id={id}
       tabIndex={-1}
@@ -250,7 +253,7 @@ function WindowInner({ id }: { id: string }) {
       >
         <WindowMenuBar id={id} />
         {state.loading && (
-          <div className={styles.loadingOverlay}>
+          <div className={styles.loadingOverlay} role="status">
             <progress />
             <div className={styles.loadingText}>Generating program...</div>
             <div className={styles.loadingActions}>

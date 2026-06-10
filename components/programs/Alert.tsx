@@ -39,7 +39,9 @@ export function Alert({ id }: { id: string }) {
             <Image src={xIcon} alt="Alert Icon" width={32} height={32} />
           </div>
         )}
-        <div className={styles.alertMessage}>{message}</div>
+        <div className={styles.alertMessage} id={`alert-message-${id}`}>
+          {message}
+        </div>
       </div>
       <div className={styles.alertActions}>{renderActions()}</div>
     </div>

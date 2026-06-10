@@ -86,6 +86,7 @@ export function Mail({ id }: { id: string }) {
     return registerCloseGuard(id, () => {
       alert({
         alertId: `mail-discard-${id}`,
+        title: "New Message",
         icon: "x",
         message: "This message hasn't been sent. Close anyway?",
         actions: [
@@ -230,6 +231,7 @@ export function Mail({ id }: { id: string }) {
   if (status === "sent") {
     return (
       <div
+        role="status"
         style={{
           padding: 20,
           fontSize: 13,
@@ -247,7 +249,7 @@ export function Mail({ id }: { id: string }) {
           <div style={{ fontWeight: "bold", marginBottom: 4 }}>
             Message sent.
           </div>
-          <div style={{ fontSize: 12, color: "#555" }}>
+          <div style={{ fontSize: 12, color: "#444" }}>
             {replyTo
               ? `I'll reply to ${replyTo} when I see this.`
               : "Thanks for writing in. I'll read it soon."}
@@ -286,7 +288,7 @@ export function Mail({ id }: { id: string }) {
         void send();
       }}
     >
-      <p style={{ fontSize: 12, color: "#555", margin: 0 }}>
+      <p style={{ fontSize: 12, color: "#444", margin: 0 }}>
         Sends straight to my inbox.
       </p>
 
@@ -323,7 +325,7 @@ export function Mail({ id }: { id: string }) {
             </span>
           )}
           {emailSuggestion && (
-            <span style={{ color: "#555" }}>
+            <span style={{ color: "#444" }}>
               Did you mean{" "}
               <button
                 type="button"
@@ -345,7 +347,7 @@ export function Mail({ id }: { id: string }) {
             </span>
           )}
           {replyTo === "" && (
-            <span style={{ color: "#555" }}>
+            <span style={{ color: "#444" }}>
               Leave blank if you don&apos;t want a reply.
             </span>
           )}
@@ -431,7 +433,7 @@ export function Mail({ id }: { id: string }) {
       </div>
 
       <details style={{ marginTop: 4 }}>
-        <summary style={{ fontSize: 11, color: "#555", cursor: "pointer" }}>
+        <summary style={{ fontSize: 11, color: "#444", cursor: "pointer" }}>
           Prefer another way?
         </summary>
         <div

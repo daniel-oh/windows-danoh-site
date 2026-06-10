@@ -16,6 +16,8 @@ type Particle = {
 
 export function burstConfetti(x: number, y: number, count = 28): void {
   if (typeof window === "undefined") return;
+  // Confetti is pure theatrics — skip it entirely for reduced-motion.
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
   const particles: Particle[] = [];
   for (let i = 0; i < count; i++) {

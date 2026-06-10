@@ -358,6 +358,7 @@ function IframeInner({ id }: { id: string }) {
       key={codeVersion}
       ref={ref}
       id={getIframeID(id)}
+      title={state.title}
       // allow-scripts WITHOUT allow-same-origin, in both modes: the
       // generated code is untrusted (built from an arbitrary visitor
       // prompt) and must never share the parent's origin/storage.

@@ -3,11 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { useAtomValue } from "jotai";
 import { windowAtomFamily } from "@/state/window";
-import { sortedPosts, BlogPost } from "@/content/blog/posts";
+import {
+  sortedPosts,
+  BlogPost,
+  getRelatedPosts,
+  getAdjacentPosts,
+} from "@/content/blog/posts";
+import { ReactionBar } from "@/components/ReactionBar";
 import { getPostComponent } from "@/content/blog/posts-content";
 import styles from "./Blog.module.css";
 import { useIsMobile } from "@/lib/useIsMobile";
-import { REACTIONS, useReactions } from "@/lib/useReactions";
 import { CopyAttribution } from "@/components/CopyAttribution";
 import { ExternalArrow } from "@/components/ExternalArrow";
 
@@ -89,12 +94,16 @@ export function Blog({ id }: { id: string }) {
           </nav>
         )}
         {showContent && (
-          <div className={styles.mainContent} role="main" ref={contentRef}>
+          <div className={styles.mainContent} ref={contentRef}>
             {selectedPost ? (
               <PostView
                 post={selectedPost}
                 onBack={goBack}
                 showBack={mobile}
+                onNavigate={(slug) => {
+                  setSelectedSlug(slug);
+                  setShowingPost(true);
+                }}
               />
             ) : (
               <p>Select a post from the list.</p>
@@ -110,10 +119,12 @@ function PostView({
   post,
   onBack,
   showBack,
+  onNavigate,
 }: {
   post: BlogPost;
   onBack: () => void;
   showBack: boolean;
+  onNavigate: (slug: string) => void;
 }) {
   return (
     <article role="article">
@@ -176,7 +187,99 @@ function PostView({
       </p>
       <PostActions slug={post.slug} />
       <ReactionBar slug={post.slug} />
+      <InOsRelated slug={post.slug} onNavigate={onNavigate} />
+      <p
+        style={{
+          marginTop: 14,
+          padding: "10px 12px",
+          border: "1px solid #808080",
+          background: "#dfdfdf",
+          fontSize: 12,
+        }}
+      >
+        Enjoyed this? Follow along via{" "}
+        <a href="/feed.xml" style={{ color: "#000080" }}>
+          RSS
+        </a>
+        , or say hello:{" "}
+        <a href="mailto:hello@danoh.com" style={{ color: "#000080" }}>
+          hello@danoh.com
+        </a>
+        .
+      </p>
     </article>
+  );
+}
+
+// In-OS readers used to dead-end after a post; the standalone pages had
+// related/prev-next all along. Navigation stays inside the window.
+function InOsRelated({
+  slug,
+  onNavigate,
+}: {
+  slug: string;
+  onNavigate: (slug: string) => void;
+}) {
+  const related = getRelatedPosts(slug, 3);
+  const { previous, next } = getAdjacentPosts(slug);
+  if (related.length === 0 && !previous && !next) return null;
+  const linkStyle = { color: "#000080", cursor: "pointer" } as const;
+  return (
+    <aside aria-label="Related posts" style={{ marginTop: 16, fontSize: 12 }}>
+      {related.length > 0 && (
+        <>
+          <div style={{ fontWeight: "bold", marginBottom: 4 }}>
+            More from the blog
+          </div>
+          <ul style={{ margin: "0 0 8px", paddingLeft: 18 }}>
+            {related.map((p) => (
+              <li key={p.slug} style={{ margin: "2px 0" }}>
+                <a
+                  href={`/blog/${p.slug}`}
+                  style={linkStyle}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    onNavigate(p.slug);
+                  }}
+                >
+                  {p.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
+        {previous ? (
+          <a
+            href={`/blog/${previous.slug}`}
+            style={linkStyle}
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate(previous.slug);
+            }}
+          >
+            ← {previous.title}
+          </a>
+        ) : (
+          <span />
+        )}
+        {next ? (
+          <a
+            href={`/blog/${next.slug}`}
+            style={linkStyle}
+            onClick={(e) => {
+              e.preventDefault();
+              onNavigate(next.slug);
+            }}
+          >
+            {next.title} →
+          </a>
+        ) : (
+          <span />
+        )}
+      </div>
+    </aside>
   );
 }
 
@@ -239,49 +342,3 @@ function PostBody({ slug }: { slug: string }) {
   return <Component />;
 }
 
-function ReactionBar({ slug }: { slug: string }) {
-  const { counts, mine, toggle } = useReactions(slug);
-  return (
-    <div
-      style={{
-        marginTop: 20,
-        paddingTop: 12,
-        borderTop: "1px solid #808080",
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-      }}
-    >
-      <div style={{ fontSize: 11, color: "#555" }}>
-        How did this land?
-      </div>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        {REACTIONS.map((r) => {
-          const active = mine.includes(r.key);
-          const count = counts[r.key] ?? 0;
-          return (
-            <button
-              key={r.key}
-              type="button"
-              aria-pressed={active}
-              aria-label={`${r.label} this post`}
-              onClick={() => toggle(r.key)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 14px",
-                minHeight: 40,
-                fontSize: 14,
-                fontWeight: active ? 700 : 400,
-              }}
-            >
-              <span style={{ fontSize: 17 }}>{r.emoji}</span>
-              <span style={{ fontVariantNumeric: "tabular-nums" }}>{count}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
