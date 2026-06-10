@@ -1,27 +1,9 @@
 import { Settings } from "@/state/settings";
-export async function getSettingsFromGetRequest(
-  req: Request
-): Promise<Settings> {
-  const url = new URL(req.url);
-  const settingsParam = url.searchParams.get("settings");
-  if (settingsParam) {
-    try {
-      const parsed = JSON.parse(decodeURIComponent(settingsParam));
-      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-        return { apiKey: null };
-      }
-      return {
-        apiKey: typeof parsed.apiKey === "string" ? parsed.apiKey : null,
-        model: parsed.model === "cheap" ? "cheap" : "best",
-      };
-    } catch (error) {
-      console.error("Error parsing settings from query string:", error);
-      return { apiKey: null };
-    }
-  }
-  return { apiKey: null };
-}
 
+// The GET-querystring variant of this module is gone with the
+// /api/program GET endpoint — settings (and the API key inside them)
+// now only ever travel in POST bodies, where proxy and CDN access
+// logs can't see them.
 export async function getSettingsFromJSON(json: any): Promise<Settings> {
   const settings = json.settings;
 

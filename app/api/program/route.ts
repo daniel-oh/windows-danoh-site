@@ -2,7 +2,7 @@ import { streamAnthropicHtml } from "@/ai/streamAnthropicHtml";
 import { getApiText } from "@/lib/apiText";
 import { createPaymentRequiredResponse } from "@/server/paymentRequiredResponse";
 
-import { getSettingsFromGetRequest } from "@/lib/getSettingsFromRequest";
+import { getSettingsFromJSON } from "@/lib/getSettingsFromRequest";
 import { createClientFromSettings } from "@/ai/client";
 import { Settings } from "@/state/settings";
 import { getUser } from "@/lib/auth/getUser";
@@ -18,10 +18,15 @@ import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
 
-export async function GET(req: Request) {
-  // /api/program is loaded as an <iframe src="…">, so a raw JSON 429
-  // would render as literal JSON text inside the window. Both gates
-  // here get converted to a styled 98.css HTML page if they reject.
+// POST, not GET: the response streams into the sandboxed bootstrap
+// iframe via parent fetch + postMessage (see Iframe.tsx), so nothing
+// needs a URL-addressable endpoint — and the old querystring put the
+// visitor's API key (inside `settings`) into proxy/CDN access logs
+// and truncated prompts at the first unencoded `&`.
+export async function POST(req: Request) {
+  // The response renders inside a window, so a raw JSON 429 would
+  // show as literal JSON text. Both gates here get converted to a
+  // styled 98.css HTML page if they reject.
   const denied = await checkAccess(req, "program");
   if (denied) return jsonRejectionAsHtml(denied);
 
@@ -31,7 +36,18 @@ export async function GET(req: Request) {
   const capped = await costGuard(req);
   if (capped) return jsonRejectionAsHtml(capped);
 
-  const settings = await getSettingsFromGetRequest(req);
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+  const { description, keys: rawKeys } = (body ?? {}) as {
+    description?: unknown;
+    keys?: unknown;
+  };
+
+  const settings = await getSettingsFromJSON(body);
   const user = await getUser();
   if (!isLocal() && settings.model !== "cheap") {
     if (!user) {
@@ -65,24 +81,20 @@ export async function GET(req: Request) {
     }
   }
 
-  const url = new URL(req.url);
-
-  const desc = url.searchParams.get("description");
-  let keys: string[];
-  try {
-    const parsed = JSON.parse(url.searchParams.get("keys") ?? "[]");
-    if (!Array.isArray(parsed) || !parsed.every((k: unknown) => typeof k === "string")) {
-      return new Response("Invalid keys parameter", { status: 400 });
-    }
-    // Validate each key matches allowed characters
-    const keyPattern = /^[a-zA-Z0-9_-]+$/;
-    if (!parsed.every((k: string) => keyPattern.test(k))) {
-      return new Response("Invalid key format", { status: 400 });
-    }
-    keys = parsed;
-  } catch {
+  const desc = typeof description === "string" ? description : null;
+  const parsed = rawKeys ?? [];
+  if (
+    !Array.isArray(parsed) ||
+    !parsed.every((k: unknown) => typeof k === "string")
+  ) {
     return new Response("Invalid keys parameter", { status: 400 });
   }
+  // Validate each key matches allowed characters
+  const keyPattern = /^[a-zA-Z0-9_-]+$/;
+  if (!parsed.every((k: string) => keyPattern.test(k))) {
+    return new Response("Invalid key format", { status: 400 });
+  }
+  const keys: string[] = parsed;
   if (!desc) {
     return new Response("No description", {
       status: 404,

@@ -1,7 +1,12 @@
 "use client";
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { settingsAtom } from "@/state/settings";
+import {
+  settingsAtom,
+  isApiKeyRemembered,
+  setApiKeyRemembered,
+} from "@/state/settings";
+import { testAnthropicKey } from "@/lib/testAnthropicKey";
 import { windowsListAtom } from "@/state/windowsList";
 import {
   isRootDirectorySetAtom,
@@ -26,34 +31,12 @@ export function Settings({ id }: { id: string }) {
   const [keyStatus, setKeyStatus] = useState<KeyStatus>("idle");
   const [showKey, setShowKey] = useState(false);
 
+  const [rememberKey, setRememberKey] = useState(() => isApiKeyRemembered());
+
   const testKey = async () => {
     if (!keyInput.trim()) return;
     setKeyStatus("testing");
-    try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": keyInput.trim(),
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 1,
-          messages: [{ role: "user", content: "hi" }],
-        }),
-      });
-      if (res.ok || res.status === 200) {
-        setKeyStatus("valid");
-      } else if (res.status === 401) {
-        setKeyStatus("invalid");
-      } else {
-        setKeyStatus("valid"); // Other errors (rate limit etc) mean key is valid
-      }
-    } catch {
-      setKeyStatus("invalid");
-    }
+    setKeyStatus(await testAnthropicKey(keyInput.trim()));
   };
 
   const saveKey = () => {
@@ -127,6 +110,20 @@ export function Settings({ id }: { id: string }) {
           </div>
         )}
         <div className={cx("field-row")} style={{ marginTop: 4 }}>
+          <input
+            id="remember-key"
+            type="checkbox"
+            checked={rememberKey}
+            onChange={(e) => {
+              setRememberKey(e.target.checked);
+              setApiKeyRemembered(e.target.checked, settings.apiKey);
+            }}
+          />
+          <label htmlFor="remember-key">
+            Remember key on this device
+          </label>
+        </div>
+        <div className={cx("field-row")} style={{ marginTop: 4 }}>
           <p className={styles.note}>
             Enter your{" "}
             <a
@@ -139,7 +136,8 @@ export function Settings({ id }: { id: string }) {
             to use AI features with no access code or rate limit.
             Your key is stored only in your browser. It travels with your
             own generation requests, is used for that call, and is never
-            stored on the server.
+            stored on the server. It clears when this tab closes unless
+            you tick Remember.
           </p>
         </div>
       </fieldset>

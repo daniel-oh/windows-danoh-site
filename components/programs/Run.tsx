@@ -10,11 +10,19 @@ import { settingsAtom } from "@/state/settings";
 import wrappedFetch from "@/lib/wrappedFetch";
 
 import { AccessCodePrompt } from "../AccessCodePrompt";
+import { ByokPrompt } from "../ByokPrompt";
 import { openDemoProgram } from "@/lib/demoPrograms";
 
 function hasSession() {
   return document.cookie.includes("lr_session=");
 }
+
+const PROMPT_EXAMPLES = [
+  "a pomodoro timer with clicky sounds",
+  "a notes app that saves files",
+  "a trivia game that generates questions with AI",
+  "a pixel-art paint program",
+];
 
 export function Run({ id }: { id: string }) {
   const windowsDispatch = useSetAtom(windowsListAtom);
@@ -28,6 +36,7 @@ export function Run({ id }: { id: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const autoSubmittedRef = useRef(false);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     // Bypass access code if user has their own API key
     setAuthenticated(hasSession() || !!settings.apiKey);
@@ -92,30 +101,70 @@ export function Run({ id }: { id: string }) {
 
   if (!authenticated) {
     return (
-      <div style={{ padding: 4 }}>
-        <AccessCodePrompt onSuccess={() => setAuthenticated(true)} />
-        <p style={{ fontSize: 11, color: "#444", margin: "8px 0 0" }}>
-          Or{" "}
-          <a
-            href="#"
-            style={{ color: "#000080" }}
-            onClick={(e) => {
-              e.preventDefault();
-              void openDemoProgram();
+      <div
+        style={{
+          padding: 4,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+        }}
+      >
+        {/* A ?run= deep link arrives gated — show the visitor their
+         * prompt survived the trip instead of leaving them to wonder. */}
+        {initialPrompt && (
+          <p
+            style={{
+              fontSize: 11,
+              background: "#ffffe1",
+              border: "1px solid #808080",
+              padding: "4px 6px",
+              margin: 0,
             }}
           >
-            watch one I made earlier
-          </a>{" "}
-          to see what this does.
-        </p>
+            Queued:{" "}
+            <strong>
+              &ldquo;
+              {initialPrompt.length > 90
+                ? `${initialPrompt.slice(0, 90)}…`
+                : initialPrompt}
+              &rdquo;
+            </strong>{" "}
+            · runs as soon as you&apos;re in.
+          </p>
+        )}
+        <fieldset>
+          <legend>Use your own Anthropic key</legend>
+          <ByokPrompt onSuccess={() => setAuthenticated(true)} />
+        </fieldset>
+        <fieldset>
+          <legend>Or enter an access code</legend>
+          <AccessCodePrompt
+            onSuccess={() => setAuthenticated(true)}
+            byokHint={false}
+          />
+        </fieldset>
         <div
           style={{
             display: "flex",
             gap: 8,
-            justifyContent: "flex-end",
-            marginTop: 8,
+            justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
+          <p style={{ fontSize: 11, color: "#444", margin: 0 }}>
+            Just browsing?{" "}
+            <a
+              href="#"
+              style={{ color: "#000080" }}
+              onClick={(e) => {
+                e.preventDefault();
+                void openDemoProgram();
+              }}
+            >
+              Watch one I made earlier
+            </a>
+            .
+          </p>
           <button
             onClick={() => windowsDispatch({ type: "REMOVE", payload: id })}
           >
@@ -143,16 +192,10 @@ export function Run({ id }: { id: string }) {
           Describe any app you can imagine. The AI will generate a fully
           functional program for you in seconds.
         </p>
-        <p style={{ fontSize: 11, color: "#444" }}>
-          You can bring your own{" "}
-          <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" } }); }} style={{ color: "#000080" }}>
-            Anthropic API key
-          </a>{" "}
-          in Settings, or use an access code.
-        </p>
       </div>
       <div className="field-row">
         <textarea
+          ref={promptRef}
           aria-label="Program description"
           placeholder="Describe the program you want to run"
           id="program-description"
@@ -175,16 +218,80 @@ export function Run({ id }: { id: string }) {
           }}
         />
       </div>
-      <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? "Opening…" : "Open"}
-        </button>
-        <button
-          type="button"
-          onClick={() => windowsDispatch({ type: "REMOVE", payload: id })}
-        >
-          Cancel
-        </button>
+      {/* Click-to-fill starters. Two of them advertise the OS APIs
+       * (files, AI chat) that nothing else surfaces at the moment of
+       * prompting — the system prompt injects those capabilities, but
+       * visitors can't use what they don't know exists. */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 4,
+          alignItems: "center",
+        }}
+      >
+        <span style={{ fontSize: 11, color: "#444" }}>Try:</span>
+        {PROMPT_EXAMPLES.map((example) => (
+          <button
+            key={example}
+            type="button"
+            style={{ fontSize: 11, minWidth: 0, padding: "2px 8px" }}
+            onClick={() => {
+              const ta = promptRef.current;
+              if (!ta) return;
+              ta.value = example;
+              ta.focus();
+            }}
+          >
+            {example}
+          </button>
+        ))}
+      </div>
+      <p style={{ fontSize: 11, color: "#444", margin: 0 }}>
+        Apps can save files, remember settings, and call AI. Just ask.
+      </p>
+      <div
+        style={{
+          display: "flex",
+          gap: 8,
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* Whose dime is this generation on? Always answerable. */}
+        <p style={{ fontSize: 11, color: "#444", margin: 0 }}>
+          {settings.apiKey ? (
+            <>
+              Using your Anthropic key (…{settings.apiKey.slice(-4)}) ·{" "}
+              <a
+                href="#"
+                style={{ color: "#000080" }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  createWindow({
+                    title: "Settings",
+                    program: { type: "settings" },
+                  });
+                }}
+              >
+                Manage
+              </a>
+            </>
+          ) : (
+            <>Using an access code session.</>
+          )}
+        </p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="submit" disabled={isLoading}>
+            {isLoading ? "Opening…" : "Open"}
+          </button>
+          <button
+            type="button"
+            onClick={() => windowsDispatch({ type: "REMOVE", payload: id })}
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </form>
   );

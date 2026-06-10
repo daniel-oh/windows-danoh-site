@@ -5,9 +5,13 @@ import { useState } from "react";
 export function AccessCodePrompt({
   onSuccess,
   message = "Enter access code:",
+  byokHint = true,
 }: {
   onSuccess: () => void;
   message?: string;
+  /** The Run gate shows its own inline key path right above this
+   * prompt — suppress the redundant "bring your own key" clause there. */
+  byokHint?: boolean;
 }) {
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -74,8 +78,11 @@ export function AccessCodePrompt({
         >
           message on LinkedIn
         </a>{" "}
-        and I&apos;ll get you one, or bring your own Anthropic API key in
-        Settings.
+        and I&apos;ll get you one{byokHint ? (
+          <>, or bring your own Anthropic API key in Settings.</>
+        ) : (
+          "."
+        )}
       </div>
     </form>
   );

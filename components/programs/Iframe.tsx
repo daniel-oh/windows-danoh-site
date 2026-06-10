@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { programAtomFamily, programsAtom } from "@/state/programs";
 import assert from "assert";
 import { registryAtom } from "@/state/registry";
-import { getURLForProgram } from "@/lib/getURLForProgram";
+import { getProgramRequestBody } from "@/lib/programRequest";
 import { getSettings } from "@/lib/getSettings";
 import { settingsAtom } from "@/state/settings";
 import wrappedFetch from "@/lib/wrappedFetch";
@@ -67,7 +67,9 @@ function IframeInner({ id }: { id: string }) {
 
   assert(program, "Program not found");
 
-  const url = getURLForProgram(program, registry);
+  // Stringified at render so the streaming effect below captures one
+  // stable snapshot per generation, same as the old URL string did.
+  const requestBody = JSON.stringify(getProgramRequestBody(program, registry));
 
   useEffect(() => {
     async function fetchIcon() {
@@ -292,7 +294,12 @@ function IframeInner({ id }: { id: string }) {
 
     (async () => {
       try {
-        const res = await fetch(url, { signal: controller.signal });
+        const res = await fetch("/api/program", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: requestBody,
+          signal: controller.signal,
+        });
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
         if (reader) {
@@ -347,8 +354,8 @@ function IframeInner({ id }: { id: string }) {
       controller.abort();
       window.removeEventListener("message", onReady);
     };
-    // url/state.title/program.prompt are intentionally captured per
-    // generation: a registry write mid-stream must not abort and
+    // requestBody/state.title/program.prompt are intentionally captured
+    // per generation: a registry write mid-stream must not abort and
     // restart a paid generation.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCode, programID, codeVersion]);
