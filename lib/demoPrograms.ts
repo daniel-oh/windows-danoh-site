@@ -23,7 +23,7 @@ const SNAKE_HTML = `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
-<link rel="stylesheet" href="https://unpkg.com/98.css">
+<link rel="stylesheet" href="/vendor/98.css">
 <style>
   html, body { height: 100%; margin: 0; }
   body {

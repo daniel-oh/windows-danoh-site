@@ -25,6 +25,25 @@ import { BootScreen } from "./boot/BootScreen";
 import { Screensaver } from "./Screensaver";
 import { settingsAtom } from "@/state/settings";
 
+// Validate the (cross-program-writable) wallpaper URL before it reaches
+// an inline CSS url(). Rejects anything that could break out of the
+// quoted url() or isn't a sensible image source; falls back to the
+// default wallpaper.
+function safeWallpaperUrl(raw: unknown): string {
+  const FALLBACK = "/bg.jpg";
+  if (typeof raw !== "string" || raw.length > 4096) return FALLBACK;
+  if (/["\\\n\r]/.test(raw)) return FALLBACK;
+  if (
+    /^https:\/\//i.test(raw) ||
+    /^blob:/i.test(raw) ||
+    /^data:image\//i.test(raw) ||
+    (raw.startsWith("/") && !raw.startsWith("//"))
+  ) {
+    return raw;
+  }
+  return FALLBACK;
+}
+
 export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   // Eager-subscribe to fsManagerAtom so the async chain
   // (IndexedDB open → root handle → mounted dirs → FsManager init)
@@ -38,7 +57,12 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   const setFocusedWindow = useSetAtom(focusedWindowAtom);
   const registry = useAtomValue(registryAtom);
 
-  const publicDesktopUrl = registry[DESKTOP_URL_KEY] ?? "/bg.jpg";
+  // public_desktop_url is a shared registry key any generated app can
+  // write (Iframe.tsx allows public_ keys cross-program), and it lands
+  // in an inline CSS url() below. React doesn't sanitize CSS value
+  // strings, so an unvalidated value could break out of url(...) and
+  // inject extra declarations. Validate to a safe image source.
+  const publicDesktopUrl = safeWallpaperUrl(registry[DESKTOP_URL_KEY]);
   const { crt } = useAtomValue(settingsAtom);
 
   // Wallpaper parallax: the background sits on its own slightly
@@ -217,7 +241,9 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
         style={{
           position: "absolute",
           inset: -20,
-          backgroundImage: `url(${publicDesktopUrl})`,
+          // Double-quoted; safeWallpaperUrl() already rejects quotes,
+          // backslashes, and newlines, so the value can't escape it.
+          backgroundImage: `url("${publicDesktopUrl}")`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           willChange: "transform",

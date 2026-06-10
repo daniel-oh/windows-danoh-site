@@ -57,7 +57,7 @@ const nextConfig = {
             value: "camera=(), microphone=(), geolocation=(), payment=()",
           },
           // Enforced CSP. Constraints are the third-party origins we
-          // actually use (PostHog / Plausible / Stripe / unpkg) plus
+          // actually use (PostHog / Plausible / Stripe) plus
           // 'unsafe-inline' + 'unsafe-eval' which Next.js's runtime
           // requires. If a new integration needs a host, widen the
           // allowlist in CSP below. Flip back to "…-Report-Only" to
@@ -77,7 +77,9 @@ const nextConfig = {
 // PostHog: api hosts are *.i.posthog.com, assets are us/eu-assets.
 // Plausible: custom self-hosted domain.
 // Stripe: script bundle + REST API.
-// unpkg: 98.css loaded from the iframe program page.
+// 98.css (generated-program iframes) and the Rive WASM are now both
+// self-hosted, so no unpkg allowance is needed. Inter is self-hosted by
+// next/font, so no Google Fonts allowance is needed either.
 // frame-src blob:/data:/self: srcDoc iframes and same-origin program frames.
 // frame-ancestors 'self': modern equivalent of X-Frame-Options SAMEORIGIN.
 const CSP = [
@@ -87,16 +89,14 @@ const CSP = [
   // cloudflareinsights: Cloudflare auto-injects its Web Analytics beacon
   // at the edge; without the allowance every pageview logs a CSP error
   // and the zone's RUM data collects nothing.
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://*.i.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com https://analytics.wuxiamaxxing.com https://js.stripe.com https://unpkg.com https://static.cloudflareinsights.com",
-  "style-src 'self' 'unsafe-inline' https://unpkg.com https://fonts.googleapis.com",
-  // unpkg: 98.css inside generated-program iframes (which inherit this
-  // CSP) pulls ms_sans_serif.woff2 from unpkg — without the allowance
-  // every generated app silently loses the retro font.
-  "font-src 'self' data: https://fonts.gstatic.com https://unpkg.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://*.i.posthog.com https://us-assets.i.posthog.com https://eu-assets.i.posthog.com https://analytics.wuxiamaxxing.com https://js.stripe.com https://static.cloudflareinsights.com",
+  "style-src 'self' 'unsafe-inline'",
+  // 98.css (self-hosted at /vendor/98.css) loads ms_sans_serif.woff2
+  // from the same origin inside generated-program iframes — covered by
+  // 'self'.
+  "font-src 'self' data:",
   "img-src 'self' data: blob: https:",
-  // unpkg in connect-src because some Rive runtimes fetch the WASM
-  // from unpkg at runtime depending on bundler config.
-  "connect-src 'self' https://*.i.posthog.com https://us.i.posthog.com https://eu.i.posthog.com https://api.stripe.com https://analytics.wuxiamaxxing.com https://unpkg.com https://cloudflareinsights.com",
+  "connect-src 'self' https://*.i.posthog.com https://us.i.posthog.com https://eu.i.posthog.com https://api.stripe.com https://analytics.wuxiamaxxing.com https://cloudflareinsights.com",
   "frame-src 'self' blob: data:",
   "worker-src 'self' blob:",
   "object-src 'none'",

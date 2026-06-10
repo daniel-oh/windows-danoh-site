@@ -122,7 +122,7 @@ export async function POST(req: Request) {
 <script src="/api.js"></script>
 <link
   rel="stylesheet"
-href="https://unpkg.com/98.css"
+href="/vendor/98.css"
 >
 <link
   rel="stylesheet"
@@ -160,7 +160,7 @@ async function jsonRejectionAsHtml(res: Response): Promise<Response> {
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="danoh-error" content="generation-rejected">
 <title>danoh.com · generation paused</title>
-<link rel="stylesheet" href="https://unpkg.com/98.css">
+<link rel="stylesheet" href="/vendor/98.css">
 <style>
   html,body{height:100%;margin:0}
   body{display:flex;align-items:center;justify-content:center;padding:16px;background:#c0c0c0;font-family:"Pixelated MS Sans Serif",Arial,sans-serif}
