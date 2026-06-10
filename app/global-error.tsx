@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import posthog from "posthog-js";
+import { loadPosthog } from "@/lib/posthogLazy";
 
 export default function GlobalError({
   error,
@@ -17,12 +17,14 @@ export default function GlobalError({
   // capture call is a no-op.
   useEffect(() => {
     try {
-      posthog.capture("client_error", {
-        message: error.message,
-        digest: error.digest,
-        stack: error.stack,
-        path: typeof window !== "undefined" ? window.location.pathname : null,
-      });
+      void loadPosthog().then((ph) =>
+        ph?.capture("client_error", {
+          message: error.message,
+          digest: error.digest,
+          stack: error.stack,
+          path: typeof window !== "undefined" ? window.location.pathname : null,
+        })
+      );
     } catch {
       // swallow — telemetry isn't allowed to break the fallback UI
     }

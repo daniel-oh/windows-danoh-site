@@ -11,7 +11,7 @@ import styles from "./Settings.module.css";
 import cx from "classnames";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
 import { useState } from "react";
-import posthog from "posthog-js";
+import { loadPosthog } from "@/lib/posthogLazy";
 import {
   isAnalyticsOptedOut,
   setAnalyticsOptedOut,
@@ -71,11 +71,11 @@ export function Settings({ id }: { id: string }) {
 
   const statusMessage = () => {
     switch (keyStatus) {
-      case "testing": return <span style={{ color: "#555" }}>Testing key...</span>;
-      case "valid": return <span style={{ color: "#006400" }}>Key is valid. Click Save to store it.</span>;
-      case "invalid": return <span style={{ color: "#cc0000" }}>Invalid key. Please check and try again.</span>;
-      case "saved": return <span style={{ color: "#006400" }}>Key saved to your browser.</span>;
-      case "cleared": return <span style={{ color: "#555" }}>Key removed.</span>;
+      case "testing": return <span style={{ color: "#444" }}>Testing key...</span>;
+      case "valid": return <span style={{ color: "#005400" }}>Key is valid. Click Save to store it.</span>;
+      case "invalid": return <span style={{ color: "#a00000" }}>Invalid key. Please check and try again.</span>;
+      case "saved": return <span style={{ color: "#005400" }}>Key saved to your browser.</span>;
+      case "cleared": return <span style={{ color: "#444" }}>Key removed.</span>;
       default: return null;
     }
   };
@@ -116,7 +116,11 @@ export function Settings({ id }: { id: string }) {
           </button>
         </div>
         {keyStatus !== "idle" && (
-          <div className={cx("field-row")} style={{ marginTop: 4 }}>
+          <div
+            className={cx("field-row")}
+            style={{ marginTop: 4 }}
+            role="status"
+          >
             <p className={styles.note} style={{ fontSize: 11 }}>
               {statusMessage()}
             </p>
@@ -160,8 +164,11 @@ function AnalyticsSection() {
     setOptedOut(next);
     setAnalyticsOptedOut(next);
     try {
-      if (next) posthog.opt_out_capturing();
-      else posthog.opt_in_capturing();
+      void loadPosthog().then((ph) => {
+        if (!ph) return;
+        if (next) ph.opt_out_capturing();
+        else ph.opt_in_capturing();
+      });
     } catch {
       /* posthog may not be initialised yet — the flag still persists
        * and the next page load will respect it. */

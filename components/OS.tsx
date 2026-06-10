@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import styles from "./OS.module.css";
 import cx from "classnames";
 import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -22,7 +22,7 @@ import { fsManagerAtom } from "@/state/fsManager";
 import { burstConfetti } from "@/lib/confetti";
 import { alert } from "@/lib/alert";
 
-export function OS() {
+export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   // Eager-subscribe to fsManagerAtom so the async chain
   // (IndexedDB open → root handle → mounted dirs → FsManager init)
   // starts on OS mount rather than lazily on the first getFsManager()
@@ -36,6 +36,13 @@ export function OS() {
   const registry = useAtomValue(registryAtom);
 
   const publicDesktopUrl = registry[DESKTOP_URL_KEY] ?? "/bg.jpg";
+
+  // The server-rendered intro stays up until the first window opens
+  // (initState runs right after hydration), then never comes back —
+  // even if the visitor later closes every window. Render-phase state
+  // adjustment per the React docs, not an effect.
+  const [booted, setBooted] = useState(false);
+  if (!booted && windows.length > 0) setBooted(true);
 
   // Keep latest windows in a ref so listeners don't need to resubscribe.
   // Synced in an effect (not during render) per the react-hooks purity
@@ -161,6 +168,7 @@ export function OS() {
       }}
     >
       <Desktop />
+      {!booted && staticIntro}
       {windows.map((id) => (
         <Window key={id} id={id} />
       ))}
@@ -175,7 +183,7 @@ function TaskBar() {
   const windows = useAtomValue(windowsListAtom);
   const [startMenuOpen, setStartMenuOpen] = useAtom(startMenuOpenAtom);
   return (
-    <div className={cx("window", styles.taskbar)}>
+    <div className={cx("window", styles.taskbar)} role="toolbar" aria-label="Taskbar">
       <button
         className={styles.startButton}
         aria-label="Start menu"
@@ -234,7 +242,7 @@ function TaskbarClock() {
 
 function LogoEasterEgg() {
   const clicksRef = useRef<number[]>([]);
-  const onClick = (e: React.MouseEvent<HTMLImageElement>) => {
+  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const now = Date.now();
     // Keep only clicks within the last 2s
     const recent = clicksRef.current.filter((t) => now - t < 2000);
@@ -247,15 +255,16 @@ function LogoEasterEgg() {
     }
   };
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src="/danoh-logo.svg"
-      alt="danoh.com"
-      className={styles.taskbarLogo}
+    <button
+      type="button"
       onClick={onClick}
-      style={{ cursor: "pointer" }}
+      className={styles.taskbarLogoButton}
       title="Psst. Try clicking me three times"
-    />
+      aria-label="danoh.com logo. Try clicking three times"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/danoh-logo.svg" alt="" className={styles.taskbarLogo} />
+    </button>
   );
 }
 
@@ -410,7 +419,9 @@ function StartMenu() {
         createWindow({
           title: "New Message",
           program: { type: "mail" },
-          size: { width: 460, height: 400 },
+          // Tall enough that Send is visible without scrolling the form —
+          // it's the primary contact flow.
+          size: { width: 460, height: 520 },
         });
       },
     },
@@ -433,7 +444,7 @@ function StartMenu() {
         createWindow({
           title: "Minesweeper",
           program: { type: "minesweeper" },
-          size: { width: 280, height: 360 },
+          size: { width: 320, height: 440 },
           icon: "/icons/pirate-playing.png",
         });
       },
@@ -446,6 +457,7 @@ function StartMenu() {
         createWindow({
           title: "Explorer",
           program: { type: "explorer" },
+          size: { width: 480, height: 400 },
         });
       },
     },
@@ -544,10 +556,11 @@ function confirmLogout(logout: () => Promise<void> | void) {
         : `${openCount} open programs will close.`;
   alert({
     alertId: "LOG_OFF_CONFIRM",
+    title: "Log Off Windows",
     message: (
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         <p style={{ margin: 0 }}>Are you sure you want to log off?</p>
-        <p style={{ margin: 0, fontSize: 11, color: "#555" }}>{openLine}</p>
+        <p style={{ margin: 0, fontSize: 11, color: "#444" }}>{openLine}</p>
       </div>
     ),
     actions: [
@@ -583,7 +596,11 @@ const WindowTaskBarItem = memo(function WindowTaskBarItem({ id }: { id: string }
       className={cx(styles.windowButton, {
         [styles.active]: focusedWindow === id,
       })}
-      aria-label={state.title}
+      aria-pressed={focusedWindow === id}
+      aria-label={
+        state.status === "minimized" ? `${state.title}, minimized` : state.title
+      }
+      title={state.title}
       onClick={(e) => {
         e.stopPropagation();
         setFocusedWindow(id);

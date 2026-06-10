@@ -26,6 +26,20 @@ const nextConfig = {
   transpilePackages: ["file-system-access", "fetch-blob"],
   // Keep .tsx etc as pages. MDX files are content modules, not routes,
   // so we deliberately don't add "mdx" here.
+  // www serves the whole site as a 200 duplicate host otherwise —
+  // canonical tags mitigate it, but a 301 consolidates signals and
+  // stops the crawl-budget waste. Done here rather than in Cloudflare
+  // so it lives in the repo.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.danoh.com" }],
+        destination: "https://danoh.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

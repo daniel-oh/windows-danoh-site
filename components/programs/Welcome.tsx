@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import styles from "./Welcome.module.css";
 import check from "@/components/assets/check.png";
 import { sortedPosts } from "@/content/blog/posts";
@@ -26,7 +27,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
 }) => {
   return (
     <div className={styles.sidebar}>
-      <h4 className={styles.sidebarTitle}>Contents</h4>
+      <div className={styles.sidebarTitle} role="heading" aria-level={2}>Contents</div>
       <ul className={styles.sidebarList}>
         {entries.map((entry) => {
           return (
@@ -46,22 +47,50 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
           );
         })}
       </ul>
-      <video
-        className={styles.sidebarLogo}
-        poster="/danoh-logo-poster.png"
-        autoPlay
-        loop
-        muted
-        playsInline
-        aria-hidden="true"
-      >
-        <source src="/danoh-logo-animated.webm" type="video/webm" />
-        <source src="/danoh-logo-animated.mp4" type="video/mp4" />
-      </video>
+      <SidebarLogo />
       <div className={styles.sidebarCounter}>
         <VisitorBadge />
       </div>
     </div>
+  );
+};
+
+// The looping logo: WCAG 2.2.2 wants auto-playing motion >5s to be
+// stoppable; reduced-motion users get the static poster, and the
+// video itself is click-to-pause for everyone else.
+const SidebarLogo = () => {
+  const reduced =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        className={styles.sidebarLogo}
+        src="/danoh-logo-poster.png"
+        alt=""
+      />
+    );
+  }
+  return (
+    <video
+      className={styles.sidebarLogo}
+      poster="/danoh-logo-poster.png"
+      autoPlay
+      loop
+      muted
+      playsInline
+      aria-hidden="true"
+      title="Click to pause"
+      onClick={(e) => {
+        const v = e.currentTarget;
+        if (v.paused) void v.play();
+        else v.pause();
+      }}
+    >
+      <source src="/danoh-logo-animated.webm" type="video/webm" />
+      <source src="/danoh-logo-animated.mp4" type="video/mp4" />
+    </video>
   );
 };
 
@@ -103,7 +132,12 @@ const contentByKey = {
             }}
           />
           <div style={{ flex: 1, minWidth: 200 }}>
-            <h3 style={{ marginBottom: 4 }}>Hey, I&apos;m Daniel Oh</h3>
+            {/* The page's h1 lives here: the desktop has no other heading,
+                and crawlers index the rendered DOM. Styled to match the
+                old h3 so nothing shifts visually. */}
+            <h1 style={{ marginBottom: 4, fontSize: "1.17em", fontWeight: "bold" }}>
+              Hey, I&apos;m Daniel Oh
+            </h1>
             <p style={{ margin: "0 0 8px 0" }}>
               Platform engineer at Nike. Michigan Engineering alum. I build
               infrastructure that teams ship on, and side projects that keep
@@ -113,12 +147,12 @@ const contentByKey = {
         </div>
         <p>
           Poke around the desktop. My{" "}
-          <a href="#" onClick={(e) => { e.preventDefault(); openResume(); }} style={{ color: "#000080" }}><strong>Resume</strong></a> and{" "}
-          <a href="#" onClick={(e) => { e.preventDefault(); openBlog(); }} style={{ color: "#000080" }}><strong>Blog</strong></a> are
+          <a href="/Daniel_Oh_Resume.pdf" onClick={(e) => { e.preventDefault(); openResume(); }} style={{ color: "#000080" }}><strong>Resume</strong></a> and{" "}
+          <Link href="/blog" onClick={(e) => { e.preventDefault(); openBlog(); }} style={{ color: "#000080" }}><strong>Blog</strong></Link> are
           both here, or try generating your own app: hit <strong>Start &gt; Run</strong>,
           describe what you want, and the AI builds it in seconds.
         </p>
-        <p style={{ fontSize: 11, color: "#555" }}>
+        <p style={{ fontSize: 11, color: "#444" }}>
           To try the AI, bring your own Anthropic API key in{" "}
           <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" } }); }} style={{ color: "#000080" }}><strong>Settings</strong></a>,
           or{" "}
@@ -159,7 +193,7 @@ const contentByKey = {
               createWindow({
                 title: "New Message",
                 program: { type: "mail" },
-                size: { width: 460, height: 400 },
+                size: { width: 460, height: 520 },
               })
             }
           >
@@ -180,7 +214,7 @@ const contentByKey = {
               margin: "2px 0 0 0",
               fontSize: 13,
               fontStyle: "italic",
-              color: "#555",
+              color: "#444",
               lineHeight: 1.35,
             }}
           >
@@ -189,19 +223,26 @@ const contentByKey = {
         </header>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "8px 0 10px", maxHeight: 300, overflowY: "auto" }}>
           {recentPosts.map((post) => (
-            <div
+            // Real anchors with deep links: these rows are the rendered
+            // DOM's only path to the posts, so crawlers need the hrefs;
+            // preventDefault keeps the in-OS reading experience.
+            <a
               key={post.slug}
+              href={`/blog/${post.slug}`}
               style={{
                 padding: "8px 10px",
                 background: "#dfdfdf",
                 border: "1px solid #808080",
                 cursor: "pointer",
                 flexShrink: 0,
+                display: "block",
+                color: "inherit",
+                textDecoration: "none",
               }}
-              onClick={() => openBlog(post.slug)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && openBlog(post.slug)}
+              onClick={(e) => {
+                e.preventDefault();
+                openBlog(post.slug);
+              }}
             >
               <div style={{
                 fontWeight: "bold",
@@ -212,7 +253,7 @@ const contentByKey = {
               }}>{post.title}</div>
               <div style={{
                 fontSize: 11,
-                color: "#555",
+                color: "#444",
                 marginTop: 2,
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -220,7 +261,7 @@ const contentByKey = {
               }}>
                 {post.date} &middot; {post.author} &middot; {post.summary}
               </div>
-            </div>
+            </a>
           ))}
         </div>
         <button onClick={() => openBlog()}>
@@ -247,7 +288,7 @@ const contentByKey = {
           />
           <div>
             <h3 style={{ margin: 0 }}>Daniel Oh</h3>
-            <div style={{ fontSize: 11, color: "#555" }}>
+            <div style={{ fontSize: 11, color: "#444" }}>
               Sr. Platform Engineer at Nike &middot; Chicago, IL
             </div>
           </div>
@@ -399,7 +440,7 @@ const contentByKey = {
           Mention these when generating: &quot;a notes app that saves files&quot;
           or &quot;a trivia game that generates questions with chat.&quot;
         </p>
-        <p style={{ fontSize: 11, color: "#555", marginTop: 8, borderTop: "1px solid #ccc", paddingTop: 8 }}>
+        <p style={{ fontSize: 11, color: "#444", marginTop: 8, borderTop: "1px solid #ccc", paddingTop: 8 }}>
           <strong>Privacy:</strong> All files are stored in your browser&apos;s
           local storage. Nothing is sent to the server. You can optionally mount
           a local directory in Settings, but that stays on your machine too.

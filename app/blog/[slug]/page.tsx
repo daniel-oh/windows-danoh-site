@@ -10,6 +10,7 @@ import {
 } from "@/content/blog/posts";
 import { getPostComponent } from "@/content/blog/posts-content";
 import { CopyAttribution } from "@/components/CopyAttribution";
+import { ReactionBar } from "@/components/ReactionBar";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import styles from "../blog.module.css";
@@ -85,6 +86,10 @@ export default async function Post({ params }: Props) {
     headline: post.title,
     description: post.summary,
     datePublished: post.date,
+    dateModified: post.date,
+    // Always provide an image — required for Discover/article rich
+    // treatment; the shared OG card is the fallback.
+    image: [post.image ?? "https://danoh.com/og-image.png"],
     author: authorPerson,
     keywords: post.tags.join(", "),
     url: `https://danoh.com/blog/${post.slug}`,
@@ -153,6 +158,7 @@ export default async function Post({ params }: Props) {
           >
             <PostBody slug={post.slug} />
           </CopyAttribution>
+          <ReactionBar slug={post.slug} />
           <RelatedAndAdjacent slug={post.slug} />
           <div className={styles.postCta}>
             Enjoyed this? I write a few times a month. Follow along via{" "}
@@ -178,9 +184,15 @@ export default async function Post({ params }: Props) {
             <Link href="/blog" className={styles.footerLink}>
               ← All posts
             </Link>
-            <Link href="/" className={styles.footerLink}>
-              Open the desktop<ExternalArrow />
-            </Link>
+            <span>
+              <Link href="/privacy" className={styles.footerLink}>
+                Privacy
+              </Link>
+              {" · "}
+              <Link href="/" className={styles.footerLink}>
+                Open the desktop<ExternalArrow />
+              </Link>
+            </span>
           </div>
         </article>
       </div>

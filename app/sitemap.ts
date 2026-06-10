@@ -3,24 +3,32 @@ import { sortedPosts } from "@/content/blog/posts";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://danoh.com";
-  const now = new Date();
+  // Honest lastmod, not request time: Google ignores lastmod site-wide
+  // once it detects fabricated values, which would hurt recrawl of the
+  // posts that DO carry accurate dates. The homepage and index move
+  // when content does — the newest post date is the truthful proxy.
+  const latestPost = sortedPosts.reduce(
+    (max, p) => (p.date > max ? p.date : max),
+    sortedPosts[0]?.date ?? "2026-01-01"
+  );
+  const PRIVACY_LAST_EDITED = "2026-05-12";
 
   const entries: MetadataRoute.Sitemap = [
     {
       url: base,
-      lastModified: now,
+      lastModified: new Date(latestPost),
       changeFrequency: "monthly",
       priority: 1,
     },
     {
       url: `${base}/blog`,
-      lastModified: now,
+      lastModified: new Date(latestPost),
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${base}/privacy`,
-      lastModified: now,
+      lastModified: new Date(PRIVACY_LAST_EDITED),
       changeFrequency: "yearly",
       priority: 0.3,
     },

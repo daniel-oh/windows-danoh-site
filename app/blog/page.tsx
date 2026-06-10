@@ -17,9 +17,29 @@ export const metadata = buildMetadata({
 // and search live in BlogIndexContent as a client island — posts are
 // passed in as a static prop so we don't force the whole shell client.
 export default function BlogIndex() {
+  // Blog + ItemList structured data: the index had none while the
+  // homepage and posts both carry theirs.
+  const ld = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": "https://danoh.com/blog#blog",
+    name: "Daniel Oh · Blog",
+    url: "https://danoh.com/blog",
+    author: { "@id": "https://danoh.com/#person" },
+    blogPost: sortedPosts.map((p) => ({
+      "@type": "BlogPosting",
+      headline: p.title,
+      url: `https://danoh.com/blog/${p.slug}`,
+      datePublished: p.date,
+    })),
+  };
   return (
     <div className={styles.page}>
       <SkipLink />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+      />
       <div className={styles.shell}>
         <div className={styles.titleBar}>
           <div className={styles.titleBarText}>Blog · danoh.com</div>
@@ -44,9 +64,15 @@ export default function BlogIndex() {
             <Link href="/" className={styles.footerLink}>
               ← Back to the desktop
             </Link>
-            <a href="/feed.xml" className={styles.footerLink}>
-              RSS<ExternalArrow />
-            </a>
+            <span>
+              <Link href="/privacy" className={styles.footerLink}>
+                Privacy
+              </Link>
+              {" · "}
+              <a href="/feed.xml" className={styles.footerLink}>
+                RSS<ExternalArrow />
+              </a>
+            </span>
           </div>
         </main>
       </div>

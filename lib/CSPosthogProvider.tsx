@@ -1,29 +1,21 @@
 "use client";
-import posthog from "posthog-js";
-import { PostHogProvider } from "posthog-js/react";
-import { isLocal } from "@/lib/isLocal";
-import { isAnalyticsOptedOut } from "@/lib/analyticsOptOut";
+import { useEffect } from "react";
+import { loadPosthog } from "./posthogLazy";
 
-// PostHog always initializes in prod so the Settings toggle can flip
-// capture on/off without a page reload. When the visitor's persisted
-// opt-out flag is set we immediately call opt_out_capturing(), which
-// stops events from being sent but keeps the instance alive for a
-// later opt-in. This avoids the earlier "opt back in after an opted-
-// out page load = silent no-op because posthog was never init'd" trap.
-// NEXT_PUBLIC_POSTHOG_KEY is baked at build time; the CI image build
-// doesn't always have it. Init'ing without a key logs a console error
-// on every page and captures nothing — skip cleanly instead.
-const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-if (typeof window !== "undefined" && !isLocal() && POSTHOG_KEY) {
-  posthog.init(POSTHOG_KEY, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    person_profiles: "identified_only",
-  });
-  if (isAnalyticsOptedOut()) {
-    posthog.opt_out_capturing();
-  }
-}
-
+// Formerly wrapped children in posthog-js/react's PostHogProvider with
+// a static posthog import — which put the whole SDK in the main bundle
+// even though no component uses the usePostHog hook. Now it just kicks
+// off the lazy init once the main thread is idle; capture call sites
+// go through lib/posthogLazy.
 export function CSPostHogProvider({ children }: { children: React.ReactNode }) {
-  return <PostHogProvider client={posthog}>{children}</PostHogProvider>;
+  useEffect(() => {
+    const kickoff = () => void loadPosthog();
+    if ("requestIdleCallback" in window) {
+      const id = window.requestIdleCallback(kickoff, { timeout: 5000 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const t = setTimeout(kickoff, 2000);
+    return () => clearTimeout(t);
+  }, []);
+  return <>{children}</>;
 }

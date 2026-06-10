@@ -1,4 +1,5 @@
 import { OS } from "@/components/OS";
+import { StaticIntro } from "@/components/StaticIntro";
 import { FlagsProvider } from "@/flags/context";
 import { getFlagsForUser } from "@/flags/flags";
 import { ActionsProvider } from "@/lib/actions/ActionsProvider";
@@ -23,8 +24,18 @@ const personLd = {
       "@id": "https://danoh.com/#person",
       name: "Daniel Oh",
       jobTitle: "Platform Engineer",
+      description:
+        "Platform engineer at Nike. Michigan Engineering alum. Builds infrastructure that teams ship on, and side projects that keep him learning.",
       url: "https://danoh.com",
       email: "mailto:hello@danoh.com",
+      // image/worksFor/alumniOf are what disambiguate an extremely
+      // common name in the knowledge graph.
+      image: "https://danoh.com/headshot.jpg",
+      worksFor: { "@type": "Organization", name: "Nike" },
+      alumniOf: {
+        "@type": "CollegeOrUniversity",
+        name: "University of Michigan",
+      },
       sameAs: [
         "https://www.linkedin.com/in/daniel-oh/",
         "https://github.com/daniel-oh",
@@ -50,7 +61,7 @@ export default async function Home() {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personLd) }}
         />
-        <OS />
+        <OS staticIntro={<StaticIntro />} />
       </ActionsProvider>
     </FlagsProvider>
   );
