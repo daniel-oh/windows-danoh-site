@@ -4,6 +4,7 @@ import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import { BlogIndexContent } from "./BlogIndexContent";
+import { StatusBarCount } from "./StatusBarCount";
 import styles from "./blog.module.css";
 import { CaptionIcon } from "./CaptionIcon";
 
@@ -83,7 +84,7 @@ export default function BlogIndex() {
         </main>
         <div className={styles.statusBar}>
           <span className={`${styles.statusCell} ${styles.grow}`}>
-            {sortedPosts.length} posts
+            <StatusBarCount total={sortedPosts.length} />
           </span>
           <span className={styles.statusCell}>danoh.com</span>
         </div>

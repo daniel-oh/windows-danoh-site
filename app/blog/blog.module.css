@@ -383,13 +383,17 @@
 }
 
 .searchRow {
+  /* <search> is display:inline in browsers that predate the element —
+   * the explicit flex covers them. */
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0 0 16px;
   padding: 8px 10px;
   background: #dfdfdf;
-  border: 1px solid #808080;
+  /* Raised toolbar strip (two-tone bevel) instead of a flat border,
+   * the way Explorer framed its toolbars. */
+  box-shadow: inset 1px 1px 0 #fff, inset -1px -1px 0 #808080;
   flex-wrap: wrap;
 }
 
@@ -404,10 +408,9 @@
   flex: 1;
   min-width: 0;
   font-size: 13px;
-  padding: 4px 6px;
-  border: 1px solid #808080;
-  background: #fff;
-  color: #000;
+  /* No border/background/padding here: 98.css's input[type=search]
+   * rules (the sunken bevel) outrank this class on specificity, so
+   * restating them would be dead code that misleads the next reader. */
 }
 
 /* Element+attr+class beats 98.css's `input[type=search]:focus
@@ -422,6 +425,33 @@ input[type="search"].searchInput:focus-visible {
   font-size: 12px;
   padding: 4px 10px;
   cursor: pointer;
+}
+
+/* Win98 selection colors — also readable inside the navy title link. */
+.searchMark {
+  background: #000080;
+  color: #fff;
+}
+
+/* Keycap-styled `/` hint: the raised bevel 98.css gives buttons,
+ * shrunk to key size. */
+.searchKbd {
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+  color: #222;
+  background: silver;
+  padding: 4px 7px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px grey, inset 2px 2px #dfdfdf;
+}
+
+.searchEmpty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
 }
 
 @media (max-width: 768px), (pointer: coarse) {
@@ -441,6 +471,10 @@ input[type="search"].searchInput:focus-visible {
     /* Touch target floor. */
     min-height: 36px;
     padding: 6px 14px;
+  }
+  /* No physical key to press on touch devices. */
+  .searchKbd {
+    display: none;
   }
 }
 
