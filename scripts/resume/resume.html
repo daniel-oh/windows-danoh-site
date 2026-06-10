@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Daniel Oh · Resume</title>
+<style>
+  /* Win98-professional: Tahoma (the actual Win98-era system font),
+     title-bar header, teal section accents, status-bar footer.
+     Recognizable to those who know, just a sharp resume to those
+     who don't. Single column for ATS parsing. */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { font-family: Tahoma, Verdana, Arial, sans-serif; color: #1a1a1a; }
+  body { font-size: 9.3pt; line-height: 1.38; }
+
+  @page { size: letter; margin: 0; }
+  .page { width: 8.5in; height: 11in; padding: 0.5in 0.62in 0.62in; position: relative; overflow: hidden; }
+  .page + .page { page-break-before: always; }
+
+  /* ---- Header: a Win98 title bar ---- */
+  .titlebar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px 7px 12px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .titlebar .name {
+    font-size: 16.5pt;
+    font-weight: bold;
+    letter-spacing: 2.5px;
+  }
+  .titlebar .role {
+    font-size: 9pt;
+    font-weight: normal;
+    letter-spacing: 1px;
+    opacity: 0.92;
+    margin-left: 14px;
+  }
+  .winbtns { display: flex; gap: 3px; }
+  .winbtn {
+    width: 14px; height: 13px;
+    background: #c0c0c0;
+    border-top: 1.5px solid #fff;
+    border-left: 1.5px solid #fff;
+    border-right: 1.5px solid #404040;
+    border-bottom: 1.5px solid #404040;
+    color: #000;
+    font-size: 7.5pt;
+    font-weight: bold;
+    line-height: 10px;
+    text-align: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* ---- Contact strip: menu-bar grey ---- */
+  .contactbar {
+    background: #efefef;
+    border: 1px solid #b8b8b8;
+    border-top: none;
+    padding: 5px 12px;
+    font-size: 8.6pt;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .contactbar a { color: #000080; text-decoration: none; }
+  .sep { color: #999; margin: 0 5px; }
+
+  /* ---- Sections ---- */
+  section { margin-top: 13px; }
+  h2 {
+    font-size: 9.2pt;
+    font-weight: bold;
+    letter-spacing: 2.5px;
+    color: #008080;
+    text-transform: uppercase;
+    padding-bottom: 3px;
+    border-bottom: 1px solid #c0c0c0;
+    margin-bottom: 7px;
+  }
+
+  .tagline { font-style: italic; font-size: 10pt; margin-bottom: 5px; color: #000; }
+
+  ul { list-style: none; }
+  li {
+    padding-left: 13px;
+    position: relative;
+    margin-bottom: 2.5px;
+  }
+  li::before {
+    content: "";
+    position: absolute;
+    left: 1px; top: 5.5px;
+    width: 5px; height: 5px;
+    background: #008080;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .edunote { color: #555; font-size: 8.8pt; margin-top: 5px; }
+
+  /* ---- Jobs ---- */
+  .job { margin-bottom: 10px; break-inside: avoid-page; }
+  .jobhead { display: flex; justify-content: space-between; align-items: baseline; }
+  .jobhead .co { font-weight: bold; font-size: 10pt; }
+  .jobhead .loc { color: #777; font-weight: normal; font-size: 8.8pt; margin-left: 7px; }
+  .jobhead .dates { color: #777; font-size: 8.8pt; white-space: nowrap; }
+  .jobrole { font-style: italic; color: #333; margin: 1px 0 4px; }
+
+  b { font-weight: bold; }
+
+  /* ---- Ventures ---- */
+  .venture { margin-bottom: 4px; padding-left: 13px; position: relative; }
+  .venture::before {
+    content: "";
+    position: absolute;
+    left: 1px; top: 5.5px;
+    width: 5px; height: 5px;
+    background: #008080;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .venture .vname { font-weight: bold; }
+  .founderline { color: #555; font-size: 8.8pt; margin-bottom: 5px; }
+
+  /* ---- Status bar footer (repeats per page) ---- */
+  .statusbar {
+    position: absolute;
+    bottom: 0.32in; left: 0.62in; right: 0.62in;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7.8pt;
+    color: #555;
+  }
+  .statusbar .cell {
+    background: #efefef;
+    border: 1px solid #b8b8b8;
+    padding: 2px 8px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .statusbar .cell.grow { flex: 1; margin-right: 4px; }
+  .statusbar a { color: #000080; text-decoration: none; }
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1 ================= -->
+<div class="page">
+  <div class="titlebar">
+    <div><span class="name">DANIEL OH</span><span class="role">Sr. Platform Engineer · Cybersecurity</span></div>
+    <div class="winbtns"><div class="winbtn">_</div><div class="winbtn">□</div><div class="winbtn">×</div></div>
+  </div>
+  <div class="contactbar">
+    <span>Chicago, IL<span class="sep">·</span>(312) 527-2058<span class="sep">·</span><a href="mailto:hello@danoh.com">hello@danoh.com</a></span>
+    <span><a href="https://danoh.com">danoh.com</a><span class="sep">·</span><a href="https://www.linkedin.com/in/daniel-oh/">linkedin.com/in/daniel-oh</a><span class="sep">·</span><a href="https://github.com/daniel-oh">github.com/daniel-oh</a></span>
+  </div>
+
+  <section>
+    <h2>Profile</h2>
+    <p class="tagline">I build the platforms that engineering teams actually want to use.</p>
+    <ul>
+      <li><b>8+ years</b> in cloud-native infrastructure across enterprise and startup environments</li>
+      <li><b>10+ engineering teams</b> shipping on platform infrastructure I designed and maintain at Nike</li>
+      <li><b>50+ AWS accounts</b> secured through an enterprise compliance strategy I built from scratch</li>
+      <li><b>$150K+ saved annually</b> by replacing vendor tooling with in-house platforms</li>
+      <li><b>Fortune 100 clients</b> in healthcare, financial services, and e-commerce</li>
+    </ul>
+    <p class="edunote">University of Michigan Computer Engineering. Azure Expert certified across DevOps, Architecture, and Network Security.</p>
+  </section>
+
+  <section>
+    <h2>Experience</h2>
+
+    <div class="job">
+      <div class="jobhead"><span class="co">Nike<span class="loc">Remote</span></span><span class="dates">Apr 2023 · Present</span></div>
+      <div class="jobrole">Cybersecurity, Sr. Platform Engineer</div>
+      <ul>
+        <li>Designed Nike's <b>two-pronged security compliance strategy across 50+ AWS accounts</b>: a Crossplane-based managed-services platform with CLI tooling that bakes security and NFRs into the happy path, backed by Wiz auto-remediation that shuts down non-compliant resources</li>
+        <li>Built and maintain <b>platform infrastructure used by 10+ engineering teams</b>: the CIS Data Lakehouse on Databricks, Kubernetes Terraform modules, and ArgoCD GitOps deployment patterns</li>
+        <li>Saved <b>$150K+ annually</b> by replacing vendor tooling with in-house platforms, optimizing Kubernetes clusters, and introducing open-source Helm charts for networking and security</li>
+        <li>Architected the <b>Azure Native WAF Deployer</b> with an enterprise-wide reporting dashboard and developer self-service, securing 79 global endpoints and blocking 10,000+ daily bot attacks</li>
+        <li>Built a <b>Slack bot integration with Databricks</b> giving non-technical analysts a chat-style query interface, cutting data-engineering toil and widening access to insights</li>
+        <li>Delivered the <b>Databricks CIS Data Lakehouse</b> on schedule in Q3, driving GitHub Actions deployment patterns and RBAC model changes for the core engineering team</li>
+      </ul>
+    </div>
+
+    <div class="job">
+      <div class="jobhead"><span class="co">Capital Markets Gateway<span class="loc">New York, NY</span></span><span class="dates">Jul 2021 · Apr 2023</span></div>
+      <div class="jobrole">DevOps Engineer</div>
+      <ul>
+        <li>Migrated the full network stack from <b>public-facing to private architecture</b> on Azure using Terragrunt, Cloudflare, GitHub Actions, and Harness CD</li>
+        <li>Replaced CircleCI with <b>self-hosted private GitHub Actions runners</b>, improving pipeline security and reducing external dependency</li>
+        <li>Implemented <b>Snyk and Trivy container scanning</b> as gated build validations, eliminating critical vulnerabilities before deployment</li>
+        <li>Instrumented applications with <b>OpenTelemetry and Datadog</b> for full-stack observability during incident response</li>
+        <li>Managed <b>50+ weekly releases</b> and year-round on-call; introduced formal <b>change management and incident response processes</b> to support team growth</li>
+      </ul>
+    </div>
+
+  </section>
+
+  <div class="statusbar">
+    <div class="cell grow">The interactive version of this resume runs on a Windows 98 desktop at <a href="https://danoh.com">danoh.com</a></div>
+    <div class="cell">Page 1 of 2</div>
+  </div>
+</div>
+
+<!-- ================= PAGE 2 ================= -->
+<div class="page">
+  <section style="margin-top: 0;">
+    <h2>Experience, continued</h2>
+    <div class="job">
+      <div class="jobhead"><span class="co">Avanade<span class="loc">Chicago, IL</span></span><span class="dates">2019 · 2021</span></div>
+      <div class="jobrole">Consultant, Site Reliability Engineer</div>
+      <ul>
+        <li>Delivered cloud enterprise solutions on <b>Azure Kubernetes Service</b> with IaC, Ansible, and CI/CD for <b>Fortune 100</b> healthcare, financial services, and e-commerce clients including Zoro (Grainger)</li>
+        <li>Platform architect for a healthcare provider with <b>72 distributed teams</b>, migrating IBM Bluemix to Azure with self-serve provisioning via ServiceNow, Terraform Enterprise, and GitHub Actions</li>
+        <li>Led migration of a <b>monolithic AWS application to microservices on Kubernetes</b> with Google Cloud Platform at Zoro (Grainger)</li>
+        <li>Maintained <b>disaster recovery and HIPAA compliance</b> across hybrid on-premise and Azure environments</li>
+        <li>Founded a <b>DevOps Community of Practice</b> at a client site; introduced Gitflow and automated 12-Factor App principles into developer workflows</li>
+      </ul>
+    </div>
+    <div class="job">
+      <div class="jobhead"><span class="co">Allstate Insurance<span class="loc">Northbrook, IL</span></span><span class="dates">2017 · 2019</span></div>
+      <div class="jobrole">Technology Leadership Program · DevOps Engineer</div>
+      <ul>
+        <li>Deployed a <b>production serverless iOS application</b> for cybersecurity and fraud detection; configured AWS VPC automation with Jenkins</li>
+        <li>Led triage as <b>Scrum Master for 20+ developers</b> across 3 product lines using JIRA</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ventures</h2>
+    <p class="founderline">Founder · Shipping with Swift/SwiftUI, Next.js, Supabase, Cloudflare, Stripe, and the Claude API</p>
+    <div class="venture"><span class="vname">danoh.com</span> · This resume's interactive twin: a Windows 98 desktop in the browser where visitors describe an app and AI builds it live. Next.js, React, Postgres, Docker, Traefik.</div>
+    <div class="venture"><span class="vname">KAY-OS</span> · AI-powered iOS app for consciousness and awareness training. Native Swift/SwiftUI with Claude API, ElevenLabs voice synthesis, and Stripe subscriptions.</div>
+    <div class="venture"><span class="vname">AM Training Hall</span> · Fitness coaching marketplace connecting trainers and clients. Stripe Connect payments, multi-role architecture, tiered coach model.</div>
+    <div class="venture"><span class="vname">Kayrage</span> · Elevated streetwear brand with hybrid print-on-demand fulfillment.</div>
+    <div class="venture"><span class="vname">312eats / 312 Built</span> · Chicago directory platforms: 3,700+ restaurant listings and 1,600+ vetted contractors across 15 categories.</div>
+  </section>
+
+  <section>
+    <h2>Education</h2>
+    <div class="jobhead"><span class="co">University of Michigan</span><span class="dates">2018</span></div>
+    <div class="jobrole">B.S.E., Computer Engineering</div>
+  </section>
+
+  <section>
+    <h2>Technical Skills</h2>
+    <ul>
+      <li><b>Cloud</b> · All three major clouds (Azure, AWS, GCP). Three Azure Expert certifications: DevOps, Architecture, and Network Security.</li>
+      <li><b>Infrastructure</b> · Kubernetes is home base, managed through Terraform, Terragrunt, Crossplane, Helm, ArgoCD, and Ansible.</li>
+      <li><b>Delivery</b> · GitHub Actions, Jenkins, and Harness CD. GitOps and trunk-based development as default patterns.</li>
+      <li><b>Security &amp; Observability</b> · Wiz, Snyk, Trivy, Cloudflare WAF, Azure WAF, Datadog, OpenTelemetry, Splunk.</li>
+      <li><b>Languages &amp; Tools</b> · Python, Swift, TypeScript, Bash day to day. Databricks, JIRA, ServiceNow, and Terraform Enterprise in the workflow.</li>
+    </ul>
+    <p class="edunote">Certified Advanced PADI scuba diver. Marathon runner. Avid reader of Money Stuff by Matt Levine.</p>
+  </section>
+
+  <div class="statusbar">
+    <div class="cell grow">The interactive version of this resume runs on a Windows 98 desktop at <a href="https://danoh.com">danoh.com</a></div>
+    <div class="cell">Page 2 of 2</div>
+  </div>
+</div>
+
+</body>
+</html>

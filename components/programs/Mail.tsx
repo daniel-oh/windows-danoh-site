@@ -9,6 +9,7 @@ import {
   CONTACT_LINKEDIN,
 } from "@/content/contact";
 import { getVisitorId } from "@/lib/visitorId";
+import { alert } from "@/lib/alert";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -73,10 +74,25 @@ export function Mail({ id }: { id: string }) {
 
   const close = () => {
     if (status !== "sent" && hasDraft) {
-      const ok = window.confirm(
-        "You have an unsent message. Close anyway?"
-      );
-      if (!ok) return;
+      // In-house dialog, not window.confirm — the native chrome is the
+      // one place the Win98 costume would slip, and it happens mid-
+      // contact-flow.
+      alert({
+        alertId: `mail-discard-${id}`,
+        icon: "x",
+        message: "This message hasn't been sent. Close anyway?",
+        actions: [
+          { label: "Keep writing", callback: (closeAlert) => closeAlert() },
+          {
+            label: "Discard",
+            callback: (closeAlert) => {
+              closeAlert();
+              windowsDispatch({ type: "REMOVE", payload: id });
+            },
+          },
+        ],
+      });
+      return;
     }
     windowsDispatch({ type: "REMOVE", payload: id });
   };

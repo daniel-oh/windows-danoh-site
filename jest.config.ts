@@ -10,6 +10,10 @@ const createJestConfig = nextJest({
 const config: Config = {
   coverageProvider: "v8",
   testEnvironment: "jsdom",
+  // .next/standalone contains a second package.json named "danoh-site",
+  // which trips jest-haste-map's module naming collision warning on
+  // every run after a local build.
+  modulePathIgnorePatterns: ["<rootDir>/.next/"],
 
   // Add more setup options before each test is run
   // setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
