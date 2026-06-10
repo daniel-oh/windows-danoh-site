@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Wrap any content block to append a "Read more at danoh.com/…"
 // citation when a visitor copies a non-trivial selection out of it.
@@ -30,6 +30,7 @@ export function CopyAttribution({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     const host = ref.current;
@@ -75,6 +76,10 @@ export function CopyAttribution({
       e.clipboardData?.setData("text/plain", plainOut);
       e.clipboardData?.setData("text/html", htmlOut);
       e.preventDefault();
+      // Screen-reader users otherwise paste two unexplained extra
+      // lines — announce the modification politely.
+      setAnnouncement("Source link added to copied text.");
+      window.setTimeout(() => setAnnouncement(""), 2000);
     };
 
     host.addEventListener("copy", handler);
@@ -84,6 +89,22 @@ export function CopyAttribution({
   return (
     <div ref={ref} className={className}>
       {children}
+      <span
+        role="status"
+        style={{
+          position: "absolute",
+          width: 1,
+          height: 1,
+          margin: -1,
+          padding: 0,
+          overflow: "hidden",
+          clip: "rect(0,0,0,0)",
+          whiteSpace: "nowrap",
+          border: 0,
+        }}
+      >
+        {announcement}
+      </span>
     </div>
   );
 }

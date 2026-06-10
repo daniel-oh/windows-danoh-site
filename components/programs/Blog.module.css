@@ -109,9 +109,15 @@
 }
 
 .backButton {
+  /* Sticky: on mobile the post scrolls inside the window and the only
+   * way back was scrolling to the top. */
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: inline-block;
   margin-bottom: 12px;
-  padding: 4px 12px;
+  padding: 8px 14px;
+  min-height: 36px;
   font-size: 12px;
   cursor: pointer;
 }

@@ -9,14 +9,17 @@
   max-width: 720px;
   margin: 0 auto;
   background: #c0c0c0;
-  border: 2px solid #fff;
-  border-right-color: #404040;
-  border-bottom-color: #404040;
-  box-shadow: 2px 2px 0 #000;
+  /* Real Win98 window chrome: two-step raised bevel from the 16-color
+   * palette. The old single-step border used #404040 (not a palette
+   * color) and a drop shadow, which didn't exist until XP. */
+  border: none;
+  padding: 2px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf,
+    inset -2px -2px #808080, inset 2px 2px #fff;
 }
 
 .titleBar {
-  background: linear-gradient(to right, #000080 0%, #1084d0 100%);
+  background: linear-gradient(to right, #000080 0%, #0d76bd 100%);
   color: #fff;
   padding: 4px 8px;
   font-weight: bold;
@@ -41,17 +44,36 @@
   padding: 2px 8px;
   background: #c0c0c0;
   color: #000;
-  border: 1px solid #fff;
-  border-right-color: #404040;
-  border-bottom-color: #404040;
+  border: none;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px #808080, inset 2px 2px #dfdfdf;
 }
 
 .titleBarLink:hover {
   text-decoration: underline;
 }
 
+.titleBarLink:active {
+  /* Pressed: bevel inverts and the label nudges, like a real caption
+   * control. */
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff,
+    inset 2px 2px #808080, inset -2px -2px #dfdfdf;
+  padding-top: 3px;
+  padding-bottom: 1px;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  .titleBarLink {
+    /* 18px-tall was the first interactive element on the page and
+     * far under the touch-target floor. */
+    min-height: 28px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
 .body {
-  padding: 24px 28px 32px;
+  padding: 24px 56px 36px;
   /* Hard guardrail against any long unbroken string — emails, URLs,
    * code identifiers, third-party brand tokens in /privacy — pushing
    * content past the shell on narrow viewports. "anywhere" only
@@ -72,7 +94,7 @@
 
 .tagline {
   padding: 12px 14px;
-  background: linear-gradient(to bottom, #000080 0%, #0000c0 100%);
+  background: #000080;
   color: #fff;
   border-bottom: 1px solid #000040;
 }
@@ -133,7 +155,9 @@
 }
 
 .markdown {
-  font-size: 15px;
+  /* 16px + the wider .body padding brings desktop lines from ~100
+   * characters down to ~85 — the bitmap font needs the shorter measure. */
+  font-size: 16px;
   line-height: 1.65;
   color: #111;
   overflow-wrap: break-word;
@@ -142,12 +166,14 @@
 .markdown h2 {
   font-size: 18px;
   margin: 28px 0 10px;
-  border-bottom: 1px solid #888;
+  border-bottom: 1px solid #808080;
+  box-shadow: 0 1px 0 #fff;
   padding-bottom: 4px;
 }
 
 .markdown h3 {
-  font-size: 16px;
+  font-size: 17px;
+  color: #000080;
   margin: 20px 0 8px;
 }
 
@@ -175,38 +201,64 @@
 }
 
 .markdown blockquote {
-  border-left: 3px solid #000080;
+  /* Sunken read-only-field idiom — it was styled identically to the
+   * .summary deck and the two read as the same element. */
   margin: 14px 0;
-  padding: 8px 12px;
-  background: #dfdfdf;
+  padding: 10px 14px;
+  background: #fff;
+  border: none;
+  box-shadow: inset -1px -1px #fff, inset 1px 1px #808080,
+    inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
   font-style: italic;
   color: #333;
 }
 
 .markdown hr {
+  /* Win98 separators are etched: gray line over white line. */
   border: none;
   border-top: 1px solid #808080;
+  border-bottom: 1px solid #fff;
+  height: 0;
   margin: 22px 0;
 }
 
 .markdown code {
-  background: #ddd;
-  padding: 1px 4px;
-  border-radius: 2px;
-  font-size: 13px;
-  font-family: "SF Mono", Consolas, monospace;
+  background: #fff;
+  padding: 0 4px;
+  border: 1px solid #808080;
+  border-radius: 0;
+  font-size: 14px;
+  font-family: "Courier New", Menlo, Consolas, monospace;
 }
 
 .markdown pre {
-  background: #1a1a1a;
-  color: #e0e0e0;
+  /* MS-DOS Prompt framing: same dark-block contrast, period-correct
+   * costume. Courier New first — the old SF Mono/Consolas stack
+   * resolved to the generic fallback on macOS. */
+  background: #000;
+  color: #c0c0c0;
   padding: 12px;
   overflow-x: auto;
-  font-size: 12px;
+  font-size: 13px;
+  font-family: "Courier New", Menlo, Consolas, monospace;
   white-space: pre-wrap;
   margin: 14px 0;
   border: 1px solid #808080;
   border-radius: 0;
+}
+
+.markdown pre::before {
+  /* Tiny caption strip selling the DOS-window read. */
+  content: "MS-DOS Prompt";
+  display: block;
+  margin: -12px -12px 10px;
+  padding: 2px 8px;
+  background: #c0c0c0;
+  color: #000;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: bold;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
 }
 
 .markdown pre code {
@@ -243,13 +295,13 @@
 }
 
 .postCta {
-  /* The one conversion moment on the SEO surface: a reader who finished
-   * a post is the highest-intent visitor the site gets. One quiet line,
-   * not a newsletter modal — sunken-panel styling keeps it retro. */
-  margin-top: 28px;
+  /* The one conversion moment on the SEO surface, styled as a Win98
+   * tooltip note (#ffffe1 + black border) so it reads as a friendly
+   * aside rather than another gray panel. */
+  margin-top: 24px;
   padding: 12px 14px;
-  border: 1px solid #808080;
-  background: #f5f4ef;
+  border: 1px solid #000;
+  background: #ffffe1;
   font-size: 13px;
   line-height: 1.55;
 }
@@ -264,6 +316,7 @@
   margin: 32px 0 0;
   padding-top: 18px;
   border-top: 1px solid #808080;
+  box-shadow: inset 0 1px 0 #fff;
   text-align: center;
   /* Long canonical URLs (longer slugs) break onto a second line on
    * narrow viewports rather than overflowing the card edge. */
@@ -357,7 +410,10 @@
   color: #000;
 }
 
-.searchInput:focus-visible {
+/* Element+attr+class beats 98.css's `input[type=search]:focus
+ * { outline: none }` — without the heavier selector this rule loses
+ * and the page's only form control has no visible focus. */
+input[type="search"].searchInput:focus-visible {
   outline: 2px solid #000080;
   outline-offset: -2px;
 }
@@ -368,7 +424,7 @@
   cursor: pointer;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px), (pointer: coarse) {
   .searchRow {
     /* A little more padding so the input and Clear aren't jammed
      * against the edge on narrow phones. */
@@ -406,17 +462,20 @@
 }
 
 .yearHeading {
+  /* Explorer column-header styling — reusing the title-bar gradient
+   * here made three stacked blue bars and blurred chrome vs content. */
   position: sticky;
   top: 0;
   z-index: 1;
-  background: linear-gradient(to right, #000080 0%, #1084d0 100%);
-  color: #fff;
-  font-size: 13px;
+  background: #c0c0c0;
+  color: #000;
+  font-size: 12px;
   font-weight: bold;
   letter-spacing: 0.4px;
   margin: 0 0 6px 0;
-  padding: 4px 10px;
+  padding: 3px 10px;
   text-transform: uppercase;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
 }
 
 .postHero {
@@ -447,6 +506,7 @@
 .indexItem {
   padding: 14px 0;
   border-bottom: 1px solid #808080;
+  box-shadow: 0 1px 0 #fff;
 }
 
 .indexItem:last-child {
@@ -457,6 +517,18 @@
   font-size: 18px;
   font-weight: bold;
   margin: 0 0 4px 0;
+}
+
+.indexTitleLink {
+  /* The titles were reusing .footerLink, whose 13px overrode the 18px
+   * above — every index row scanned as equal-weight text. */
+  font-size: inherit;
+  color: #000080;
+  text-decoration: underline;
+}
+
+.indexTitleLink:hover {
+  color: #0000ff;
 }
 
 .indexSummary {
@@ -582,7 +654,7 @@
   color: #000080;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px), (pointer: coarse) {
   .page {
     padding: 16px 8px 48px;
   }
@@ -624,5 +696,72 @@
     min-height: 40px;
     display: inline-flex;
     align-items: center;
+  }
+}
+
+/* Text selection in the Win98 highlight color — felt by every reader
+ * who copies a quote, and pairs with CopyAttribution. */
+.markdown ::selection,
+.body ::selection {
+  background: #000080;
+  color: #fff;
+}
+
+/* Win98 status bar: sunken cells along the shell's bottom edge. */
+.statusBar {
+  display: flex;
+  gap: 3px;
+  padding: 3px 4px 4px;
+  background: #c0c0c0;
+}
+
+.statusCell {
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #fff;
+  padding: 2px 10px;
+  font-size: 11px;
+  color: #000;
+  white-space: nowrap;
+}
+
+.statusCell.grow {
+  flex: 1;
+}
+
+.titleBarIcon {
+  /* Every real Win98 window had a 16x16 app icon at the caption's
+   * left edge. */
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+@media print {
+  /* Posts print as plain documents: hide the interactive chrome, keep
+   * the prose. */
+  .page {
+    background: #fff;
+    padding: 0;
+  }
+  .shell {
+    box-shadow: none;
+    padding: 0;
+    max-width: none;
+  }
+  .titleBar a,
+  .searchRow,
+  .footer,
+  .postCta,
+  .statusBar {
+    display: none !important;
+  }
+  .markdown pre {
+    background: #fff;
+    color: #000;
+    border: 1px solid #000;
+  }
+  .markdown pre::before {
+    display: none;
   }
 }
