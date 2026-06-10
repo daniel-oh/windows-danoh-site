@@ -1,0 +1,56 @@
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "letting-fable-5-loose",
+  title: "Letting Fable 5 loose on this site",
+  date: "2026-06-10",
+  author: "Daniel Oh",
+  summary:
+    "The desktop got a boot sequence, a 3D Pipes screensaver, and genie windows in one long run with Claude's new Fable 5 model. Field notes from the passenger seat.",
+  tags: ["ai", "engineering"],
+  readingTime: "4 min",
+};
+
+If you've visited the desktop this week, you may have noticed it boots now. BIOS text, a memory check, the sliding blue loading bar, then the icons stagger in and the taskbar rises. Leave the mouse alone for a minute and the 3D Pipes screensaver takes over. Minimize a window and it genies down into its own taskbar button.
+
+None of that existed last week. It shipped in one long run with Fable 5, Anthropic's new model, the tier above Opus. I've been building this site with Claude since the first commit, so a new frontier model isn't an abstract benchmark story for me. It's a new colleague showing up at the same desk, working in the same codebase, and either earning trust or not. Here is what shipped, and what the work was actually like.
+
+## What shipped
+
+The visible layer first, since that's the fun part:
+
+- **A boot sequence.** BIOS POST text, branded splash, the classic load bar. Once per browser session, any key skips it, reduced-motion users never see it.
+- **3D Pipes.** The most iconic screensaver of the era, rebuilt in three.js. Pipes random-walk a 3D grid, elbow at every turn, and start over when the space fills up. Fires after a minute of idle, desktop only.
+- **Genie windows.** Minimize collapses a window into its taskbar button; restore plays it backwards. Plus a subtle wallpaper parallax and an optional CRT scanline mode in Settings.
+- **Snake.exe.** Neon retro theme, and the walls kill you now, as nature intended.
+- **The small stuff.** A live taskbar clock, the startup sound, ``Ctrl+` `` to cycle windows, right-click menus on every desktop icon.
+
+The less visible layer mattered more. The blog got a full Win98 design pass (code blocks framed as MS-DOS Prompt windows, etched dividers, a real status bar) and a rebuilt content pipeline: each post's metadata now lives inside the post file itself, a registry pairs it with the compiled component, and a prebuild check fails the build if they ever drift. Adding a post used to mean touching three files that could quietly disagree. Now it's one file and one import, and disagreement is a build error.
+
+And underneath everything: four audit passes (accessibility, SEO, mobile, security), all findings fixed, and the homepage finally crawlable. This desktop is a JavaScript app pretending to be an operating system, which search engines historically read as an empty page. There's now a server-rendered intro that crawlers see and humans never do.
+
+## How the work actually went
+
+The loop that worked: audit first, build second, verify third.
+
+I never asked for the boot screen. I asked for an audit of the public pages, and got back a ranked list of motion opportunities with file paths, a performance budget, and a warning about what would hurt Core Web Vitals. The boot screen, the pipes, and the genie effect all came out of that list. Building from an audit instead of a feature request meant every flourish had been weighed against the bundle before a line was written. The initial JavaScript payload is actually slightly smaller than before the motion shipped, because three.js only downloads if you idle long enough to need it.
+
+The verification step is where Fable 5 surprised me. It opens the site in a headless browser and checks its own work, and it catches its own bugs doing it. Best example: the genie effect initially teleported windows to the wrong corner. Two animation systems were fighting over the same CSS transform, GSAP's pipeline clobbering the position React had set. I didn't find that bug. The model found it in its own verification pass, diagnosed why, and rewrote the animation to drive the newer standalone CSS properties that React doesn't own. That's a debugging session I would not have enjoyed, and I only ever saw it as a one-line note in the work log.
+
+## Where I still earn my keep
+
+The taste calls and the risk calls.
+
+Taste: the Recycle Bin stays last on the desktop, below the games, because that's where a bin goes. Taskbar buttons are text-only because Win98's were. A dark theme got built in an earlier round and then pulled, because it clashed with the 98 palette and I'd rather ship nothing than ship half-baked. None of these are decisions a model makes for you. They're decisions you make, and it executes faithfully.
+
+Risk: midway through the security pass it proposed locking the origin server's firewall down to Cloudflare's IP ranges. Correct hardening, straight out of the book. I declined, because I SSH into that box, and the book didn't know that. The model wrote the script anyway, parked it for later, and moved on. That's the right division of labor: it proposes the textbook answer, I hold the context the textbook doesn't have.
+
+## First impressions, honestly
+
+What stands out about Fable 5 isn't any single output. It's that the whole run held together. One session covered site audits, a resume redesign, a snake game, a blog rebuild, and a motion layer, and it never lost the plot. Conventions I stated once held across everything it wrote afterward, this post's draft included. Earlier models needed the rules restated; this one needed them stated.
+
+It's not magic. It still needed me for direction, for taste, and for the handful of calls where the safe answer was wrong. But the ratio has shifted: I spent the run deciding things, and almost none of it typing things. That's the trade I've wanted from these tools all along.
+
+The premise of this site has always been [AI building software in front of you](/blog/ai-app-generation): you type a prompt, an app appears in a window. The maintenance now works the same way. I point a model at the site, we argue about what matters, and the desktop gets a little more like 1998.
+
+If the boot screen annoys you, press any key. That's also period-accurate.

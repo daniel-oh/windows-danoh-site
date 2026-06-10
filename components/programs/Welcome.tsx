@@ -332,6 +332,33 @@ const contentByKey = {
         <h3>Updates</h3>
 
         <div style={{ borderLeft: "2px solid #808080", paddingLeft: 14, marginTop: 8 }}>
+          <h4 style={{ margin: "0 0 4px" }}>Jun 10, 2026</h4>
+          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
+            Boot screens, 3D Pipes, and genie windows
+          </p>
+          <p style={{ margin: "0 0 8px" }}>
+            The desktop finally moves like the machine it&apos;s
+            pretending to be. First visit each session opens with a
+            BIOS boot sequence (any key skips it). Idle for a minute
+            and the 3D Pipes screensaver takes over, rebuilt in
+            three.js. Windows genie into the taskbar when minimized,
+            and Settings grew an optional CRT scanline mode. Also new:
+            Snake.exe in neon (the walls are lethal now, as nature
+            intended), a live taskbar clock, the startup sound, and{" "}
+            <code>Ctrl+`</code> to cycle windows from the keyboard.
+          </p>
+          <p style={{ margin: "0 0 12px" }}>
+            Under the hood: the blog got a Win98 design pass and a
+            rebuilt content pipeline with one source of truth per
+            post, the homepage is finally crawlable, and four audit
+            passes (accessibility, SEO, mobile, security) closed out.
+            Most of this batch was built with Claude&apos;s new Fable
+            5 model. Field notes:{" "}
+            <a href="/blog/letting-fable-5-loose" style={{ color: "#000080" }}>
+              Letting Fable 5 loose on this site
+            </a>.
+          </p>
+
           <h4 style={{ margin: "0 0 4px" }}>May 11, 2026</h4>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
             Floeberg launch and a security pass
