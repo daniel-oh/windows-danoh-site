@@ -7,6 +7,7 @@ import blogIcon from "./assets/blog-icon.png";
 import resumeIcon from "./assets/resume-icon.png";
 import Image from "next/image";
 import { createWindow } from "@/lib/createWindow";
+import { openProgram } from "@/lib/programs";
 import { useCreateContextMenu } from "@/state/contextMenu";
 import { useServerPrograms } from "@/lib/useServerPrograms";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -149,39 +150,12 @@ export const Desktop = () => {
     setIconPositions((prev: IconPositions) => ({ ...prev, [id]: { col, row } }));
   }, []);
 
-  const openBlog = useCallback(() => {
-    createWindow({
-      title: "Blog",
-      program: { type: "blog" },
-      size: { width: 700, height: 500 },
-    });
-  }, []);
-
-  const openResume = useCallback(() => {
-    createWindow({
-      title: "Resume - Daniel Oh",
-      program: { type: "resume" },
-      size: { width: 700, height: 550 },
-    });
-  }, []);
-
-  const openMinesweeper = useCallback(() => {
-    createWindow({
-      title: "Minesweeper",
-      program: { type: "minesweeper" },
-      size: { width: 320, height: 440 },
-      icon: "/icons/pirate-playing.png",
-    });
-  }, []);
-
-  const openRecycle = useCallback(() => {
-    createWindow({
-      title: "Recycle Bin",
-      program: { type: "recycle" },
-      size: { width: 420, height: 420 },
-      icon: "/icons/recycle-bin.png",
-    });
-  }, []);
+  // Window configs live in the shared PROGRAMS table (lib/programs.ts);
+  // these just name which program each desktop icon opens.
+  const openBlog = useCallback(() => openProgram("blog"), []);
+  const openResume = useCallback(() => openProgram("resume"), []);
+  const openMinesweeper = useCallback(() => openProgram("minesweeper"), []);
+  const openRecycle = useCallback(() => openProgram("recycle"), []);
 
   // Right-click / long-press the empty desktop → the classic Win98
   // background menu. createContextMenu wires both the mouse and the

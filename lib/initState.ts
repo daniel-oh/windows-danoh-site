@@ -1,5 +1,5 @@
-import { WIDTH } from "@/components/programs/Welcome";
 import { createWindow } from "./createWindow";
+import { openProgram } from "./programs";
 import { isMobile } from "./isMobile";
 import { waitForElement } from "./waitForElement";
 import { seedDemoProgram } from "./demoPrograms";
@@ -38,11 +38,7 @@ export function initState() {
     // Shareable link flow: land directly on Run with the prompt pre-filled
     // and auto-submitted. We still open Welcome behind it so the visitor has
     // context about where they are after the generated program appears.
-    createWindow({
-      title: "Welcome to danoh.com",
-      program: { type: "welcome" },
-      size: { width: WIDTH, height: "auto" },
-    });
+    openProgram("welcome");
     createWindow({
       title: "Run",
       program: { type: "run", initialPrompt: sharedPrompt },
@@ -51,12 +47,7 @@ export function initState() {
     return;
   }
 
-  const id = createWindow({
-    title: "Welcome to danoh.com",
-    program: { type: "welcome" },
-
-    size: { width: WIDTH, height: "auto" },
-  });
+  const id = openProgram("welcome");
   if (!isMobile()) {
     waitForElement(id).then((el) => {
       if (el) {

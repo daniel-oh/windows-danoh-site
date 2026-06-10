@@ -7,7 +7,7 @@ import styles from "./Welcome.module.css";
 import check from "@/components/assets/check.png";
 import { sortedPosts } from "@/content/blog/registry";
 import { createWindow } from "@/lib/createWindow";
-import { SETTINGS_WIDTH, SETTINGS_HEIGHT } from "./Settings";
+import { openProgram, PROGRAMS } from "@/lib/programs";
 import { useVisitorCount } from "@/lib/useVisitorCount";
 
 type TableOfContentsEntry = {
@@ -96,23 +96,16 @@ const SidebarLogo = () => {
 };
 
 const openBlog = (slug?: string) => {
+  // Spread the shared Blog config (title/size) and override just the
+  // program so the clicked post threads through — without initialSlug
+  // every recent-posts row opened the newest post.
   createWindow({
-    title: "Blog",
-    // Thread the clicked post through — without it every row in the
-    // recent-posts list opened the newest post regardless of which
-    // one the visitor chose.
+    ...PROGRAMS.blog,
     program: { type: "blog", initialSlug: slug },
-    size: { width: 700, height: 500 },
   });
 };
 
-const openResume = () => {
-  createWindow({
-    title: "Resume - Daniel Oh",
-    program: { type: "resume" },
-    size: { width: 700, height: 550 },
-  });
-};
+const openResume = () => openProgram("resume");
 
 const contentByKey = {
   welcome: () => {
@@ -155,7 +148,7 @@ const contentByKey = {
         </p>
         <p style={{ fontSize: 11, color: "#444" }}>
           To try the AI, bring your own Anthropic API key in{" "}
-          <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" }, size: { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT } }); }} style={{ color: "#000080" }}><strong>Settings</strong></a>,
+          <a href="#" onClick={(e) => { e.preventDefault(); openProgram("settings"); }} style={{ color: "#000080" }}><strong>Settings</strong></a>,
           or{" "}
           <a href="https://www.linkedin.com/in/daniel-oh/" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
             message me on LinkedIn
@@ -190,13 +183,7 @@ const contentByKey = {
           <button onClick={openResume}>Resume</button>
           <button
             type="button"
-            onClick={() =>
-              createWindow({
-                title: "New Message",
-                program: { type: "mail" },
-                size: { width: 460, height: 520 },
-              })
-            }
+            onClick={() => openProgram("mail")}
           >
             Email me
           </button>
@@ -505,8 +492,6 @@ function VisitorBadge() {
     </div>
   );
 }
-
-export const WIDTH = 700;
 
 export function Welcome({ id: _id }: { id: string }) {
   const tableOfContentsEntries: TableOfContentsEntry[] = [

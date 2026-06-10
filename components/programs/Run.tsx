@@ -11,7 +11,7 @@ import wrappedFetch from "@/lib/wrappedFetch";
 
 import { AccessCodePrompt } from "../AccessCodePrompt";
 import { ByokPrompt } from "../ByokPrompt";
-import { SETTINGS_WIDTH, SETTINGS_HEIGHT } from "./Settings";
+import { openProgram } from "@/lib/programs";
 import { openDemoProgram } from "@/lib/demoPrograms";
 
 function hasSession() {
@@ -269,11 +269,7 @@ export function Run({ id }: { id: string }) {
                 style={{ color: "#000080" }}
                 onClick={(e) => {
                   e.preventDefault();
-                  createWindow({
-                    title: "Settings",
-                    program: { type: "settings" },
-                    size: { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
-                  });
+                  openProgram("settings");
                 }}
               >
                 Manage

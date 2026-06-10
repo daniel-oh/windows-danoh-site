@@ -8,7 +8,6 @@ import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { focusedWindowAtom } from "@/state/focusedWindow";
 import { windowsListAtom } from "@/state/windowsList";
 import { windowAtomFamily, type WindowState } from "@/state/window";
-import { createWindow } from "@/lib/createWindow";
 import { Window } from "./Window";
 import { startMenuOpenAtom } from "@/state/startMenu";
 import { Desktop } from "./Desktop";
@@ -16,8 +15,7 @@ import { DESKTOP_URL_KEY, registryAtom } from "@/state/registry";
 import { ContextMenu } from "./ContextMenu";
 import { useActions } from "@/lib/actions/ActionsProvider";
 import { initState } from "@/lib/initState";
-import { WIDTH } from "./programs/Welcome";
-import { SETTINGS_WIDTH, SETTINGS_HEIGHT } from "./programs/Settings";
+import { openProgram } from "@/lib/programs";
 import { fsManagerAtom } from "@/state/fsManager";
 import { burstConfetti } from "@/lib/confetti";
 import { alert } from "@/lib/alert";
@@ -488,129 +486,25 @@ function StartMenu() {
     // it, the way the real Win98 Start menu chunked its sections.
     separatorBefore?: boolean;
   }[] = [
+    // Each program opener routes through the shared PROGRAMS table in
+    // lib/programs.ts — title/size/icon live there, not inline here.
     // Anchor
-    {
-      label: "Welcome",
-      programType: "welcome",
-      cb: () => {
-        createWindow({
-          title: "Welcome to danoh.com",
-          program: { type: "welcome" },
-          size: { width: WIDTH, height: "auto" },
-        });
-      },
-    },
+    { label: "Welcome", programType: "welcome", cb: () => openProgram("welcome") },
     // Read
-    {
-      label: "Blog",
-      programType: "blog",
-      separatorBefore: true,
-      cb: () => {
-        createWindow({
-          title: "Blog",
-          program: { type: "blog" },
-          size: { width: 700, height: 500 },
-        });
-      },
-    },
-    {
-      label: "Resume",
-      programType: "resume",
-      cb: () => {
-        createWindow({
-          title: "Resume - Daniel Oh",
-          program: { type: "resume" },
-          size: { width: 700, height: 550 },
-        });
-      },
-    },
+    { label: "Blog", programType: "blog", separatorBefore: true, cb: () => openProgram("blog") },
+    { label: "Resume", programType: "resume", cb: () => openProgram("resume") },
     // Create
-    {
-      label: "Run",
-      programType: "run",
-      separatorBefore: true,
-      cb: () => {
-        createWindow({
-          title: "Run",
-          program: { type: "run" },
-        });
-      },
-    },
+    { label: "Run", programType: "run", separatorBefore: true, cb: () => openProgram("run") },
     // Connect
-    {
-      label: "Mail",
-      programType: "mail",
-      cb: () => {
-        createWindow({
-          title: "New Message",
-          program: { type: "mail" },
-          // Tall enough that Send is visible without scrolling the form —
-          // it's the primary contact flow.
-          size: { width: 460, height: 520 },
-        });
-      },
-    },
-    {
-      label: "Guestbook",
-      programType: "guestbook",
-      cb: () => {
-        createWindow({
-          title: "Guestbook",
-          program: { type: "guestbook" },
-          size: { width: 440, height: 520 },
-        });
-      },
-    },
+    { label: "Mail", programType: "mail", cb: () => openProgram("mail") },
+    { label: "Guestbook", programType: "guestbook", cb: () => openProgram("guestbook") },
     // Play
-    {
-      label: "Minesweeper",
-      programType: "minesweeper",
-      cb: () => {
-        createWindow({
-          title: "Minesweeper",
-          program: { type: "minesweeper" },
-          size: { width: 320, height: 440 },
-          icon: "/icons/pirate-playing.png",
-        });
-      },
-    },
+    { label: "Minesweeper", programType: "minesweeper", cb: () => openProgram("minesweeper") },
     // Utility
-    {
-      label: "Explorer",
-      programType: "explorer",
-      separatorBefore: true,
-      cb: () => {
-        createWindow({
-          title: "Explorer",
-          program: { type: "explorer" },
-          size: { width: 480, height: 400 },
-        });
-      },
-    },
-    {
-      label: "Settings",
-      programType: "settings",
-      cb: () => {
-        createWindow({
-          title: "Settings",
-          program: { type: "settings" },
-          size: { width: SETTINGS_WIDTH, height: SETTINGS_HEIGHT },
-        });
-      },
-    },
+    { label: "Explorer", programType: "explorer", separatorBefore: true, cb: () => openProgram("explorer") },
+    { label: "Settings", programType: "settings", cb: () => openProgram("settings") },
     // Help
-    {
-      label: "Shortcuts",
-      programType: "shortcuts",
-      separatorBefore: true,
-      cb: () => {
-        createWindow({
-          title: "Keyboard Shortcuts",
-          program: { type: "shortcuts" },
-          size: { width: 440, height: 380 },
-        });
-      },
-    },
+    { label: "Shortcuts", programType: "shortcuts", separatorBefore: true, cb: () => openProgram("shortcuts") },
     {
       label: "Report a bug",
       cb: () => {

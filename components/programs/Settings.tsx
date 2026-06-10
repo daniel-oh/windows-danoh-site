@@ -24,13 +24,6 @@ import {
 
 type KeyStatus = "idle" | "testing" | "valid" | "invalid" | "saved" | "cleared";
 
-// One source for the window size so every entry point (Start menu,
-// the Welcome link, a generated app's "Manage" link) opens Settings at
-// the same comfortable width instead of the 300px MIN_WINDOW_SIZE
-// default. ~370-400px is the Win98 settings-dialog norm.
-export const SETTINGS_WIDTH = 420;
-export const SETTINGS_HEIGHT = 520;
-
 export function Settings({ id }: { id: string }) {
   const [settings, setSettings] = useAtom(settingsAtom);
   const windowsDispatch = useSetAtom(windowsListAtom);
