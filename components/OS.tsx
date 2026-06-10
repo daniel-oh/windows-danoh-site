@@ -15,7 +15,6 @@ import { Desktop } from "./Desktop";
 import { DESKTOP_URL_KEY, registryAtom } from "@/state/registry";
 import { ContextMenu } from "./ContextMenu";
 import { useActions } from "@/lib/actions/ActionsProvider";
-import Image from "next/image";
 import { initState } from "@/lib/initState";
 import { WIDTH } from "./programs/Welcome";
 import { fsManagerAtom } from "@/state/fsManager";
@@ -618,19 +617,11 @@ const WindowTaskBarItem = memo(function WindowTaskBarItem({ id }: { id: string }
         maxWidth: "256px",
         display: "flex",
         alignItems: "center",
-        gap: "4px",
-        paddingLeft: state.icon ? "8px" : undefined,
       }}
     >
-      {state.icon && (
-        <Image
-          unoptimized
-          src={state.icon}
-          alt={state.title}
-          width={16}
-          height={16}
-        />
-      )}
+      {/* Text only: program icons in the taskbar buttons read as
+        * clutter at 16px and drift from the spare Win98 look. The
+        * icon still lives on the desktop and the window title bar. */}
       <span>{state.title}</span>
     </button>
   );
