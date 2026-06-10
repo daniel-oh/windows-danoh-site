@@ -2,6 +2,7 @@ import { WIDTH } from "@/components/programs/Welcome";
 import { createWindow } from "./createWindow";
 import { isMobile } from "./isMobile";
 import { waitForElement } from "./waitForElement";
+import { seedDemoProgram } from "./demoPrograms";
 
 let initialized = false;
 
@@ -25,6 +26,11 @@ function readShareablePrompt(): string | null {
 export function initState() {
   if (initialized) return;
   initialized = true;
+
+  // Fire-and-forget: drops Snake.exe on the desktop the first time a
+  // browser visits, so the "AI builds apps" promise has a working
+  // exhibit even for visitors without an access code.
+  void seedDemoProgram();
 
   const sharedPrompt = readShareablePrompt();
 

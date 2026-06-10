@@ -35,22 +35,47 @@ export function createWindow({
     };
   }
 
+  // CSS enforces MIN_WINDOW_SIZE anyway; clamping the state too keeps
+  // the first resize drag from traversing a dead zone where the stored
+  // width crawls up to what's already rendered.
+  size = {
+    width: Math.max(size.width, MIN_WINDOW_SIZE.width),
+    height:
+      size.height === "auto"
+        ? "auto"
+        : Math.max(size.height, MIN_WINDOW_SIZE.height),
+  };
+
   const isCentering = !pos;
   if (!pos) {
     // Cascade new windows so two Start-menu opens of the same program
     // don't land at identical coordinates and disappear on top of each other.
     const openCount = getDefaultStore().get(windowsListAtom).length;
     const cascadeOffset = (openCount % 10) * 24;
+    // Center within the area above the taskbar — centering against the
+    // full viewport let restored windows underlap it.
+    const taskbarH = 40;
+    const usableH = window.innerHeight - taskbarH;
+    const winH = size.height === "auto" ? MIN_WINDOW_SIZE.height : size.height;
     const centerX = Math.floor(window.innerWidth / 2 - size.width / 2);
-    const centerY = Math.floor(
-      window.innerHeight / 2 -
-        (size.height === "auto" ? MIN_WINDOW_SIZE.height : size.height) / 2
-    );
+    const centerY = Math.floor(usableH / 2 - winH / 2);
     pos = {
       x: Math.max(0, centerX + cascadeOffset),
-      y: Math.max(0, centerY + cascadeOffset),
+      y: Math.min(
+        Math.max(0, centerY + cascadeOffset),
+        Math.max(0, usableH - Math.min(winH, usableH))
+      ),
     };
   }
+  // Force-maximize gates on WIDTH only: pointer-coarse alone (iPads in
+  // landscape) handles the full desktop metaphor fine and shouldn't be
+  // locked to one window. Dialog-type programs stay small everywhere —
+  // a full-screen gray void with a form in the top corner is the worst
+  // version of an alert.
+  const DIALOG_TYPES: ReadonlySet<string> = new Set(["alert", "run"]);
+  const narrow =
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 768px)").matches;
   getDefaultStore().set(windowAtomFamily(id), {
     type: "INIT",
     payload: {
@@ -61,7 +86,8 @@ export function createWindow({
       size,
       pos,
       icon,
-      status: isMobile() ? "maximized" : "normal",
+      status:
+        narrow && !DIALOG_TYPES.has(program.type) ? "maximized" : "normal",
     },
   });
   getDefaultStore().set(windowsListAtom, { type: "ADD", payload: id });

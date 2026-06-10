@@ -10,6 +10,7 @@ import { settingsAtom } from "@/state/settings";
 import wrappedFetch from "@/lib/wrappedFetch";
 
 import { AccessCodePrompt } from "../AccessCodePrompt";
+import { openDemoProgram } from "@/lib/demoPrograms";
 
 function hasSession() {
   return document.cookie.includes("lr_session=");
@@ -93,6 +94,20 @@ export function Run({ id }: { id: string }) {
     return (
       <div style={{ padding: 4 }}>
         <AccessCodePrompt onSuccess={() => setAuthenticated(true)} />
+        <p style={{ fontSize: 11, color: "#444", margin: "8px 0 0" }}>
+          Or{" "}
+          <a
+            href="#"
+            style={{ color: "#000080" }}
+            onClick={(e) => {
+              e.preventDefault();
+              void openDemoProgram();
+            }}
+          >
+            watch one I made earlier
+          </a>{" "}
+          to see what this does.
+        </p>
         <div
           style={{
             display: "flex",
@@ -128,7 +143,7 @@ export function Run({ id }: { id: string }) {
           Describe any app you can imagine. The AI will generate a fully
           functional program for you in seconds.
         </p>
-        <p style={{ fontSize: 11, color: "#555" }}>
+        <p style={{ fontSize: 11, color: "#444" }}>
           You can bring your own{" "}
           <a href="#" onClick={(e) => { e.preventDefault(); createWindow({ title: "Settings", program: { type: "settings" } }); }} style={{ color: "#000080" }}>
             Anthropic API key
