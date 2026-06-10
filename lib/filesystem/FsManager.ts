@@ -7,7 +7,8 @@ import {
   Depth,
 } from "./Drive";
 import { RealFs } from "./RealFs";
-import { atomFamily, atomWithRefresh } from "jotai/utils";
+import { atomWithRefresh } from "jotai/utils";
+import { atomFamily } from "jotai-family";
 import {
   SYSTEM_PATH,
   PROGRAMS_PATH,

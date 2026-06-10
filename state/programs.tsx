@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { atomFamily } from "jotai/utils";
+import { atomFamily } from "jotai-family";
 import { PROGRAMS_PATH } from "@/lib/filesystem/defaultFileSystem";
 import { getFsManager } from "@/state/fsManager";
 import { DeepFolder, DeepItem } from "@/lib/filesystem/Drive";
