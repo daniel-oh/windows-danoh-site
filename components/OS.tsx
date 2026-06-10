@@ -309,6 +309,10 @@ function TaskBar() {
           setStartMenuOpen((v) => !v);
         }}
       >
+        {/* The Win98 flag, like the original Start button. Decorative
+         * (the button's aria-label already says "Start menu"). */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/icons/win98-start.png" alt="" className={styles.startLogo} />
         Start
       </button>
       {startMenuOpen && <StartMenu />}

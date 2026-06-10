@@ -122,6 +122,19 @@
   font-weight: bold;
   min-width: inherit;
   transition: transform 50ms ease;
+  /* Flag icon + label on one row, like the real Win98 Start button. */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.startLogo {
+  height: 16px;
+  width: auto;
+  /* Smooth-scaled logo (it's a downscaled raster, not pixel art), and
+   * non-draggable so it doesn't ghost when the button is pressed. */
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .startButton:active {

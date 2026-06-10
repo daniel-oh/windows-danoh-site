@@ -60,7 +60,12 @@ export function createWindow({
     const centerX = Math.floor(window.innerWidth / 2 - size.width / 2);
     const centerY = Math.floor(usableH / 2 - winH / 2);
     pos = {
-      x: Math.max(0, centerX + cascadeOffset),
+      // Clamp the right edge on-screen too (cascade could push a wide
+      // window off the right), not just x >= 0.
+      x: Math.min(
+        Math.max(0, centerX + cascadeOffset),
+        Math.max(0, window.innerWidth - size.width)
+      ),
       y: Math.min(
         Math.max(0, centerY + cascadeOffset),
         Math.max(0, usableH - Math.min(winH, usableH))
@@ -96,12 +101,19 @@ export function createWindow({
   if (isCentering && size.height === "auto") {
     waitForElement(id).then((element) => {
       if (element) {
-        const windowHeight = window.innerHeight;
+        // Auto-height windows are placed with a guessed height, then
+        // re-centered here once the real height is known. Center within
+        // the area ABOVE the taskbar — the old math used the full
+        // viewport height, which let tall windows (e.g. the Run dialog
+        // with its bring-your-own-key gate) spill under the taskbar on
+        // short viewports. Then clamp so the whole window stays
+        // on-screen; one taller than the usable area pins to the top so
+        // its title bar stays reachable.
+        const taskbarH = 40;
+        const usableH = window.innerHeight - taskbarH;
         const elementHeight = element.offsetHeight;
-        const newY = Math.max(
-          0,
-          Math.floor(windowHeight / 2 - elementHeight / 2)
-        );
+        const centered = Math.floor(usableH / 2 - elementHeight / 2);
+        const newY = Math.max(0, Math.min(centered, usableH - elementHeight));
         getDefaultStore().set(windowAtomFamily(id), {
           type: "MOVE",
           payload: { dx: 0, dy: newY - pos.y },
