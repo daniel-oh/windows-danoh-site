@@ -15,7 +15,7 @@ import { MIN_WINDOW_SIZE, windowAtomFamily } from "@/state/window";
 import { WindowBody } from "./WindowBody";
 import styles from "./Window.module.css";
 import React, { memo, useEffect, useRef, useState } from "react";
-import { isMobile } from "@/lib/isMobile";
+import { useIsMobile } from "@/lib/useIsMobile";
 import Image from "next/image";
 import { createWindow } from "@/lib/createWindow";
 import { WindowMenuBar } from "./WindowMenuBar";
@@ -30,12 +30,8 @@ function WindowInner({ id }: { id: string }) {
   const [focusedWindow, setFocusedWindow] = useAtom(focusedWindowAtom);
   const zOrder = useAtomValue(zOrderAtom);
   const isResizing = useAtomValue(isResizingAtom);
-  const [mobile, setMobileState] = useState(false);
+  const mobile = useIsMobile();
   const [isMinimizing, setIsMinimizing] = useState(false);
-
-  useEffect(() => {
-    setMobileState(isMobile());
-  }, []);
   const prevStatusRef = useRef(state.status);
 
   useEffect(() => {

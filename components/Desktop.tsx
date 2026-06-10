@@ -10,7 +10,7 @@ import { useCreateContextMenu } from "@/state/contextMenu";
 import { useServerPrograms } from "@/lib/useServerPrograms";
 import { useEffect, useRef, useState, useCallback } from "react";
 import cx from "classnames";
-import { isMobile } from "@/lib/isMobile";
+import { useIsMobile } from "@/lib/useIsMobile";
 
 const GRID = 96;
 const GRID_MOBILE = 88;
@@ -90,11 +90,7 @@ export const Desktop = () => {
   const didSync = useRef(false);
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [iconPositions, setIconPositions] = useState<IconPositions>({});
-  const [mobile, setMobile] = useState(false);
-
-  useEffect(() => {
-    setMobile(isMobile());
-  }, []);
+  const mobile = useIsMobile();
 
   useEffect(() => {
     if (didSync.current) return;
@@ -496,7 +492,7 @@ function BuiltInIcon({
     }
   };
 
-  const startDrag = (startX: number, startY: number) => {
+  const startDrag = (startX: number, startY: number, isTouch = false) => {
     const gridSize = getGridSize();
     const origin = gridToPixels(position.col, position.row, gridSize);
     isDraggingRef.current = false;
@@ -536,17 +532,34 @@ function BuiltInIcon({
 
     const onMouseMove = (e: MouseEvent) => onPointerMove(e.clientX, e.clientY);
     const onMouseUp = (e: MouseEvent) => onEnd(e.clientX, e.clientY);
+    const onTouchMove = (e: TouchEvent) => {
+      const t = e.touches[0];
+      if (t) onPointerMove(t.clientX, t.clientY);
+    };
+    const onTouchEnd = (e: TouchEvent) => {
+      const t = e.changedTouches[0];
+      onEnd(t?.clientX ?? startX, t?.clientY ?? startY);
+    };
 
     const cleanup = () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("blur", cancel);
       cleanupRef.current = null;
     };
 
     cleanupRef.current = cleanup;
-    window.addEventListener("mousemove", onMouseMove);
-    window.addEventListener("mouseup", onMouseUp);
+    // Same touch wiring as ProgramIcon — without it the built-in icons
+    // (Blog, Resume, Minesweeper, Recycle) were immovable on phones.
+    if (isTouch) {
+      window.addEventListener("touchmove", onTouchMove, { passive: true });
+      window.addEventListener("touchend", onTouchEnd);
+    } else {
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    }
     window.addEventListener("blur", cancel);
   };
 
@@ -576,6 +589,10 @@ function BuiltInIcon({
           e.preventDefault();
           startDrag(e.clientX, e.clientY);
         }
+      }}
+      onTouchStart={(e) => {
+        const t = e.touches[0];
+        if (t) startDrag(t.clientX, t.clientY, true);
       }}
     >
       <Image

@@ -65,10 +65,13 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
   );
 };
 
-const openBlog = () => {
+const openBlog = (slug?: string) => {
   createWindow({
     title: "Blog",
-    program: { type: "blog" },
+    // Thread the clicked post through — without it every row in the
+    // recent-posts list opened the newest post regardless of which
+    // one the visitor chose.
+    program: { type: "blog", initialSlug: slug },
     size: { width: 700, height: 500 },
   });
 };
@@ -195,10 +198,10 @@ const contentByKey = {
                 cursor: "pointer",
                 flexShrink: 0,
               }}
-              onClick={openBlog}
+              onClick={() => openBlog(post.slug)}
               role="button"
               tabIndex={0}
-              onKeyDown={(e) => e.key === 'Enter' && openBlog()}
+              onKeyDown={(e) => e.key === 'Enter' && openBlog(post.slug)}
             >
               <div style={{
                 fontWeight: "bold",
@@ -220,7 +223,7 @@ const contentByKey = {
             </div>
           ))}
         </div>
-        <button onClick={openBlog}>
+        <button onClick={() => openBlog()}>
           Open Blog
         </button>
       </>

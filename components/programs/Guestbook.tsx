@@ -120,7 +120,7 @@ export function Guestbook() {
         <span style={{ fontSize: 18 }}>📖</span>
         <div style={{ flex: 1 }}>
           <div style={{ fontWeight: "bold" }}>Guestbook</div>
-          <div style={{ fontSize: 11, color: "#555" }}>
+          <div style={{ fontSize: 11, color: "#444" }}>
             Leave a note. No account needed. Messages pass through an AI
             filter before appearing.
           </div>
@@ -190,7 +190,7 @@ export function Guestbook() {
             alignItems: "center",
             justifyContent: "space-between",
             fontSize: 11,
-            color: "#555",
+            color: "#444",
           }}
         >
           <span>{message.length}/{MAX_MESSAGE}</span>
@@ -217,12 +217,12 @@ export function Guestbook() {
         }}
         aria-live="polite"
       >
-        {loading && <div style={{ fontSize: 12, color: "#555" }}>Loading…</div>}
+        {loading && <div style={{ fontSize: 12, color: "#444" }}>Loading…</div>}
         {!loading && error && (
           <div style={{ fontSize: 12, color: "#800000" }}>{error}</div>
         )}
         {!loading && !error && entries.length === 0 && (
-          <div style={{ fontSize: 12, color: "#555" }}>
+          <div style={{ fontSize: 12, color: "#444" }}>
             Be the first to sign.
           </div>
         )}
@@ -248,7 +248,7 @@ export function Guestbook() {
                 <span style={{ fontWeight: "bold" }}>
                   {e.name || "Anonymous"}
                 </span>
-                <span style={{ fontSize: 11, color: "#555" }}>
+                <span style={{ fontSize: 11, color: "#444" }}>
                   {relTime(e.createdAt)}
                 </span>
               </div>

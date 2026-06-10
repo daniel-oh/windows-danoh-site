@@ -1,27 +1,30 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useAtomValue } from "jotai";
+import { windowAtomFamily } from "@/state/window";
 import { sortedPosts, BlogPost } from "@/content/blog/posts";
 import { getPostComponent } from "@/content/blog/posts-content";
 import styles from "./Blog.module.css";
-import { isMobile } from "@/lib/isMobile";
+import { useIsMobile } from "@/lib/useIsMobile";
 import { REACTIONS, useReactions } from "@/lib/useReactions";
 import { CopyAttribution } from "@/components/CopyAttribution";
 import { ExternalArrow } from "@/components/ExternalArrow";
 
 export const BLOG_WIDTH = 700;
 
-export function Blog({ id: _id }: { id: string }) {
+export function Blog({ id }: { id: string }) {
+  const win = useAtomValue(windowAtomFamily(id));
+  const initialSlug =
+    win.program.type === "blog" ? win.program.initialSlug : undefined;
   const [selectedSlug, setSelectedSlug] = useState(
-    sortedPosts[0]?.slug || ""
+    initialSlug || sortedPosts[0]?.slug || ""
   );
-  const [mobile, setMobile] = useState(false);
-  const [showingPost, setShowingPost] = useState(false);
+  const mobile = useIsMobile();
+  // Landing on a specific post (clicked in Welcome) skips the list
+  // view on mobile and goes straight to reading.
+  const [showingPost, setShowingPost] = useState(!!initialSlug);
   const contentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setMobile(isMobile());
-  }, []);
 
   // Scroll back to the top when the selected post changes.
   useEffect(() => {
@@ -227,8 +230,12 @@ function PostActions({ slug }: { slug: string }) {
 }
 
 function PostBody({ slug }: { slug: string }) {
+  // getPostComponent LOOKS UP a statically-defined MDX component from
+  // a module-level map — identity is stable per slug, so this is not
+  // the create-components-during-render hazard the rule targets.
   const Component = getPostComponent(slug);
   if (!Component) return <p>Post content not found.</p>;
+  // eslint-disable-next-line react-hooks/static-components
   return <Component />;
 }
 

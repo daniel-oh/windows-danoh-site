@@ -93,7 +93,7 @@
 
 .meta {
   font-size: 12px;
-  color: #555;
+  color: #444;
   margin-bottom: 8px;
   display: flex;
   gap: 8px;
@@ -260,7 +260,7 @@
    * post navigation. Middle dot is the only separator — no em-dashes
    * anywhere on the site. */
   font-size: 11px;
-  color: #555;
+  color: #444;
   margin: 32px 0 0;
   padding-top: 18px;
   border-top: 1px solid #808080;
@@ -274,7 +274,7 @@
   /* Same muted treatment as the surrounding text — readable but not
    * shouting blue. Underline-on-hover keeps the affordance discoverable
    * without competing with the body links. */
-  color: #555;
+  color: #444;
   text-decoration: none;
 }
 
@@ -390,7 +390,7 @@
 
 .indexCount {
   font-size: 12px;
-  color: #555;
+  color: #444;
   background: #dfdfdf;
   border: 1px solid #808080;
   padding: 2px 8px;
@@ -432,7 +432,7 @@
 
 .postHeroCaption {
   font-size: 12px;
-  color: #555;
+  color: #444;
   text-align: center;
   margin-top: 6px;
   font-style: italic;
@@ -467,7 +467,7 @@
 
 .indexMeta {
   font-size: 11px;
-  color: #555;
+  color: #444;
 }
 
 .pinnedBadge {
@@ -572,7 +572,7 @@
 
 .adjLabel {
   font-size: 11px;
-  color: #555;
+  color: #444;
   margin-bottom: 2px;
 }
 
