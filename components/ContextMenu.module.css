@@ -13,3 +13,12 @@
     color: white;
   }
 }
+
+/* Roomier rows on touch — a long-press menu with 23px items is a
+ * fiddly tap. 40px matches the touch-target floor used across the OS. */
+@media (max-width: 768px), (pointer: coarse) {
+  .contextMenu > button {
+    min-height: 40px;
+    padding: 8px 18px;
+  }
+}

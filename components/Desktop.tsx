@@ -183,6 +183,80 @@ export const Desktop = () => {
     });
   }, []);
 
+  // Right-click / long-press the empty desktop → the classic Win98
+  // background menu. createContextMenu wires both the mouse and the
+  // 500ms touch long-press, so this is mobile-friendly for free.
+  const createContextMenu = useCreateContextMenu();
+
+  // "Arrange Icons" reflows EVERY icon into the canonical column-major
+  // layout, which also clears any overlap a drag-drop left behind
+  // (dropping onto an occupied cell just stacked them — there was no
+  // collision check). Built-ins first, programs stacked under, Recycle
+  // Bin anchored to the bottom, same shape as getDefaultPositions but
+  // forced rather than fill-the-gaps.
+  const arrangeIcons = useCallback(() => {
+    const gridSize = getGridSize();
+    const maxRows = Math.max(
+      4,
+      Math.floor((window.innerHeight - 80) / gridSize)
+    );
+    const positions: IconPositions = {
+      [BLOG_ICON_ID]: { col: 0, row: 0 },
+      [RESUME_ICON_ID]: { col: 0, row: 1 },
+      [MINESWEEPER_ICON_ID]: { col: 0, row: 2 },
+      [RECYCLE_ICON_ID]: { col: 0, row: Math.max(4, maxRows - 1) },
+    };
+    const occupied = new Set(
+      Object.values(positions).map((p) => `${p.col},${p.row}`)
+    );
+    for (const program of programs) {
+      let placed = false;
+      for (let col = 0; col < 20 && !placed; col++) {
+        for (let row = 0; row < maxRows; row++) {
+          const k = `${col},${row}`;
+          if (!occupied.has(k)) {
+            positions[program.id] = { col, row };
+            occupied.add(k);
+            placed = true;
+            break;
+          }
+        }
+      }
+    }
+    // Replace the whole map (not merge): drops stale entries for
+    // deleted programs and guarantees no two icons share a cell.
+    setIconPositions(positions);
+    setSelectedIcon(null);
+  }, [programs, setIconPositions]);
+
+  // "Refresh" re-pulls saved programs from the server, so a program
+  // generated in another tab shows up without a full reload — the
+  // authentic desktop "Refresh", with an actual job to do.
+  const refreshPrograms = useCallback(() => {
+    fetchPrograms().then((serverPrograms) => {
+      if (!serverPrograms || !Array.isArray(serverPrograms)) return;
+      for (const sp of serverPrograms) {
+        if (!programs.some((p) => p.id === sp.id)) {
+          dispatch({
+            type: "ADD_PROGRAM",
+            payload: {
+              id: sp.id,
+              name: sp.name,
+              prompt: sp.prompt,
+              code: sp.code ?? undefined,
+              icon: sp.icon ?? undefined,
+            },
+          });
+        }
+      }
+    });
+  }, [programs, fetchPrograms, dispatch]);
+
+  const desktopMenu = createContextMenu([
+    { label: "Arrange Icons", onClick: arrangeIcons },
+    { label: "Refresh", onClick: refreshPrograms },
+  ]);
+
   // Arrow keys move focus between desktop icons so keyboard-only
   // visitors can navigate without Tab-through-every-UI-control. Home /
   // End jump to the first / last icon. Enter / Space is already handled
@@ -219,6 +293,17 @@ export const Desktop = () => {
       role="main"
       onClick={() => setSelectedIcon(null)}
       onKeyDown={onKeyDown}
+      // Background menu only — icons' own onContextMenu stopPropagation,
+      // so a right-click on an icon never reaches here. For touch the
+      // icon long-press doesn't stopPropagation, so guard on
+      // target===currentTarget: only a press on the bare desktop (not
+      // an icon button) starts the background long-press timer.
+      onContextMenu={desktopMenu.onContextMenu}
+      onTouchStart={(e) => {
+        if (e.target === e.currentTarget) desktopMenu.onTouchStart?.(e);
+      }}
+      onTouchEnd={desktopMenu.onTouchEnd}
+      onTouchMove={desktopMenu.onTouchMove}
     >
       <BuiltInIcon
         id={BLOG_ICON_ID}

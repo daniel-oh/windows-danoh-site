@@ -1,6 +1,6 @@
 import { contextMenuAtom } from "@/state/contextMenu";
 import { useAtom } from "jotai";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import styles from "./ContextMenu.module.css";
 
 export function ContextMenu() {
@@ -64,6 +64,26 @@ export function ContextMenu() {
     return () =>
       window.removeEventListener("keydown", onKeyDown, { capture: true });
   }, [contextMenu, setContextMenu]);
+
+  // Keep the menu on-screen. A right-click near the right edge, or a
+  // long-press in the bottom-right of a phone, would otherwise spill
+  // the menu off the viewport. Runs before paint so there's no jump.
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!contextMenu || !el) return;
+    const pad = 8;
+    const rect = el.getBoundingClientRect();
+    let nx = contextMenu.x;
+    let ny = contextMenu.y;
+    if (nx + rect.width > window.innerWidth - pad) {
+      nx = Math.max(pad, window.innerWidth - rect.width - pad);
+    }
+    if (ny + rect.height > window.innerHeight - pad) {
+      ny = Math.max(pad, window.innerHeight - rect.height - pad);
+    }
+    el.style.left = `${nx}px`;
+    el.style.top = `${ny}px`;
+  }, [contextMenu]);
 
   if (!contextMenu) return null;
 
