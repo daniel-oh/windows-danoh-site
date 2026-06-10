@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
+import { PRIVACY_LAST_UPDATED } from "@/lib/legal";
 import styles from "../blog/blog.module.css";
 
 export const metadata = buildMetadata({
@@ -13,8 +14,8 @@ export const metadata = buildMetadata({
 
 // Intentionally short. A legal wall of text on a personal site is a
 // signal that no one reads it — so I read it. If you want more detail
-// on any of this, the Mail program is a click away.
-const LAST_UPDATED = "2026-04-18";
+// on any of this, the Mail program is a click away. The "last updated"
+// date lives in lib/legal.ts so the sitemap can't drift from it.
 
 export default function Privacy() {
   return (
@@ -45,12 +46,9 @@ export default function Privacy() {
                 identifying.
               </li>
               <li>
-                Supabase session cookie: only set if you log in via Google.
-                Clears the moment you log off.
-              </li>
-              <li>
-                Stripe cookies: only set if you enter the checkout flow.
-                Required by Stripe for fraud protection.
+                Supabase session cookie: only set if you sign in with Google
+                (there&rsquo;s no public reason to; sign-in is for me as the
+                operator). Clears the moment you log off.
               </li>
             </ul>
           </Section>
@@ -70,8 +68,12 @@ export default function Privacy() {
             </ul>
             <p>
               Both exist so I can tell whether features are useful and whether
-              something is silently broken. To opt out: block the respective
-              domains at the browser level (any standard ad blocker does this).
+              something is silently broken. The easiest opt-out is the toggle
+              in <strong>Settings &rarr; Analytics</strong>, which turns
+              PostHog off for you on the spot. Plausible is cookieless and
+              only counts aggregate pageviews, so there&rsquo;s nothing
+              personal to opt out of; if you&rsquo;d rather block both at the
+              network level, any standard ad blocker does it.
             </p>
           </Section>
 
@@ -82,11 +84,8 @@ export default function Privacy() {
                 the Run, Chat, or Help programs.
               </li>
               <li>
-                <strong>Supabase</strong>: auth session + any purchased tokens.
-              </li>
-              <li>
-                <strong>Stripe</strong>: checkout information if you buy
-                tokens.
+                <strong>Supabase</strong>: my operator auth session. No
+                visitor data unless you sign in.
               </li>
               <li>
                 <strong>Resend</strong>: the contents of the Mail program form
@@ -107,6 +106,11 @@ export default function Privacy() {
                 incentive for this site to move your information anywhere.
               </li>
               <li>
+                No selling anything, currently. If paid tokens ever go live,
+                Stripe handles checkout and never shares your card details
+                with me.
+              </li>
+              <li>
                 No reading guestbook messages to the public until they pass an
                 AI moderation check. You can see the whole rule set in{" "}
                 <code>app/api/guestbook/route.ts</code>.
@@ -121,9 +125,11 @@ export default function Privacy() {
                 Application &rarr; Storage &rarr; Clear site data.
               </li>
               <li>
-                Opt out of analytics: block <code>plausible</code> and{" "}
-                <code>posthog</code> domains (uBlock / Brave / Safari content
-                blockers all do this by default).
+                Opt out of analytics: flip the toggle in{" "}
+                <strong>Settings &rarr; Analytics</strong> (one click, no
+                extensions). Or block the <code>plausible</code> and{" "}
+                <code>posthog</code> domains at the network level. uBlock /
+                Brave / Safari content blockers all do this by default.
               </li>
               <li>
                 Delete a guestbook entry or request your data: open Mail and
@@ -142,16 +148,22 @@ export default function Privacy() {
           </Section>
 
           <p className={styles.indexMeta} style={{ marginTop: 24 }}>
-            Last updated {LAST_UPDATED}
+            Last updated {PRIVACY_LAST_UPDATED}
           </p>
 
           <div className={styles.footer}>
             <Link href="/" className={styles.footerLink}>
               ← Back to the desktop
             </Link>
-            <Link href="/blog" className={styles.footerLink}>
-              Blog<ExternalArrow />
-            </Link>
+            <span>
+              <Link href="/terms" className={styles.footerLink}>
+                Terms
+              </Link>
+              {" · "}
+              <Link href="/blog" className={styles.footerLink}>
+                Blog<ExternalArrow />
+              </Link>
+            </span>
           </div>
         </main>
       </div>

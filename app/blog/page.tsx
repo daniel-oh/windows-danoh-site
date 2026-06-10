@@ -76,6 +76,10 @@ export default function BlogIndex() {
                 Privacy
               </Link>
               {" · "}
+              <Link href="/terms" className={styles.footerLink}>
+                Terms
+              </Link>
+              {" · "}
               <a href="/feed.xml" className={styles.footerLink}>
                 RSS<ExternalArrow />
               </a>

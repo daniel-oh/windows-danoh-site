@@ -552,6 +552,12 @@ function StartMenu() {
         window.open("/privacy", "_blank");
       },
     },
+    {
+      label: "Terms",
+      cb: () => {
+        window.open("/terms", "_blank");
+      },
+    },
   ];
 
   return (

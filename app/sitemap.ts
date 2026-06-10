@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { sortedPosts } from "@/content/blog/registry";
+import { PRIVACY_LAST_UPDATED, TERMS_LAST_UPDATED } from "@/lib/legal";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://danoh.com";
@@ -11,8 +12,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     (max, p) => (p.date > max ? p.date : max),
     sortedPosts[0]?.date ?? "2026-01-01"
   );
-  const PRIVACY_LAST_EDITED = "2026-05-12";
-
   const entries: MetadataRoute.Sitemap = [
     {
       url: base,
@@ -28,7 +27,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${base}/privacy`,
-      lastModified: new Date(PRIVACY_LAST_EDITED),
+      lastModified: new Date(PRIVACY_LAST_UPDATED),
+      changeFrequency: "yearly",
+      priority: 0.3,
+    },
+    {
+      url: `${base}/terms`,
+      lastModified: new Date(TERMS_LAST_UPDATED),
       changeFrequency: "yearly",
       priority: 0.3,
     },
