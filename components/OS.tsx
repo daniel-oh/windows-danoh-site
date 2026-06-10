@@ -241,8 +241,38 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
 function TaskBar() {
   const windows = useAtomValue(windowsListAtom);
   const [startMenuOpen, setStartMenuOpen] = useAtom(startMenuOpenAtom);
+
+  // Arrow-key navigation across the taskbar's own controls (Start,
+  // window buttons, logo) — the WAI-ARIA toolbar role promises it, and
+  // it mirrors the desktop icons' keyboard nav. Buttons inside the
+  // Start menu are excluded: the menu owns its own up/down handling,
+  // and the guard (idx < 0 when focus is in the menu) hands arrows back
+  // to it. Vertical arrows are left alone for the same reason.
+  const onTaskbarKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key)) return;
+    const controls = Array.from(
+      e.currentTarget.querySelectorAll<HTMLButtonElement>("button")
+    ).filter((b) => !b.closest("#start-menu"));
+    if (!controls.length) return;
+    const idx = controls.indexOf(document.activeElement as HTMLButtonElement);
+    if (idx < 0) return; // focus is in the Start menu, not on a control
+    e.preventDefault();
+    let next: number;
+    if (e.key === "Home") next = 0;
+    else if (e.key === "End") next = controls.length - 1;
+    else if (e.key === "ArrowLeft")
+      next = (idx - 1 + controls.length) % controls.length;
+    else next = (idx + 1) % controls.length;
+    controls[next].focus();
+  };
+
   return (
-    <div className={cx("window", styles.taskbar)} role="toolbar" aria-label="Taskbar">
+    <div
+      className={cx("window", styles.taskbar)}
+      role="toolbar"
+      aria-label="Taskbar"
+      onKeyDown={onTaskbarKeyDown}
+    >
       <button
         className={styles.startButton}
         aria-label="Start menu"
@@ -291,6 +321,9 @@ function TaskbarClock() {
   return (
     <div
       className={styles.taskbarClock}
+      // role="timer" gives the aria-label something to attach to — a
+      // bare div with aria-label is announced inconsistently.
+      role="timer"
       title={new Date().toDateString()}
       aria-label={`Clock: ${time}`}
     >

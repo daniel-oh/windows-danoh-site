@@ -231,8 +231,10 @@
 }
 
 .taskbarClock {
-  /* Classic sunken tray well. Fixed-ish width keeps the taskbar from
-   * jittering when the minutes tick over. */
+  /* Classic sunken tray well. Tabular figures + a min-width sized for
+   * the widest string ("12:00 AM") so the tray and the logo beside it
+   * don't shift when a digit is added (9:59 -> 10:00) or AM flips to
+   * PM. Right-aligned so shorter strings pad on the left, not jump. */
   border-top: 1px solid #808080;
   border-left: 1px solid #808080;
   border-bottom: 1px solid #ffffff;
@@ -243,6 +245,9 @@
   white-space: nowrap;
   user-select: none;
   align-self: center;
+  min-width: 52px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .taskbarLogoButton {
