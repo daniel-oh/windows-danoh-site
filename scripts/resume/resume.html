@@ -39,22 +39,26 @@
     opacity: 0.92;
     margin-left: 14px;
   }
-  .winbtns { display: flex; gap: 3px; }
+  .winbtns { display: flex; gap: 2px; align-items: center; }
   .winbtn {
-    width: 14px; height: 13px;
+    width: 16px; height: 14px;
     background: #c0c0c0;
     border-top: 1.5px solid #fff;
     border-left: 1.5px solid #fff;
     border-right: 1.5px solid #404040;
     border-bottom: 1.5px solid #404040;
-    color: #000;
-    font-size: 7.5pt;
-    font-weight: bold;
-    line-height: 10px;
-    text-align: center;
+    /* Flex-center the icon. The old version centered font glyphs
+     * (_ □ ×) via line-height + text-align — but those three glyphs
+     * have different vertical metrics, so none of them actually sat
+     * centered. Drawn SVG icons remove the guesswork. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  .winbtn svg { display: block; }
 
   /* ---- Contact strip: menu-bar grey ---- */
   .contactbar {
@@ -156,7 +160,11 @@
 <div class="page">
   <div class="titlebar">
     <div><span class="name">DANIEL OH</span><span class="role">Sr. Platform Engineer · Cybersecurity</span></div>
-    <div class="winbtns"><div class="winbtn">_</div><div class="winbtn">□</div><div class="winbtn">×</div></div>
+    <div class="winbtns">
+      <div class="winbtn" aria-label="Minimize"><svg width="7" height="7" viewBox="0 0 7 7"><rect x="0" y="5" width="6" height="2" fill="#0a0a0a"/></svg></div>
+      <div class="winbtn" aria-label="Maximize"><svg width="9" height="9" viewBox="0 0 9 9"><path fill="#0a0a0a" d="M0 0h9v9H0V0zm1 2v6h7V2H1z"/></svg></div>
+      <div class="winbtn" aria-label="Close"><svg width="8" height="7" viewBox="0 0 8 7"><path fill="#0a0a0a" d="M0 0h2v1h1v1h2V1h1V0h2v1H7v1H6v1H5v1h1v1h1v1h1v1H6V6H5V5H3v1H2v1H0V6h1V5h1V4h1V3H2V2H1V1H0V0z"/></svg></div>
+    </div>
   </div>
   <div class="contactbar">
     <span>Chicago, IL<span class="sep">·</span>(312) 527-2058<span class="sep">·</span><a href="mailto:hello@danoh.com">hello@danoh.com</a></span>
