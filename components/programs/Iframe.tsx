@@ -9,7 +9,7 @@ import { getURLForProgram } from "@/lib/getURLForProgram";
 import { getSettings } from "@/lib/getSettings";
 import { settingsAtom } from "@/state/settings";
 import wrappedFetch from "@/lib/wrappedFetch";
-import { showUpsell } from "@/lib/showUpsell";
+import { alert } from "@/lib/alert";
 import { useServerPrograms } from "@/lib/useServerPrograms";
 
 export function Iframe({ id }: { id: string }) {
@@ -117,11 +117,18 @@ function IframeInner({ id }: { id: string }) {
 
       switch (operation) {
         case "get": {
-          event.source!.postMessage({
-            operation: "result",
-            id,
-            value: registry[namespaceKey(key)],
-          });
+          (event.source as Window).postMessage(
+            {
+              operation: "result",
+              id,
+              value: registry[namespaceKey(key)],
+            },
+            // "*" because srcDoc-sandboxed iframes have an opaque origin —
+            // the default (sender-origin) targetOrigin never matches it and
+            // the reply is silently dropped. Source is already verified to
+            // be exactly our iframe's contentWindow above.
+            "*"
+          );
           break;
         }
         case "set": {
@@ -142,22 +149,24 @@ function IframeInner({ id }: { id: string }) {
           const visible = Object.keys(registry)
             .map(denamespaceKey)
             .filter((k): k is string => k !== null);
-          event.source!.postMessage({
-            operation: "result",
-            id,
-            value: visible,
-          });
+          (event.source as Window).postMessage(
+            { operation: "result", id, value: visible },
+            "*"
+          );
           break;
         }
         case "chat": {
           // Only allow iframe chat if user has their own API key
           const currentSettings = getSettings();
           if (!currentSettings.apiKey) {
-            event.source!.postMessage({
-              operation: "result",
-              value: "Chat API is not available. Add your own API key in Settings to enable this feature.",
-              id,
-            });
+            (event.source as Window).postMessage(
+              {
+                operation: "result",
+                value: "Chat API is not available. Add your own API key in Settings to enable this feature.",
+                id,
+              },
+              "*"
+            );
             break;
           }
           // Sanitize messages from iframe — only allow user/assistant roles, limit count
@@ -175,11 +184,10 @@ function IframeInner({ id }: { id: string }) {
               settings: currentSettings,
             }),
           });
-          event.source!.postMessage({
-            operation: "result",
-            value: await result.json(),
-            id,
-          });
+          (event.source as Window).postMessage(
+            { operation: "result", value: await result.json(), id },
+            "*"
+          );
           break;
         }
         case "registerOnSave": {
@@ -223,7 +231,13 @@ function IframeInner({ id }: { id: string }) {
       srcDoc={program?.code || undefined}
       style={{ width: "100%", height: "100%", flex: "1 1 0", minHeight: 0, border: "none" }}
       onError={() => {
-        showUpsell();
+        // A load error is a network/server failure, not a billing state —
+        // don't diagnose it as "out of tokens".
+        alert({
+          message:
+            "This program couldn't load. Check your connection, then use File > Reload to try again.",
+          icon: "x",
+        });
       }}
       onLoad={() => {
         assert(state.program.type === "iframe", "Program is not an iframe");
@@ -234,8 +248,15 @@ function IframeInner({ id }: { id: string }) {
 
         dispatch({ type: "SET_LOADING", payload: false });
         if (ref.current) {
-          const outerHTML =
-            ref.current.contentDocument?.documentElement.outerHTML;
+          const doc = ref.current.contentDocument;
+          // Server error pages (rate limit, upstream failure) mark
+          // themselves with this meta tag. Persisting them here would
+          // freeze the error page as the program's code forever — skip
+          // the save so a retry actually regenerates.
+          if (doc?.querySelector('meta[name="danoh-error"]')) {
+            return;
+          }
+          const outerHTML = doc?.documentElement.outerHTML;
           assert(outerHTML, "Outer HTML of iframe content is undefined");
           assert(state.program.type === "iframe", "Program is not an iframe");
           dispatchPrograms({

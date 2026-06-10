@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { focusedWindowAtom } from "@/state/focusedWindow";
 
 import { windowAtomFamily } from "@/state/window";
 import { windowsListAtom } from "@/state/windowsList";
@@ -19,6 +20,7 @@ import disk from "@/components/assets/disk.png";
 import { mountDirectory } from "@/lib/filesystem/directoryMapping";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
 import { runProgramFromPath } from "@/lib/runProgramFromPath";
+import { alert } from "@/lib/alert";
 
 export function Explorer({ id }: { id: string }) {
   const createContextMenu = useCreateContextMenu();
@@ -97,7 +99,7 @@ export function Explorer({ id }: { id: string }) {
         payload: { type: "explorer", currentPath: parentPath },
       });
     } catch {
-      alert("Cannot navigate up from the current path");
+      alert({ message: "Cannot navigate up from the current path", icon: "x" });
     }
   };
 
@@ -107,7 +109,7 @@ export function Explorer({ id }: { id: string }) {
 
   const handleFileSave = () => {
     if (newFileName.trim() === "") {
-      alert("File name cannot be empty");
+      alert({ message: "File name cannot be empty", icon: "x" });
       return;
     }
     action!(`${currentPath}/${newFileName}`);
@@ -135,7 +137,7 @@ export function Explorer({ id }: { id: string }) {
       setIsCreatingFolder(false);
       setSelectedItem(newFolderPath);
     } catch (error) {
-      alert("Failed to create folder");
+      alert({ message: "Failed to create folder", icon: "x" });
     }
   };
 
@@ -166,7 +168,7 @@ export function Explorer({ id }: { id: string }) {
       setIsRenaming(false);
       setSelectedItem(newPath);
     } catch (error) {
-      alert("Failed to rename item");
+      alert({ message: "Failed to rename item", icon: "x" });
     }
   };
 
@@ -227,25 +229,29 @@ export function Explorer({ id }: { id: string }) {
       }
     } catch (error) {
       console.error("Failed to paste from clipboard:", error);
-      alert("Failed to paste item");
+      alert({ message: "Failed to paste item", icon: "x" });
     }
   }, [currentPath]);
 
   const handleMount = useCallback(async () => {
     try {
       const directoryHandle = await window.showDirectoryPicker();
-      const mountName = prompt("Enter a name for this mounted directory:");
-      if (mountName) {
-        await mountDirectory(mountName, directoryHandle);
-        // Refresh the current folder view
-        dispatch({
-          type: "UPDATE_PROGRAM",
-          payload: { type: "explorer", currentPath },
-        });
-      }
+      // The picked folder already has a name — no need for a prompt()
+      // (which would also break the Win98 chrome with a native dialog).
+      await mountDirectory(directoryHandle.name, directoryHandle);
+      // Refresh the current folder view
+      dispatch({
+        type: "UPDATE_PROGRAM",
+        payload: { type: "explorer", currentPath },
+      });
     } catch (error) {
+      // Closing the picker rejects with AbortError — that's a cancel,
+      // not a failure.
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
       console.error("Failed to mount directory:", error);
-      alert("Failed to mount directory");
+      alert({ message: "Failed to mount directory", icon: "x" });
     }
   }, [dispatch, currentPath]);
 
@@ -260,7 +266,7 @@ export function Explorer({ id }: { id: string }) {
         });
       } catch (error) {
         console.error("Failed to unmount directory:", error);
-        alert("Failed to unmount directory");
+        alert({ message: "Failed to unmount directory", icon: "x" });
       }
     },
     [dispatch, currentPath]
@@ -268,24 +274,37 @@ export function Explorer({ id }: { id: string }) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key.toLowerCase()) {
-          case "c":
-            if (selectedItem) handleCopy(selectedItem);
-            break;
-          case "x":
-            if (selectedItem) handleCut(selectedItem);
-            break;
-          case "v":
-            handlePaste();
-            break;
-        }
+      if (!e.ctrlKey && !e.metaKey) return;
+      // The listener is global, so without these guards ANY open
+      // Explorer (even minimized) hijacks copy/paste everywhere:
+      // Ctrl+C while copying text in another window replaces the
+      // clipboard with FS JSON, and Ctrl+X deletes the selected file.
+      if (getDefaultStore().get(focusedWindowAtom) !== id) return;
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      switch (e.key.toLowerCase()) {
+        case "c":
+          if (selectedItem) handleCopy(selectedItem);
+          break;
+        case "x":
+          if (selectedItem) handleCut(selectedItem);
+          break;
+        case "v":
+          handlePaste();
+          break;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedItem, handleCopy, handleCut, handlePaste]);
+  }, [id, selectedItem, handleCopy, handleCut, handlePaste]);
 
   const renderItems = (items: Record<string, StubItem>, path: string) => {
     return Object.keys(items).map((key) => {

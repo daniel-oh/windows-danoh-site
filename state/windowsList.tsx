@@ -1,6 +1,7 @@
 import { assertNever } from "@/lib/assertNever";
 import { atom } from "jotai";
 import { windowAtomFamily } from "./window";
+import { pruneWindowFocusAtom } from "./focusedWindow";
 import {
   recycleBinAtom,
   RECYCLE_BIN_LIMIT,
@@ -31,6 +32,11 @@ export const windowsListAtom = atom(
         return;
       case "REMOVE": {
         const id = action.payload;
+        // Idempotency guard: Esc (or a double-fired Close) can dispatch
+        // REMOVE for an id that's already gone. Without this, each
+        // repeat re-snapshots the stale window atom into the Recycle
+        // Bin as a duplicate entry.
+        if (!get(_listAtom).includes(id)) return;
         const win = get(windowAtomFamily(id));
         if (win && !NON_RECYCLABLE.has(win.program.type)) {
           const entry: RecycleBinEntry = {
@@ -49,6 +55,13 @@ export const windowsListAtom = atom(
           );
         }
         set(_listAtom, (prev) => prev.filter((v) => v !== id));
+        set(pruneWindowFocusAtom, id);
+        // Window ids are random and never reused, so the per-window
+        // atom can be dropped once closed — atomFamily retains every
+        // member forever otherwise (alert ReactNodes, explorer action
+        // closures, ...). Deferred so the unmounting Window component
+        // isn't still subscribed when the atom is recreated-on-read.
+        setTimeout(() => windowAtomFamily.remove(id), 0);
         return;
       }
       default:

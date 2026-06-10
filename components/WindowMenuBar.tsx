@@ -67,9 +67,15 @@ export function WindowMenuBar({ id }: { id: string }) {
 
                     window.addEventListener("message", handleSaveComplete);
 
-                    iframe.contentWindow?.postMessage({
-                      operation: "save",
-                    });
+                    // "*" because the saved-program iframe is srcDoc-
+                    // sandboxed (opaque origin) — the default targetOrigin
+                    // can never match it and the message would be dropped.
+                    iframe.contentWindow?.postMessage(
+                      {
+                        operation: "save",
+                      },
+                      "*"
+                    );
                   },
                 }
               : null,
@@ -95,10 +101,13 @@ export function WindowMenuBar({ id }: { id: string }) {
                           const file = await fs.getFile(path, "deep");
                           const iframe = getIframe(id)!;
                           store.set(lastVisitedPathAtom, getParentPath(path));
-                          iframe.contentWindow?.postMessage({
-                            operation: "open",
-                            content: file?.content,
-                          });
+                          iframe.contentWindow?.postMessage(
+                            {
+                              operation: "open",
+                              content: file?.content,
+                            },
+                            "*"
+                          );
                         },
                       },
                     });
@@ -113,10 +122,6 @@ export function WindowMenuBar({ id }: { id: string }) {
                   program: {
                     type: "history",
                     programID,
-                  },
-                  pos: {
-                    x: 0,
-                    y: 0,
                   },
                   size: {
                     width: 300,

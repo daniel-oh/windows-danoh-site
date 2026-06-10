@@ -23,8 +23,13 @@ const binStorage = createJSONStorage<RecycleBinEntry[]>(() =>
   typeof window !== "undefined" ? window.localStorage : undefined!
 );
 
+// getOnInit matters here: the atom is written (window closed) before it
+// is ever read (Recycle window opened). Without it, the first write of a
+// session updates the in-memory default [] and overwrites localStorage,
+// silently wiping every prior session's entries.
 export const recycleBinAtom = atomWithStorage<RecycleBinEntry[]>(
   "danoh_recycle_bin",
   [],
-  binStorage
+  binStorage,
+  { getOnInit: true }
 );

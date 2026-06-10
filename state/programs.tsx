@@ -54,6 +54,20 @@ export const programsAtom = atom<Promise<ProgramsState>, [ProgramAction], void>(
   }
 );
 
+// main.exe is written by us but lives in user-controlled storage
+// (IndexedDB / mounted dirs) — a single corrupt file must degrade to
+// "this program is skipped", not throw inside the programsAtom read
+// and take down the whole desktop.
+function parseProgramConfig(content: unknown): Record<string, any> {
+  if (typeof content !== "string" || !content) return {};
+  try {
+    const parsed = JSON.parse(content);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 function getProgramEntry(item: DeepItem): ProgramEntry | null {
   if (item.type !== "folder") return null;
   const folder = item as DeepFolder;
@@ -67,12 +81,13 @@ function getProgramEntry(item: DeepItem): ProgramEntry | null {
   if (index && index.type === "file") {
     code = index.content as string;
   }
-  const config = main.content ? JSON.parse(main.content as string) : {};
+  const config = parseProgramConfig(main.content);
   return {
     ...config,
     id: folder.name,
     name: folder.name,
-    code,
+    prompt: typeof config.prompt === "string" ? config.prompt : "",
+    code: code ?? undefined,
     currentVersion: config.currentVersion || Date.now(),
   };
 }
@@ -123,7 +138,7 @@ async function programsReducer(
         const existingContent = await (
           await fsManager.getFile(`${path}/main.exe`, "deep")
         )?.content;
-        const existing = JSON.parse(existingContent as string);
+        const existing = parseProgramConfig(existingContent);
         await fsManager.writeFile(
           `${path}/main.exe`,
           JSON.stringify({ ...existing, ...rest, currentVersion: timestamp })
@@ -132,7 +147,7 @@ async function programsReducer(
         const existingContent = await (
           await fsManager.getFile(`${path}/main.exe`, "deep")
         )?.content;
-        const existing = JSON.parse(existingContent as string);
+        const existing = parseProgramConfig(existingContent);
         await fsManager.writeFile(
           `${path}/main.exe`,
           JSON.stringify({ ...existing, ...rest })
@@ -163,7 +178,7 @@ async function programsReducer(
       const existingContent = await (
         await fsManager.getFile(`${path}/main.exe`, "deep")
       )?.content;
-      const existing = JSON.parse(existingContent as string);
+      const existing = parseProgramConfig(existingContent);
       await fsManager.writeFile(
         `${path}/main.exe`,
         JSON.stringify({ ...existing, currentVersion: version })
@@ -184,7 +199,7 @@ async function programsReducer(
       const existingContent = await (
         await fsManager.getFile(`${path}/main.exe`, "deep")
       )?.content;
-      const existing = JSON.parse(existingContent as string);
+      const existing = parseProgramConfig(existingContent);
       if (existing.currentVersion === version) {
         const remainingVersions =
           Object.keys(
@@ -196,7 +211,10 @@ async function programsReducer(
             .filter((v) => !isNaN(v))
         );
 
-        if (!isNaN(latestVersion)) {
+        // Number.isFinite, not !isNaN: Math.max of an empty version list
+        // is -Infinity, which passes !isNaN and would blank index.html
+        // and persist currentVersion: -Infinity.
+        if (Number.isFinite(latestVersion)) {
           const latestCode = await fsManager.getFile(
             `${versionsPath}/${latestVersion}.html`,
             "deep"

@@ -35,9 +35,17 @@ export async function GET(req: Request) {
   const user = await getUser();
   if (!isLocal() && settings.model !== "cheap") {
     if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
+      // Styled like the other rejections — raw JSON would render as
+      // literal text inside the program window.
+      return jsonRejectionAsHtml(
+        new Response(
+          JSON.stringify({
+            error:
+              "Sign in (or add your own Anthropic API key in Settings) to use the quality model.",
+          }),
+          { status: 401 }
+        )
+      );
     }
 
     if (!settings.apiKey) {
@@ -93,7 +101,7 @@ export async function GET(req: Request) {
       req,
     });
   } catch (err) {
-    return upstreamErrorResponse("program", err);
+    return jsonRejectionAsHtml(upstreamErrorResponse("program", err));
   }
   const parentOrigin = new URL(req.url).origin;
   return new Response(
@@ -138,7 +146,8 @@ async function jsonRejectionAsHtml(res: Response): Promise<Response> {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>danoh.com — rate limited</title>
+<meta name="danoh-error" content="generation-rejected">
+<title>danoh.com · generation paused</title>
 <link rel="stylesheet" href="https://unpkg.com/98.css">
 <style>
   html,body{height:100%;margin:0}

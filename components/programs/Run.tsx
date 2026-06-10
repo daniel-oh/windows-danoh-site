@@ -38,16 +38,30 @@ export function Run({ id }: { id: string }) {
       const trimmed = desc.trim();
       if (!trimmed) return;
       setIsLoading(true);
-      let name = trimmed;
-      if (name.length > 20) {
-        const nameResp = await wrappedFetch("/api/name", {
-          method: "POST",
-          body: JSON.stringify({
-            desc: trimmed,
-            settings: getSettings(),
-          }),
-        });
-        name = (await nameResp.json()).name;
+      // The name is a nicety — if /api/name fails (rate limit, network),
+      // fall back to a truncated prompt instead of bricking the dialog
+      // or creating a program literally named "undefined".
+      let name = trimmed.length > 24 ? `${trimmed.slice(0, 24).trimEnd()}…` : trimmed;
+      if (trimmed.length > 20) {
+        try {
+          const nameResp = await wrappedFetch("/api/name", {
+            method: "POST",
+            body: JSON.stringify({
+              desc: trimmed,
+              settings: getSettings(),
+            }),
+          });
+          if (nameResp.ok) {
+            const generated = (await nameResp.json()).name;
+            if (typeof generated === "string" && generated.trim()) {
+              name = generated;
+            }
+          }
+        } catch {
+          /* keep the fallback name */
+        } finally {
+          setIsLoading(false);
+        }
       }
       const program: ProgramEntry = {
         id: name,
@@ -151,6 +165,7 @@ export function Run({ id }: { id: string }) {
           Open
         </button>
         <button
+          type="button"
           onClick={() => windowsDispatch({ type: "REMOVE", payload: id })}
         >
           Cancel

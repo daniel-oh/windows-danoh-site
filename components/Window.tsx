@@ -136,8 +136,18 @@ function WindowInner({ id }: { id: string }) {
           inactive: focusedWindow !== id,
         })}
         {...createResizeEvent((_e, delta) => {
-          // Auto-restore maximized windows when dragging starts
-          if (state.status === "maximized" && (Math.abs(delta.x) > 2 || Math.abs(delta.y) > 2)) {
+          // Read status from the store, not the render closure: the drag
+          // listeners installed at mousedown outlive this render, so the
+          // captured `state` goes stale after the first TOGGLE_MAXIMIZE
+          // and the window would strobe maximize/restore on every frame.
+          const live = getDefaultStore().get(windowAtomFamily(id));
+          if (live.status === "maximized") {
+            // Auto-restore when an intentional drag starts. Threshold is
+            // finger-jitter-sized so a touch tap on the title bar doesn't
+            // accidentally un-maximize.
+            if (Math.abs(delta.x) <= 8 && Math.abs(delta.y) <= 8) {
+              return;
+            }
             dispatch({ type: "TOGGLE_MAXIMIZE" });
           }
           dispatch({
@@ -172,7 +182,22 @@ function WindowInner({ id }: { id: string }) {
             {state.title}
           </div>
         </div>
-        <div className="title-bar-controls">
+        <div
+          className="title-bar-controls"
+          // Keep control taps from bubbling into the title-bar drag
+          // handler — on touch, a tiny wobble during a tap on Close/
+          // Minimize would otherwise start a window drag (or un-maximize)
+          // before the click lands. Focus explicitly since we cut off
+          // the window's own focus-on-mousedown.
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            setFocusedWindow(id);
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+            setFocusedWindow(id);
+          }}
+        >
           {state.program.type !== "iframe" ? null : (
             <button
               aria-label="Help"
