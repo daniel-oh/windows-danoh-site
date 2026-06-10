@@ -72,8 +72,18 @@ const nextConfig = {
   },
 };
 
-// unsafe-inline + unsafe-eval are required by Next.js's bootstrap +
-// webpack runtime + inline React styles + 98.css inline style props.
+// script-src 'unsafe-inline' is a DELIBERATE, load-bearing constraint,
+// not an oversight: generated apps run in srcDoc sandboxed iframes
+// (Iframe.tsx, sandbox="allow-scripts"), and a srcDoc document inherits
+// its embedder's CSP. Those apps are arbitrary LLM-written HTML full of
+// inline <script> and event handlers that cannot carry a per-request
+// nonce — so a nonce-based policy (which disables 'unsafe-inline')
+// would break the core "AI generates and runs an app in your browser"
+// feature. Removing 'unsafe-inline' would require serving generated
+// apps from a separate sandbox origin so the main document could go
+// strict; that's a tracked future re-architecture, not a quick swap.
+// 'unsafe-eval' (script) is required by Next.js's webpack runtime, and
+// 'unsafe-inline' (style) by inline React styles + 98.css inline props.
 // PostHog: api hosts are *.i.posthog.com, assets are us/eu-assets.
 // Plausible: custom self-hosted domain.
 // Stripe: script bundle + REST API.
