@@ -68,13 +68,24 @@ function WindowInner({ id }: { id: string }) {
     const body = el.querySelector<HTMLElement>(".window-body") ?? el;
     // The iframe outranks everything: program windows also contain the
     // File menu button, and "first button wins" would aim Space/Enter
-    // at the menu instead of the app.
+    // at the menu instead of the app. Focusing the iframe is invisible
+    // (no ring) and routes keys to the app, so it's fine on any device.
+    const iframe = body.querySelector<HTMLElement>("iframe");
+    if (iframe) {
+      iframe.focus({ preventScroll: true });
+      return;
+    }
+    // On touch devices there's no keyboard to serve, and moving focus on
+    // open just paints a stray focus ring on whatever control is first
+    // (e.g. the Welcome window's GitHub button) — a sloppy first
+    // impression, and the ring even clips against the body's left edge.
+    // Leave focus alone; taps reach controls directly. Keyboard/mouse
+    // users still get focus moved in so Tab/Esc work immediately.
+    if (window.matchMedia("(pointer: coarse)").matches) return;
     const focusTarget =
-      body.querySelector<HTMLElement>("iframe") ??
       body.querySelector<HTMLElement>(
         "input, textarea, [autofocus], button:not([aria-label='Close'])"
-      ) ??
-      el;
+      ) ?? el;
     focusTarget.focus({ preventScroll: true });
     // Run only once on mount (and when restoring from minimized).
     // eslint-disable-next-line react-hooks/exhaustive-deps
