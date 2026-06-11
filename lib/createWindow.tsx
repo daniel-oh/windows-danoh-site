@@ -101,36 +101,52 @@ export function createWindow({
   if (size.height === "auto") {
     waitForElement(id).then((element) => {
       if (!element) return;
-      // Auto-height windows are placed with a guessed height, then
-      // corrected here once the real height is known. Work within the
-      // area ABOVE the taskbar — using the full viewport height let tall
-      // windows spill under it.
       const taskbarH = 40;
-      const usableH = window.innerHeight - taskbarH;
-      const h = element.offsetHeight;
-      const w = element.offsetWidth;
-      let newX = pos.x;
-      let newY = pos.y;
-      if (isCentering) {
-        // Re-center vertically, then clamp so the whole window stays
-        // on-screen; one taller than the usable area pins to the top so
-        // its title bar stays reachable.
-        const centered = Math.floor(usableH / 2 - h / 2);
-        newY = Math.max(0, Math.min(centered, usableH - h));
-      } else {
-        // Explicit position (e.g. the Run dialog dropped below Welcome):
-        // honor it, but now that the real auto height is known, clamp
-        // both axes. Without this an explicit pos skipped all clamping,
-        // so a tall Run dialog spilled its bottom under the taskbar.
-        newY = Math.max(0, Math.min(pos.y, usableH - h));
-        newX = Math.max(0, Math.min(pos.x, window.innerWidth - w));
-      }
-      if (newX !== pos.x || newY !== pos.y) {
-        getDefaultStore().set(windowAtomFamily(id), {
-          type: "MOVE",
-          payload: { dx: newX - pos.x, dy: newY - pos.y },
-        });
-      }
+
+      // Auto-height windows are placed with a guessed height, then
+      // corrected once the real height is known. Read the LIVE position
+      // each pass (not the initial guess) so repeated passes compose,
+      // and work within the area ABOVE the taskbar — using the full
+      // viewport height let tall windows spill under it.
+      const clamp = () => {
+        const cur = getDefaultStore().get(windowAtomFamily(id)).pos;
+        const usableH = window.innerHeight - taskbarH;
+        const h = element.offsetHeight;
+        const w = element.offsetWidth;
+        let newX = cur.x;
+        let newY = cur.y;
+        if (isCentering) {
+          // Re-center vertically, then clamp so the whole window stays
+          // on-screen; one taller than usable pins to the top so its
+          // title bar stays reachable.
+          const centered = Math.floor(usableH / 2 - h / 2);
+          newY = Math.max(0, Math.min(centered, usableH - h));
+        } else {
+          // Explicit position (e.g. the Run dialog dropped below
+          // Welcome): honor it, but clamp both axes so it can't spill
+          // its bottom under the taskbar or its sides off-screen. An
+          // explicit pos used to skip clamping entirely.
+          newY = Math.max(0, Math.min(cur.y, usableH - h));
+          newX = Math.max(0, Math.min(cur.x, window.innerWidth - w));
+        }
+        if (newX !== cur.x || newY !== cur.y) {
+          getDefaultStore().set(windowAtomFamily(id), {
+            type: "MOVE",
+            payload: { dx: newX - cur.x, dy: newY - cur.y },
+          });
+        }
+      };
+
+      clamp();
+      // Gated dialogs (Run, Help) grow a frame or two after first paint
+      // as fonts and sub-forms settle, so a single measure clamps against
+      // a too-short height and the final layout still overflows. Re-clamp
+      // on real size changes, briefly — then disconnect so the user can
+      // freely drag the window off-edge afterward. A move doesn't change
+      // size, so this can't loop.
+      const ro = new ResizeObserver(clamp);
+      ro.observe(element);
+      setTimeout(() => ro.disconnect(), 2500);
     });
   }
   return id;
