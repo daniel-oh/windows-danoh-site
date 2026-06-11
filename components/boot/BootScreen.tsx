@@ -84,11 +84,16 @@ export function BootScreen() {
         .fromTo(
           splash,
           { opacity: 0 },
-          { opacity: 1, duration: 0.18 },
+          { opacity: 1, duration: 0.32 },
           "<0.05"
         )
-        .to(splash, { opacity: 1, duration: 0.55 }) // hold
-        .to(root, { opacity: 0, duration: 0.3 });
+        // Hold the branded splash long enough to land as a deliberate
+        // first-run "wow" rather than a flicker — the logo is the payoff
+        // of the whole boot, so let it breathe. This pushes total boot to
+        // ~3s; it's still skippable (any key/click/tap) and only ever
+        // plays once per browser session, so the dwell can't become a tax.
+        .to(splash, { opacity: 1, duration: 1.5 }) // hold
+        .to(root, { opacity: 0, duration: 0.35 });
 
       // Desktop assembly plays under the lifting curtain.
       timeline.add(() => {
