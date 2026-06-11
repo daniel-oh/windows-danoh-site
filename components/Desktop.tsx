@@ -400,7 +400,7 @@ function DesktopIcon({
   };
 
   const startDrag = (startX: number, startY: number, isTouch: boolean) => {
-    const gridSize = getGridSize();
+    const gridSize = mobile ? GRID_MOBILE : GRID;
     const origin = gridToPixels(position.col, position.row, gridSize);
     isDraggingRef.current = false;
 
@@ -473,7 +473,14 @@ function DesktopIcon({
     }
   };
 
-  const gridSize = getGridSize();
+  // Derive the grid from the reactive `mobile` prop, NOT a raw
+  // getGridSize() window read. getGridSize() returns 96 server-side
+  // (window undefined) and 88 on a phone, so SSR'd built-in icons kept
+  // 96 while the async-seeded Snake.exe rendered at 88 — mismatched
+  // grids that overlapped (Snake's logo painted over Minesweeper's
+  // label). `mobile` updates on hydration and re-renders every icon
+  // together, so they always share one grid.
+  const gridSize = mobile ? GRID_MOBILE : GRID;
   const basePos = gridToPixels(position.col, position.row, gridSize);
   const pixelPos = dragging && dragOffset
     ? { x: basePos.x + dragOffset.x, y: basePos.y + dragOffset.y }
