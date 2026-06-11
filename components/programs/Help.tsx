@@ -15,10 +15,22 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useState, useRef } from "react";
 import Markdown from "react-markdown";
 import { getSettings } from "@/lib/getSettings";
+import { settingsAtom } from "@/state/settings";
 import styles from "./Help.module.css";
 import imageIcon from "@/components/assets/image.png";
 import wrappedFetch from "@/lib/wrappedFetch";
 import { AccessCodePrompt } from "../AccessCodePrompt";
+import { ByokPrompt } from "../ByokPrompt";
+
+// Fix & Iterate calls the AI (and would spend tokens / the shared
+// budget), so it's gated exactly like the Run dialog: a visitor needs
+// an access-code session or their own Anthropic key before they can
+// prompt it. document.cookie is the same signal Run uses.
+function hasSession() {
+  return (
+    typeof document !== "undefined" && document.cookie.includes("lr_session=")
+  );
+}
 
 type Message = {
   role: string;
@@ -121,6 +133,17 @@ export function Help({ id }: { id: string }) {
   const [attachment, setAttachment] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [needsAuth, setNeedsAuth] = useState(false);
+  // Proactive gate: don't even show the prompt input without auth (the
+  // old flow let you type and send, then only surfaced the gate after
+  // the server's 401). Lazy init from the synchronous signals so a
+  // keyed/sessioned user never sees a flash of the gate.
+  const settings = useAtomValue(settingsAtom);
+  const [authed, setAuthed] = useState(
+    () => hasSession() || !!getSettings().apiKey
+  );
+  useEffect(() => {
+    if (settings.apiKey) setAuthed(true);
+  }, [settings.apiKey]);
 
   const doSend = async (allMessages: Messages) => {
     try {
@@ -298,15 +321,40 @@ export function Help({ id }: { id: string }) {
           </div>
         )}
       </div>
-      {needsAuth ? (
-        <div style={{ padding: "0 10px 10px" }}>
-          <AccessCodePrompt
-            message="Session expired. Enter access code to continue:"
-            onSuccess={() => {
-              setNeedsAuth(false);
-              setIsLoading(false);
-            }}
-          />
+      {!authed || needsAuth ? (
+        <div
+          style={{
+            padding: "0 10px 10px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <p style={{ fontSize: 12, color: "#444", margin: 0 }}>
+            {needsAuth
+              ? "Session expired. Add your Anthropic key or an access code to keep editing."
+              : "Fix & Iterate edits this app with AI. Add your own Anthropic key or an access code to use it."}
+          </p>
+          <fieldset>
+            <legend>Use your own Anthropic key</legend>
+            <ByokPrompt
+              onSuccess={() => {
+                setAuthed(true);
+                setNeedsAuth(false);
+              }}
+            />
+          </fieldset>
+          <fieldset>
+            <legend>Or enter an access code</legend>
+            <AccessCodePrompt
+              byokHint={false}
+              onSuccess={() => {
+                setAuthed(true);
+                setNeedsAuth(false);
+                setIsLoading(false);
+              }}
+            />
+          </fieldset>
         </div>
       ) : (
       <>
