@@ -66,7 +66,10 @@ export function CopyAttribution({
       const html = wrapper.innerHTML;
 
       const display = url.replace(/^https?:\/\//, "");
-      const plainOut = `${text}\n\nRead more at ${display}\n${url}`;
+      // Plain text: one line with the full URL — it auto-linkifies in
+      // chat/email and reads clean. (Previously this printed the display
+      // URL and the full URL on two lines, which duplicated the link.)
+      const plainOut = `${text}\n\nRead more at ${url}`;
       const htmlOut =
         `<div>${html}</div>` +
         `<p style="margin-top:1em;font-size:13px;color:#555;">` +

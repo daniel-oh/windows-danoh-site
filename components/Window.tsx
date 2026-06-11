@@ -18,6 +18,7 @@ import React, { memo, useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/lib/useIsMobile";
 import Image from "next/image";
 import { createWindow } from "@/lib/createWindow";
+import { isCoarsePointer } from "@/lib/isCoarsePointer";
 import { WindowMenuBar } from "./WindowMenuBar";
 
 const isResizingAtom = atom(false);
@@ -81,7 +82,7 @@ function WindowInner({ id }: { id: string }) {
     // impression, and the ring even clips against the body's left edge.
     // Leave focus alone; taps reach controls directly. Keyboard/mouse
     // users still get focus moved in so Tab/Esc work immediately.
-    if (window.matchMedia("(pointer: coarse)").matches) return;
+    if (isCoarsePointer()) return;
     const focusTarget =
       body.querySelector<HTMLElement>(
         "input, textarea, [autofocus], button:not([aria-label='Close'])"

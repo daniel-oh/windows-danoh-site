@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { isCoarsePointer } from "@/lib/isCoarsePointer";
 
 export function AccessCodePrompt({
   onSuccess,
@@ -51,7 +52,9 @@ export function AccessCodePrompt({
           aria-label="Access code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
-          autoFocus
+          // Skip on touch: auto-focusing pops the soft keyboard and
+          // shows a focus ring the moment the gate appears.
+          autoFocus={!isCoarsePointer()}
           disabled={loading}
           style={{ flex: 1 }}
           placeholder="Access code"

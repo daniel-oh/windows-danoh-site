@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { getSettings } from "@/lib/getSettings";
 import { settingsAtom } from "@/state/settings";
 import wrappedFetch from "@/lib/wrappedFetch";
+import { isCoarsePointer } from "@/lib/isCoarsePointer";
 
 import { AccessCodePrompt } from "../AccessCodePrompt";
 import { ByokPrompt } from "../ByokPrompt";
@@ -209,7 +210,10 @@ export function Run({ id }: { id: string }) {
           name="program-description"
           spellCheck={false}
           autoComplete="off"
-          autoFocus
+          // Skip on touch: auto-focusing pops the soft keyboard the
+          // instant Run opens. Desktop still focuses so you can type
+          // your prompt immediately.
+          autoFocus={!isCoarsePointer()}
           defaultValue={initialPrompt}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
