@@ -166,6 +166,13 @@ export function BootScreen() {
             top: 24,
             left: 28,
             margin: 0,
+            // 98.css styles every <pre> as a white sunken textarea box
+            // (background, inset border, padding). On the black boot
+            // screen that rendered as a stray white rectangle around the
+            // POST text. Strip the chrome so it reads as terminal output.
+            background: "transparent",
+            boxShadow: "none",
+            padding: 0,
             fontFamily: "'Courier New', Menlo, monospace",
             fontSize: 14,
             lineHeight: 1.7,

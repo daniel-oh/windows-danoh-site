@@ -98,25 +98,37 @@ export function createWindow({
   getDefaultStore().set(windowsListAtom, { type: "ADD", payload: id });
   getDefaultStore().set(focusedWindowAtom, id);
 
-  if (isCentering && size.height === "auto") {
+  if (size.height === "auto") {
     waitForElement(id).then((element) => {
-      if (element) {
-        // Auto-height windows are placed with a guessed height, then
-        // re-centered here once the real height is known. Center within
-        // the area ABOVE the taskbar — the old math used the full
-        // viewport height, which let tall windows (e.g. the Run dialog
-        // with its bring-your-own-key gate) spill under the taskbar on
-        // short viewports. Then clamp so the whole window stays
+      if (!element) return;
+      // Auto-height windows are placed with a guessed height, then
+      // corrected here once the real height is known. Work within the
+      // area ABOVE the taskbar — using the full viewport height let tall
+      // windows spill under it.
+      const taskbarH = 40;
+      const usableH = window.innerHeight - taskbarH;
+      const h = element.offsetHeight;
+      const w = element.offsetWidth;
+      let newX = pos.x;
+      let newY = pos.y;
+      if (isCentering) {
+        // Re-center vertically, then clamp so the whole window stays
         // on-screen; one taller than the usable area pins to the top so
         // its title bar stays reachable.
-        const taskbarH = 40;
-        const usableH = window.innerHeight - taskbarH;
-        const elementHeight = element.offsetHeight;
-        const centered = Math.floor(usableH / 2 - elementHeight / 2);
-        const newY = Math.max(0, Math.min(centered, usableH - elementHeight));
+        const centered = Math.floor(usableH / 2 - h / 2);
+        newY = Math.max(0, Math.min(centered, usableH - h));
+      } else {
+        // Explicit position (e.g. the Run dialog dropped below Welcome):
+        // honor it, but now that the real auto height is known, clamp
+        // both axes. Without this an explicit pos skipped all clamping,
+        // so a tall Run dialog spilled its bottom under the taskbar.
+        newY = Math.max(0, Math.min(pos.y, usableH - h));
+        newX = Math.max(0, Math.min(pos.x, window.innerWidth - w));
+      }
+      if (newX !== pos.x || newY !== pos.y) {
         getDefaultStore().set(windowAtomFamily(id), {
           type: "MOVE",
-          payload: { dx: 0, dy: newY - pos.y },
+          payload: { dx: newX - pos.x, dy: newY - pos.y },
         });
       }
     });
