@@ -244,21 +244,32 @@
 }
 
 .taskbarClock {
-  /* Classic sunken tray well. Tabular figures + a min-width sized for
-   * the widest string ("12:00 AM") so the tray and the logo beside it
-   * don't shift when a digit is added (9:59 -> 10:00) or AM flips to
-   * PM. Right-aligned so shorter strings pad on the left, not jump. */
-  border-top: 1px solid #808080;
-  border-left: 1px solid #808080;
-  border-bottom: 1px solid #ffffff;
-  border-right: 1px solid #ffffff;
-  padding: 1px 8px;
-  margin-right: 4px;
+  /* Classic sunken system-tray well. The old hard 1px borders (grey
+   * top-left, white bottom-right) read as a harsh outlined box; use the
+   * softer inset bevel the rest of the shell uses for sunken fields.
+   *
+   * Stretch the well to the taskbar height with symmetric vertical
+   * margins instead of a short, center-aligned box: that guarantees
+   * equal space above and below (the old box rode low, ~10px above vs
+   * ~6px below) and auto-adapts to the 32px desktop / 40px mobile bar.
+   * Flex so the time sits dead-centre inside the well.
+   *
+   * Tabular figures + a min-width sized for the widest string
+   * ("12:00 AM") so the tray and the logo beside it don't shift when a
+   * digit is added (9:59 -> 10:00) or AM flips to PM. Right-aligned so
+   * shorter strings pad on the left, not jump. */
+  box-shadow: inset -1px -1px #dfdfdf, inset 1px 1px #808080;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  align-self: stretch;
+  box-sizing: border-box;
+  margin: 5px 6px 5px 0;
+  padding: 0 8px;
   font-size: 11px;
   white-space: nowrap;
   user-select: none;
-  align-self: center;
-  min-width: 52px;
+  min-width: 56px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
