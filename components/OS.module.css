@@ -2,11 +2,16 @@
   position: absolute;
   bottom: 0;
   width: 100%;
-  /* Installed-PWA on notched iPhones: keep the Start button and window
-   * buttons above the home indicator. The inset is also baked into
-   * --taskbar-height (globals.css) so the Start menu and maximized
-   * windows anchor above the whole bar. */
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  /* The taskbar carries the 98.css ".window" raised bevel, which has a
+   * 3px inset on the top and sides framing its content — but its bottom
+   * was flush (padding 0), so the buttons and the clock ran right over
+   * the bevel's dark bottom edge. The buttons' own dark bottom hid it,
+   * but the clock's SUNKEN well has a light bottom bevel, which broke
+   * the dark line and read as the clock overlapping the edge. Match the
+   * 3px bottom inset (plus the installed-PWA safe-area on notched
+   * iPhones, also baked into --taskbar-height) so the bevel frames every
+   * item the same way, top and bottom. */
+  padding-bottom: calc(3px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
   border-bottom: 0;
   border-left: 0;

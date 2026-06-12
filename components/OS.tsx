@@ -298,7 +298,9 @@ function TaskBar() {
       onKeyDown={onTaskbarKeyDown}
     >
       <button
-        className={styles.startButton}
+        // Stay visually pressed while the menu is open, like the real
+        // Win98 Start button (it only looked pressed on mousedown before).
+        className={cx(styles.startButton, { [styles.active]: startMenuOpen })}
         aria-label="Start menu"
         aria-haspopup="menu"
         aria-expanded={startMenuOpen}
