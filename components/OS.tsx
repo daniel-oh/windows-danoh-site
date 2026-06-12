@@ -227,7 +227,14 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
         width: "100vw",
         position: "relative",
         background: "#008080",
-        overflow: "hidden",
+        // clip, NOT hidden: the parallax wallpaper sits at inset:-20 so
+        // the root's scrollHeight is 20px taller than the viewport. With
+        // "hidden" the root is still a programmatic scroll container, so
+        // when a gate input (Run's access-code field) autofocuses on load
+        // the browser scrolls it into view — scrolling the desktop, and
+        // the taskbar with it, up by 20px. "clip" clips identically but
+        // is not scrollable, so focus can never shift the desktop.
+        overflow: "clip",
       }}
       onContextMenu={(e) => {
         e.preventDefault();
