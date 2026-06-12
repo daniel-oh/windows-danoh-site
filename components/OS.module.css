@@ -248,12 +248,6 @@
    * top-left, white bottom-right) read as a harsh outlined box; use the
    * softer inset bevel the rest of the shell uses for sunken fields.
    *
-   * Stretch the well to the taskbar height with symmetric vertical
-   * margins instead of a short, center-aligned box: that guarantees
-   * equal space above and below (the old box rode low, ~10px above vs
-   * ~6px below) and auto-adapts to the 32px desktop / 40px mobile bar.
-   * Flex so the time sits dead-centre inside the well.
-   *
    * Tabular figures + a min-width sized for the widest string
    * ("12:00 AM") so the tray and the logo beside it don't shift when a
    * digit is added (9:59 -> 10:00) or AM flips to PM. Right-aligned so
@@ -262,14 +256,20 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  /* Stretch to the taskbar's interior height (no vertical margin) so the
+   * well is the SAME height as the Start and task buttons — its top sits
+   * just under the raised top edge exactly like they do, the way the
+   * real Win98 system tray reads, not a short inset box. */
   align-self: stretch;
   box-sizing: border-box;
-  margin: 5px 6px 5px 0;
-  padding: 0 8px;
-  font-size: 11px;
+  margin: 0 6px 0 0;
+  padding: 0 10px;
+  /* A touch larger than the 11px button text so the time has the right
+   * presence in the full-height well. */
+  font-size: 12px;
   white-space: nowrap;
   user-select: none;
-  min-width: 56px;
+  min-width: 60px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
