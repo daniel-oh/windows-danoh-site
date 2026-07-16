@@ -7,7 +7,12 @@
 html,
 body {
   max-width: 100vw;
-  overflow-x: hidden;
+  /* clip, not hidden: hidden makes body a scroll container, which
+   * position: sticky then resolves against — the blog post's
+   * bottom-stuck status bar never engaged. clip guards horizontal
+   * overflow identically without creating a scrollport (same fix the
+   * OS root needed). */
+  overflow-x: clip;
   font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
   touch-action: manipulation;
   /* Teal desktop base from the very first paint. html isn't animated,
