@@ -18,13 +18,15 @@ export async function POST(req: Request) {
   if (capped) return capped;
   const body = await req.json();
   const settings = await getSettingsFromJSON(body);
+
+  // A visitor who brings their own Anthropic API key pays for their own
+  // inference, so they skip sign-in. Only when there's no own key does
+  // the sign-in gate run.
   const user = await getUser();
-  if (!isLocal()) {
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
-    }
+  if (!isLocal() && !settings.apiKey && !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
   }
 
   const { messages: rawMessages } = body;
@@ -34,9 +36,13 @@ export async function POST(req: Request) {
 
   log(messages);
 
+  // Own-key visitors get the model they chose; on our dime chat is
+  // forced to the cheap model.
+  const forceModel = settings.apiKey ? undefined : "cheap";
+
   const { usedOwnKey, preferredModel } = createClientFromSettings({
     ...settings,
-    model: "cheap",
+    model: forceModel ?? settings.model,
   });
 
   await capture(
@@ -54,6 +60,7 @@ export async function POST(req: Request) {
       settings,
       label: "chat",
       user,
+      forceModel,
       body: {
         messages: [...messages],
         max_tokens: getMaxTokens(settings),

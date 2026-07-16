@@ -24,14 +24,17 @@ export async function POST(req: Request) {
   const body = await req.json();
   const settings = await getSettingsFromJSON(body);
   const user = await getUser();
-  if (!isLocal()) {
+  // A visitor who brings their own Anthropic API key pays for their own
+  // inference, so they skip both sign-in and token accounting. Only when
+  // there's no own key does the user/token gate run.
+  if (!isLocal() && !settings.apiKey) {
     if (!user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
       });
     }
 
-    if (!settings.apiKey && settings.model !== "cheap") {
+    if (settings.model !== "cheap") {
       const client = await createClient();
       const hasTokens = await canGenerate(client, user);
 

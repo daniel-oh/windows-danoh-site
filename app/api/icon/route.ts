@@ -20,8 +20,14 @@ export async function POST(req: Request) {
   if (denied) return denied;
   const capped = await costGuard(req);
   if (capped) return capped;
+  const body = await req.json();
+  const settings = await getSettingsFromJSON(body);
+
+  // A visitor who brings their own Anthropic API key pays for their own
+  // inference, so they skip both sign-in and token accounting. Only when
+  // there's no own key does the user/token gate run.
   const user = await getUser();
-  if (!isLocal()) {
+  if (!isLocal() && !settings.apiKey) {
     if (!user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -34,8 +40,6 @@ export async function POST(req: Request) {
     }
   }
 
-  const body = await req.json();
-  const settings = await getSettingsFromJSON(body);
   const prompt = body.name;
 
   let imagePrompt: string | null;

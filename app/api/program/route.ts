@@ -48,8 +48,14 @@ export async function POST(req: Request) {
   };
 
   const settings = await getSettingsFromJSON(body);
-  const user = await getUser();
-  if (!isLocal() && settings.model !== "cheap") {
+
+  // A visitor who brings their own Anthropic API key pays for their own
+  // inference, so they skip both sign-in and token accounting entirely —
+  // on any model. Only when there's no own key does the user/token gate
+  // run, and only for the quality model (the cheap model stays open to
+  // anonymous visitors).
+  if (!isLocal() && !settings.apiKey && settings.model !== "cheap") {
+    const user = await getUser();
     if (!user) {
       // Styled like the other rejections — raw JSON would render as
       // literal text inside the program window.
@@ -64,21 +70,19 @@ export async function POST(req: Request) {
       );
     }
 
-    if (!settings.apiKey) {
-      const client = await createClient();
-      const hasTokens = await canGenerate(client, user);
+    const client = await createClient();
+    const hasTokens = await canGenerate(client, user);
 
-      if (!hasTokens) {
-        return createPaymentRequiredResponse();
-      }
-
-      await insertGeneration({
-        client,
-        user,
-        tokensUsed: 1,
-        action: "program",
-      });
+    if (!hasTokens) {
+      return createPaymentRequiredResponse();
     }
+
+    await insertGeneration({
+      client,
+      user,
+      tokensUsed: 1,
+      action: "program",
+    });
   }
 
   const desc = typeof description === "string" ? description : null;

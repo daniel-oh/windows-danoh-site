@@ -16,19 +16,21 @@ export async function POST(req: Request) {
   if (denied) return denied;
   const capped = await costGuard(req);
   if (capped) return capped;
-  const user = await getUser();
-  if (!isLocal()) {
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
-    }
-  }
-
   const body = await req.json();
   const { desc } = body;
 
   const settings = await getSettingsFromJSON(body);
+
+  // A visitor who brings their own Anthropic API key pays for their own
+  // inference, so they skip sign-in. Only when there's no own key does
+  // the sign-in gate run.
+  const user = await getUser();
+  if (!isLocal() && !settings.apiKey && !user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
+  }
+
   const { mode, usedOwnKey } = createClientFromSettings(settings);
 
   await capture(
