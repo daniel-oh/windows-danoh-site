@@ -158,11 +158,54 @@
   color: #333;
 }
 
+/* Post-page tags are links into the index's ?q= search. Same chip
+ * body as .tag; bold + per-tag color (set inline) signal clickability. */
+.tagLink {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  padding: 2px 8px;
+  background: #dfdfdf;
+  border: 1px solid #808080;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.tagLink:hover {
+  background: #fff;
+}
+
+/* Post byline: avatar + author-first meta row. */
+.byline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.byline .meta {
+  margin-bottom: 0;
+}
+
+.bylineAvatar {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border: 1px solid #808080;
+  flex-shrink: 0;
+}
+
+.bylineAuthor {
+  color: #000;
+  font-weight: bold;
+}
+
 .markdown {
-  /* 16px + the wider .body padding brings desktop lines from ~100
-   * characters down to ~85 — the bitmap font needs the shorter measure. */
-  font-size: 16px;
-  line-height: 1.65;
+  /* 15px/1.7 in the Tahoma stack (.bodyPost switches post prose off the
+   * bitmap font) — slightly tighter than the old 16px bitmap setting,
+   * with more leading to carry the longer 760px measure. */
+  font-size: 15px;
+  line-height: 1.7;
   color: #111;
   overflow-wrap: break-word;
 }
@@ -300,18 +343,6 @@
    * Child ul/li inherit this — .body ul/ol only set padding. */
   font-size: 15px;
   line-height: 1.6;
-}
-
-.postCta {
-  /* The one conversion moment on the SEO surface, styled as a Win98
-   * tooltip note (#ffffe1 + black border) so it reads as a friendly
-   * aside rather than another gray panel. */
-  margin-top: 24px;
-  padding: 12px 14px;
-  border: 1px solid #000;
-  background: #ffffe1;
-  font-size: 13px;
-  line-height: 1.55;
 }
 
 .copyright {
@@ -634,10 +665,23 @@ input[type="search"].searchInput:focus-visible {
 }
 
 .relatedLink {
-  display: block;
+  display: flex;
+  gap: 10px;
   padding: 10px 12px;
   text-decoration: none;
   color: #000;
+}
+
+.relatedIcon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.relatedText {
+  display: block;
+  min-width: 0;
 }
 
 .relatedLink:hover {
@@ -646,6 +690,7 @@ input[type="search"].searchInput:focus-visible {
 }
 
 .relatedItemTitle {
+  display: block;
   font-weight: bold;
   font-size: 13px;
   margin-bottom: 4px;
@@ -653,47 +698,104 @@ input[type="search"].searchInput:focus-visible {
 }
 
 .relatedItemSummary {
+  display: block;
   font-size: 12px;
   color: #333;
   line-height: 1.4;
 }
 
-.adjacent {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  border-top: 1px solid #808080;
-  padding-top: 16px;
+/* "End of file" card: a raised sub-window closing the post — houses
+ * reactions, the subscribe note, and the read-next actions (which
+ * replace the old prev/next grid). Same bevel recipe as .shell. */
+.eofCard {
+  margin: 28px 0 0;
+  background: #c0c0c0;
+  padding: 2px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf,
+    inset -2px -2px #808080, inset 2px 2px #fff;
 }
 
-.adjLink {
-  display: flex;
-  flex-direction: column;
-  padding: 10px 12px;
-  text-decoration: none;
-  color: #000;
-  border: 1px solid #808080;
-  background: #ebebeb;
-}
-
-.adjLink:hover {
-  background: #dfdfdf;
-}
-
-.adjNext {
-  text-align: right;
-}
-
-.adjLabel {
-  font-size: 11px;
-  color: #444;
-  margin-bottom: 2px;
-}
-
-.adjTitle {
+.eofTitleBar {
+  background: linear-gradient(to right, #000080 0%, #0d76bd 100%);
+  color: #fff;
+  padding: 3px 8px;
   font-weight: bold;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* The card is inside the Tahoma article; its caption bar stays in
+   * window-chrome pixel type like every other title bar. */
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+}
+
+.eofClose {
+  background: #c0c0c0;
+  color: #000;
+  font-size: 10px;
+  padding: 0 5px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
+}
+
+.eofBody {
+  padding: 14px 16px;
+}
+
+.eofHeading {
   font-size: 13px;
-  color: #000080;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.eofNote {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #222;
+  /* Etched divider between the reactions and the sign-off. */
+  border-top: 1px solid #808080;
+  box-shadow: inset 0 1px 0 #fff;
+  padding-top: 12px;
+  margin: 14px 0 12px;
+}
+
+.eofActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.eofBtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 4px 14px;
+  background: silver;
+  color: #000;
+  text-decoration: none;
+  font-size: 12px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px grey, inset 2px 2px #dfdfdf;
+}
+
+.eofBtn:hover {
+  text-decoration: underline;
+}
+
+.eofBtn:active {
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff,
+    inset 2px 2px grey, inset -2px -2px #dfdfdf;
+}
+
+/* The "default button" double ring, like OK in a real dialog. */
+.eofBtnPrimary {
+  font-weight: bold;
+  box-shadow: inset -2px -2px #0a0a0a, inset 1px 1px #0a0a0a,
+    inset 2px 2px #fff, inset -3px -3px grey, inset 3px 3px #dfdfdf;
+}
+
+.eofBtnPrimary:active {
+  box-shadow: inset 2px 2px #0a0a0a, inset -1px -1px #0a0a0a,
+    inset -2px -2px #fff, inset 3px 3px grey, inset -3px -3px #dfdfdf;
 }
 
 @media (max-width: 768px), (pointer: coarse) {
@@ -723,11 +825,13 @@ input[type="search"].searchInput:focus-visible {
   .summary {
     font-size: 14px;
   }
-  .adjacent {
-    grid-template-columns: 1fr;
-  }
   .relatedList {
     grid-template-columns: 1fr;
+  }
+  .tagLink,
+  .eofBtn {
+    /* Same touch-target reasoning as .titleBarLink above. */
+    min-height: 32px;
   }
   .titleBarText {
     font-size: 12px;
@@ -747,6 +851,62 @@ input[type="search"].searchInput:focus-visible {
 .body ::selection {
   background: #000080;
   color: #fff;
+}
+
+/* Post-page modifiers. The /blog index and /privacy share this shell,
+ * so the overhaul's wider measure, sticky chrome, and Tahoma prose are
+ * opt-in per page. Defined after the mobile block above so they win
+ * the equal-specificity cascade on small screens too. */
+.shellPost {
+  max-width: 760px;
+}
+
+.bodyPost {
+  /* Fluid gutter replaces the fixed 56px + mobile override pair. */
+  padding: 24px clamp(14px, 6vw, 56px) 36px;
+  /* Post prose reads in Tahoma; window chrome (title/status bars)
+   * stays in the bitmap font. */
+  font-family: Tahoma, Verdana, "Segoe UI", sans-serif;
+}
+
+.titleBarSticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.statusBarSticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+}
+
+.titleBar .titleBarLink {
+  margin-left: 4px;
+}
+
+/* Reading-progress cell: label + segmented Win98 gauge. */
+.statusProgress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progressTrack {
+  flex: 1;
+  max-width: 220px;
+  height: 10px;
+  box-shadow: inset -1px -1px #dfdfdf, inset 1px 1px grey;
+  padding: 1px;
+  display: block;
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  /* 6px navy blocks with 2px gaps — the segmented Win98 loader. */
+  background-image: linear-gradient(90deg, #000080 6px, transparent 0 2px);
+  background-size: 8px 100%;
 }
 
 /* Win98 status bar: sunken cells along the shell's bottom edge. */
@@ -794,7 +954,7 @@ input[type="search"].searchInput:focus-visible {
   .titleBar a,
   .searchRow,
   .footer,
-  .postCta,
+  .eofCard,
   .statusBar {
     display: none !important;
   }

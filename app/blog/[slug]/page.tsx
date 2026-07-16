@@ -15,6 +15,7 @@ import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import styles from "../blog.module.css";
 import { CaptionIcon } from "../CaptionIcon";
+import { ReadingProgress } from "./ReadingProgress";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -141,30 +142,47 @@ export default async function Post({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
       />
-      <div className={styles.shell}>
-        <div className={styles.titleBar}>
+      <div className={`${styles.shell} ${styles.shellPost}`}>
+        <div className={`${styles.titleBar} ${styles.titleBarSticky}`}>
           <CaptionIcon />
-          <div className={styles.titleBarText}>{post.title} · danoh.com</div>
+          <div className={styles.titleBarText}>{post.slug}.txt · danoh.com</div>
+          <Link href="/blog" className={styles.titleBarLink}>
+            ← All posts
+          </Link>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
         </div>
-        <article id="main" className={styles.body}>
-          <div className={styles.meta}>
-            <time dateTime={post.date}>{post.date}</time>
-            <span>·</span>
-            <span>{post.author}</span>
-            <span>·</span>
-            <span>{post.readingTime} read</span>
+        <article id="main" className={`${styles.body} ${styles.bodyPost}`}>
+          <div className={styles.byline}>
+            <Image
+              src="/headshot.jpg"
+              alt={post.author}
+              width={32}
+              height={32}
+              className={styles.bylineAvatar}
+            />
+            <div className={styles.meta}>
+              <span className={styles.bylineAuthor}>{post.author}</span>
+              <span>·</span>
+              <time dateTime={post.date}>{post.date}</time>
+              <span>·</span>
+              <span>{post.readingTime} read</span>
+            </div>
           </div>
           <h1 className={styles.postHeading}>{post.title}</h1>
           <p className={styles.summary}>{post.summary}</p>
           {post.tags.length > 0 && (
             <div className={styles.tags} aria-label="Tags">
-              {post.tags.map((tag) => (
-                <span key={tag} className={styles.tag}>
+              {post.tags.map((tag, i) => (
+                <Link
+                  key={tag}
+                  href={`/blog?q=${encodeURIComponent(tag)}`}
+                  className={styles.tagLink}
+                  style={{ color: TAG_COLORS[i % TAG_COLORS.length] }}
+                >
                   {tag}
-                </span>
+                </Link>
               ))}
             </div>
           )}
@@ -192,19 +210,8 @@ export default async function Post({ params }: Props) {
           >
             <PostBody slug={post.slug} />
           </CopyAttribution>
-          <ReactionBar slug={post.slug} />
-          <div className={styles.postCta}>
-            Enjoyed this? I write a few times a month. Follow along via{" "}
-            <a href="/feed.xml" className={styles.footerLink}>
-              RSS
-            </a>
-            , or just say hello:{" "}
-            <a href="mailto:hello@danoh.com" className={styles.footerLink}>
-              hello@danoh.com
-            </a>
-            .
-          </div>
-          <RelatedAndAdjacent slug={post.slug} />
+          <EndOfFileCard post={post} />
+          <RelatedPosts slug={post.slug} />
           <p className={styles.copyright}>
             © {postYear} {post.author} ·{" "}
             <a
@@ -229,10 +236,9 @@ export default async function Post({ params }: Props) {
             </span>
           </div>
         </article>
-        <div className={styles.statusBar}>
-          <span className={`${styles.statusCell} ${styles.grow}`}>
-            {post.readingTime} read
-          </span>
+        <div className={`${styles.statusBar} ${styles.statusBarSticky}`}>
+          <ReadingProgress />
+          <span className={styles.statusCell}>{post.readingTime} read</span>
           <span className={styles.statusCell}>danoh.com</span>
         </div>
       </div>
@@ -242,53 +248,76 @@ export default async function Post({ params }: Props) {
 
 
 
-function RelatedAndAdjacent({ slug }: { slug: string }) {
+// Per-tag / per-card accent colors, cycled deterministically. The
+// Win98 16-color palette's three "document text" hues from the design.
+const TAG_COLORS = ["#008080", "#000080", "#800000"];
+
+// The post's closing card: reactions, sign-off, and the read-next
+// actions that replaced the old prev/next grid. "Read next" prefers
+// the newer neighbor and falls back to the older one, so the newest
+// post still gets a destination.
+function EndOfFileCard({ post }: { post: BlogPost }) {
+  const { previous, next } = getAdjacentPosts(post.slug);
+  const readNext = next ?? previous;
+  return (
+    <section className={styles.eofCard} aria-label="End of post">
+      <div className={styles.eofTitleBar}>
+        <span>End of file · {post.slug}.txt</span>
+        <span className={styles.eofClose} aria-hidden="true">
+          ×
+        </span>
+      </div>
+      <div className={styles.eofBody}>
+        <div className={styles.eofHeading}>How did this land?</div>
+        <ReactionBar slug={post.slug} bare />
+        <div className={styles.eofNote}>
+          Enjoyed this? I write a few times a month, and I read every reply.
+        </div>
+        <div className={styles.eofActions}>
+          {readNext && (
+            <Link
+              href={`/blog/${readNext.slug}`}
+              className={`${styles.eofBtn} ${styles.eofBtnPrimary}`}
+            >
+              Read next: {readNext.title} →
+            </Link>
+          )}
+          <a href="/feed.xml" className={styles.eofBtn}>
+            Subscribe via RSS
+          </a>
+          <a href="mailto:hello@danoh.com" className={styles.eofBtn}>
+            Say hello
+          </a>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RelatedPosts({ slug }: { slug: string }) {
   const related = getRelatedPosts(slug, 3);
-  const { previous, next } = getAdjacentPosts(slug);
-  if (related.length === 0 && !previous && !next) return null;
+  if (related.length === 0) return null;
   return (
     <aside className={styles.related} aria-label="Related posts">
-      {related.length > 0 && (
-        <div className={styles.relatedBlock}>
-          <div className={styles.relatedTitle}>More from the blog</div>
-          <ul className={styles.relatedList}>
-            {related.map((p) => (
-              <li key={p.slug} className={styles.relatedItem}>
-                <Link
-                  href={`/blog/${p.slug}`}
-                  className={styles.relatedLink}
-                >
-                  <div className={styles.relatedItemTitle}>{p.title}</div>
-                  <div className={styles.relatedItemSummary}>{p.summary}</div>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {(previous || next) && (
-        <nav className={styles.adjacent} aria-label="Previous and next posts">
-          {previous ? (
-            <Link href={`/blog/${previous.slug}`} className={styles.adjLink}>
-              <span className={styles.adjLabel}>← Previous</span>
-              <span className={styles.adjTitle}>{previous.title}</span>
-            </Link>
-          ) : (
-            <span />
-          )}
-          {next ? (
-            <Link
-              href={`/blog/${next.slug}`}
-              className={`${styles.adjLink} ${styles.adjNext}`}
-            >
-              <span className={styles.adjLabel}>Next →</span>
-              <span className={styles.adjTitle}>{next.title}</span>
-            </Link>
-          ) : (
-            <span />
-          )}
-        </nav>
-      )}
+      <div className={styles.relatedBlock}>
+        <div className={styles.relatedTitle}>More from the blog</div>
+        <ul className={styles.relatedList}>
+          {related.map((p, i) => (
+            <li key={p.slug} className={styles.relatedItem}>
+              <Link href={`/blog/${p.slug}`} className={styles.relatedLink}>
+                <CaptionIcon
+                  className={styles.relatedIcon}
+                  lineColor={TAG_COLORS[i % TAG_COLORS.length]}
+                />
+                <span className={styles.relatedText}>
+                  <span className={styles.relatedItemTitle}>{p.title}</span>
+                  <span className={styles.relatedItemSummary}>{p.summary}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </aside>
   );
 }
