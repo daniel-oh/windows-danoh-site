@@ -3,6 +3,7 @@ import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import { TERMS_LAST_UPDATED } from "@/lib/legal";
+import { CaptionIcon } from "../blog/CaptionIcon";
 import styles from "../blog/blog.module.css";
 
 export const metadata = buildMetadata({
@@ -21,14 +22,15 @@ export default function Terms() {
   return (
     <div className={styles.page}>
       <SkipLink />
-      <div className={styles.shell}>
+      <div className={`${styles.shell} ${styles.shellWide}`}>
         <div className={styles.titleBar}>
-          <div className={styles.titleBarText}>Terms · danoh.com</div>
+          <CaptionIcon />
+          <div className={styles.titleBarText}>terms.txt · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
         </div>
-        <main id="main" className={styles.body}>
+        <main id="main" className={`${styles.body} ${styles.bodyProse}`}>
           <h1 className={styles.postHeading} style={{ fontSize: 22 }}>
             Terms of use
           </h1>
@@ -131,6 +133,12 @@ export default function Terms() {
             </span>
           </div>
         </main>
+        <div className={styles.statusBar}>
+          <span className={`${styles.statusCell} ${styles.grow}`}>
+            Last updated {TERMS_LAST_UPDATED}
+          </span>
+          <span className={styles.statusCell}>danoh.com</span>
+        </div>
       </div>
     </div>
   );

@@ -44,7 +44,7 @@ export function StaticIntro() {
             This site is a Windows 98 desktop where you describe an app and
             the AI builds it in front of you. Read the{" "}
             <Link href="/blog">blog</Link>, grab the{" "}
-            <a href="/Daniel_Oh_Resume.pdf">resume</a>, or say hello at{" "}
+            <a href="/resume">resume</a>, or say hello at{" "}
             <a href="mailto:hello@danoh.com">hello@danoh.com</a>.
           </p>
           <p style={{ margin: "0 0 4px", fontWeight: "bold", fontSize: 12 }}>

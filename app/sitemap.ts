@@ -1,6 +1,10 @@
 import type { MetadataRoute } from "next";
 import { sortedPosts } from "@/content/blog/registry";
-import { PRIVACY_LAST_UPDATED, TERMS_LAST_UPDATED } from "@/lib/legal";
+import {
+  PRIVACY_LAST_UPDATED,
+  RESUME_LAST_UPDATED,
+  TERMS_LAST_UPDATED,
+} from "@/lib/legal";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = "https://danoh.com";
@@ -24,6 +28,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(latestPost),
       changeFrequency: "weekly",
       priority: 0.9,
+    },
+    {
+      url: `${base}/resume`,
+      lastModified: new Date(RESUME_LAST_UPDATED),
+      changeFrequency: "yearly",
+      priority: 0.7,
     },
     {
       url: `${base}/privacy`,

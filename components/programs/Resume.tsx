@@ -1,5 +1,6 @@
-"use client";
-
+// No "use client": there are no hooks or handlers here, so the /resume
+// page can render this fully static (zero hydration), while the client
+// WindowBody tree keeps importing it exactly as before.
 import Image from "next/image";
 import styles from "./Resume.module.css";
 
