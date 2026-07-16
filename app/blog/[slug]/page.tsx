@@ -31,21 +31,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = getPost(slug);
   if (!post) return { title: "Post not found · Daniel Oh" };
   const url = `https://danoh.com/blog/${post.slug}`;
-  // Fall back to the site-wide OG image when a post hasn't set its
-  // own. Without this, posts without an explicit hero would render
-  // with no preview card on X / LinkedIn / Slack — a blank placeholder
-  // where the danoh.com card should be.
-  // JSON-LD and the twitter images array are hand-built strings, so
-  // unlike the openGraph block they don't get metadataBase resolution —
-  // a relative post.image would ship invalid schema. Absolutize here.
-  const absoluteImage = post.image
-    ? post.image.startsWith("http")
-      ? post.image
-      : `https://danoh.com${post.image}`
-    : "https://danoh.com/og-image.png";
-  const ogImages = post.image
-    ? [{ url: post.image, alt: post.imageAlt || post.title }]
-    : [{ url: "/og-image.png", width: 1200, height: 630, alt: "Daniel Oh" }];
+  // og:image comes from the sibling opengraph-image.tsx (a generated
+  // per-post Win98 card) via the file convention, which takes precedence
+  // over anything set here — so no openGraph.images entry. Twitter and
+  // JSON-LD are hand-built absolute strings without metadataBase
+  // resolution, so they reference the same route explicitly.
+  const cardImage = `https://danoh.com/blog/${post.slug}/opengraph-image`;
   return {
     title: `${post.title} · Daniel Oh`,
     description: post.summary,
@@ -59,7 +50,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       publishedTime: post.date,
       authors: [post.author],
       tags: post.tags,
-      images: ogImages,
     },
     twitter: {
       card: "summary_large_image",
@@ -67,7 +57,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       creator: "@danohstudio",
       title: post.title,
       description: post.summary,
-      images: [absoluteImage],
+      images: [cardImage],
     },
   };
 }
@@ -102,14 +92,8 @@ export default async function Post({ params }: Props) {
     datePublished: post.date,
     dateModified: post.date,
     // Always provide an image — required for Discover/article rich
-    // treatment; the shared OG card is the fallback.
-    image: [
-      post.image
-        ? post.image.startsWith("http")
-          ? post.image
-          : `https://danoh.com${post.image}`
-        : "https://danoh.com/og-image.png",
-    ],
+    // treatment. The generated per-post card (opengraph-image.tsx).
+    image: [`https://danoh.com/blog/${post.slug}/opengraph-image`],
     author: authorPerson,
     keywords: post.tags.join(", "),
     url: `https://danoh.com/blog/${post.slug}`,

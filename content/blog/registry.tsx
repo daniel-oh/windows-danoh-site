@@ -29,7 +29,9 @@ export type BlogPost = {
   tags: string[];
   readingTime: string;
   pinned?: boolean;
-  /** Optional hero image shown at the top of the post + used as OG preview. */
+  /** Optional hero image shown at the top of the post. Share/OG cards
+   * are generated per post by app/blog/[slug]/opengraph-image.tsx and
+   * ignore this field. */
   image?: string;
   /** Intrinsic width + height of the hero image. Required when `image` is
    * set so next/image can reserve space (no layout shift) and pick the
