@@ -25,3 +25,17 @@ export function StatusBarCount({ total }: { total: number }) {
     </>
   );
 }
+
+// Sibling status cell: names the applied topic filters, or teaches the
+// `/` shortcut when nothing is filtered. Same external-store bridge as
+// the count above. The server snapshot is null, so SSR deterministically
+// renders the shortcut hint.
+export function StatusBarHint() {
+  const status = useSyncExternalStore(
+    subscribeSearchStatus,
+    getSearchStatus,
+    () => null
+  );
+  const topics = status?.topics ?? [];
+  return <>{topics.length ? `topic: ${topics.join(" + ")}` : "press / to search"}</>;
+}

@@ -1,12 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import { sortedPosts } from "@/content/blog/registry";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import { BlogIndexContent } from "./BlogIndexContent";
-import { StatusBarCount } from "./StatusBarCount";
+import { StatusBarCount, StatusBarHint } from "./StatusBarCount";
 import styles from "./blog.module.css";
-import { CaptionIcon } from "./CaptionIcon";
+import { FolderIcon } from "./FolderIcon";
 
 export const metadata = buildMetadata({
   title: "Blog · Daniel Oh",
@@ -46,23 +47,56 @@ export default function BlogIndex() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
       />
-      <div className={styles.shell}>
+      <div className={`${styles.shell} ${styles.shellWide}`}>
         <div className={styles.titleBar}>
-          <CaptionIcon />
-          <div className={styles.titleBarText}>Blog · danoh.com</div>
+          <FolderIcon />
+          <div className={styles.titleBarText}>C:\danoh\blog</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
         </div>
-        <header className={styles.tagline}>
-          <div className={styles.taglineLine1}>
-            Engineer who designs. Operator who writes.
+        {/* Decorative Explorer dressing — like the real Explorer's menu
+         * bar, it mostly just sits there. Hidden from AT so screen
+         * readers don't announce menus that do nothing. */}
+        <div className={styles.menuStrip} aria-hidden="true">
+          <span className={styles.menuItem}>
+            <u>F</u>ile
+          </span>
+          <span className={styles.menuItem}>
+            <u>E</u>dit
+          </span>
+          <span className={styles.menuItem}>
+            <u>V</u>iew
+          </span>
+          <span className={styles.menuItem}>
+            <u>H</u>elp
+          </span>
+        </div>
+        <div className={styles.addressRow} aria-hidden="true">
+          <span className={styles.addressLabel}>Address</span>
+          <div className={styles.addressField}>
+            <FolderIcon className={styles.addressIcon} />
+            C:\danoh\blog
           </div>
-          <div className={styles.taglineLine2}>
-            AI, craft, and the work of building things that last.
+        </div>
+        <header className={styles.tagline}>
+          <Image
+            src="/headshot.jpg"
+            alt="Daniel Oh"
+            width={40}
+            height={40}
+            className={styles.taglineAvatar}
+          />
+          <div>
+            <div className={styles.taglineLine1}>
+              Engineer who designs. Operator who writes.
+            </div>
+            <div className={styles.taglineLine2}>
+              AI, craft, and the work of building things that last.
+            </div>
           </div>
         </header>
-        <main id="main" className={styles.body}>
+        <main id="main" className={`${styles.body} ${styles.bodyProse}`}>
           <BlogIndexContent posts={sortedPosts} />
           <p className={styles.copyright}>
             © {new Date().getFullYear()} Daniel Oh · danoh.com
@@ -89,6 +123,9 @@ export default function BlogIndex() {
         <div className={styles.statusBar}>
           <span className={`${styles.statusCell} ${styles.grow}`}>
             <StatusBarCount total={sortedPosts.length} />
+          </span>
+          <span className={styles.statusCell}>
+            <StatusBarHint />
           </span>
           <span className={styles.statusCell}>danoh.com</span>
         </div>

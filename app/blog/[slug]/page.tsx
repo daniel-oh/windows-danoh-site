@@ -142,7 +142,7 @@ export default async function Post({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
       />
-      <div className={`${styles.shell} ${styles.shellPost}`}>
+      <div className={`${styles.shell} ${styles.shellWide}`}>
         <div className={`${styles.titleBar} ${styles.titleBarSticky}`}>
           <CaptionIcon />
           <div className={styles.titleBarText}>{post.slug}.txt · danoh.com</div>
@@ -153,7 +153,7 @@ export default async function Post({ params }: Props) {
             Open the desktop<ExternalArrow />
           </Link>
         </div>
-        <article id="main" className={`${styles.body} ${styles.bodyPost}`}>
+        <article id="main" className={`${styles.body} ${styles.bodyProse}`}>
           <div className={styles.byline}>
             <Image
               src="/headshot.jpg"

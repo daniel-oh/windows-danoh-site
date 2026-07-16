@@ -96,11 +96,77 @@
   padding-left: 22px;
 }
 
+/* Decorative Explorer chrome for the index: a menu strip and address
+ * bar that dress the window without doing anything — like the real
+ * Explorer's, most days. Both are aria-hidden in the JSX. */
+.menuStrip {
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px;
+  font-size: 12px;
+  border-bottom: 1px solid #808080;
+  box-shadow: 0 1px 0 #fff;
+}
+
+.menuItem {
+  padding: 2px 7px;
+  cursor: default;
+}
+
+.menuItem:hover {
+  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+}
+
+.addressRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #808080;
+  box-shadow: 0 1px 0 #fff;
+}
+
+.addressLabel {
+  font-size: 11px;
+  color: #222;
+}
+
+.addressField {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  padding: 3px 6px;
+  box-shadow: inset -1px -1px #fff, inset 1px 1px grey,
+    inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+  font-size: 12px;
+}
+
+.addressIcon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
 .tagline {
   padding: 12px 14px;
   background: #000080;
   color: #fff;
   border-bottom: 1px solid #000040;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.taglineAvatar {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border: 1px solid #fff;
+  box-shadow: 1px 1px 0 #000040;
+  flex-shrink: 0;
 }
 
 .taglineLine1 {
@@ -201,7 +267,7 @@
 }
 
 .markdown {
-  /* 15px/1.7 in the Tahoma stack (.bodyPost switches post prose off the
+  /* 15px/1.7 in the Tahoma stack (.bodyProse switches post prose off the
    * bitmap font) — slightly tighter than the old 16px bitmap setting,
    * with more leading to carry the longer 760px measure. */
   font-size: 15px;
@@ -493,6 +559,160 @@ input[type="search"].searchInput:focus-visible {
   margin-top: 14px;
 }
 
+/* Details/Icons view switcher — pressed bevel marks the active view. */
+.viewToggle {
+  display: flex;
+  gap: 2px;
+  margin-left: 4px;
+}
+
+.viewBtn {
+  font-size: 11px;
+  padding: 3px 8px;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.viewBtn[aria-pressed="true"] {
+  font-weight: bold;
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff,
+    inset 2px 2px grey, inset -2px -2px #dfdfdf;
+}
+
+/* Topic filter chips: toggle buttons, AND-combined with the search. */
+.topicsRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 16px;
+  flex-wrap: wrap;
+}
+
+.topicsLabel {
+  font-size: 11px;
+  font-weight: bold;
+  color: #000080;
+}
+
+.topicChip {
+  font-size: 11px;
+  padding: 3px 9px;
+  min-width: 0;
+  min-height: 22px;
+  cursor: pointer;
+  color: #222;
+}
+
+.topicChip[aria-pressed="true"] {
+  color: #000080;
+  font-weight: bold;
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff,
+    inset 2px 2px grey, inset -2px -2px #dfdfdf;
+}
+
+/* "Start here" featured card: the pinned intro post as a Win98
+ * tooltip-yellow note, shown only while nothing is filtered (a pinned
+ * result inside a filter is just a result). */
+.featured {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 0 0 20px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: #000;
+  background: #ffffe1;
+  border: 1px solid #000;
+}
+
+.featured:hover {
+  background: #fffbc8;
+}
+
+.featuredIcon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.featuredBadge {
+  display: inline-block;
+  background: #000080;
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.featuredTitle {
+  display: block;
+  font-size: 17px;
+  font-weight: bold;
+  color: #000080;
+  text-decoration: underline;
+}
+
+.featuredSummary {
+  display: block;
+  font-size: 13px;
+  color: #333;
+  margin-top: 4px;
+}
+
+.featuredMeta {
+  display: block;
+  font-size: 11px;
+  color: #444;
+  margin-top: 4px;
+}
+
+/* Icons view: the same posts as an Explorer large-icons grid. */
+.iconsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.iconCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px 10px;
+  text-decoration: none;
+  color: #000;
+  text-align: center;
+}
+
+.iconCard:hover {
+  background: #dfdfdf;
+}
+
+.iconCardIcon {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+
+.iconCardTitle {
+  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #000;
+  max-width: 140px;
+}
+
+.iconCardMeta {
+  display: block;
+  font-size: 10px;
+  color: #444;
+}
+
 @media (max-width: 768px), (pointer: coarse) {
   .searchRow {
     /* A little more padding so the input and Clear aren't jammed
@@ -577,7 +797,6 @@ input[type="search"].searchInput:focus-visible {
 }
 
 .indexItem {
-  padding: 14px 0;
   border-bottom: 1px solid #808080;
   box-shadow: 0 1px 0 #fff;
 }
@@ -586,31 +805,52 @@ input[type="search"].searchInput:focus-visible {
   border-bottom: none;
 }
 
-.indexTitle {
-  font-size: 18px;
-  font-weight: bold;
-  margin: 0 0 4px 0;
+/* The whole row is one link (icon + title + summary + meta), with the
+ * Explorer row-hover; the title keeps its navy underline inside it. */
+.indexLink {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 6px;
+  text-decoration: none;
+  color: #000;
 }
 
-.indexTitleLink {
-  /* The titles were reusing .footerLink, whose 13px overrode the 18px
-   * above — every index row scanned as equal-weight text. */
-  font-size: inherit;
+.indexLink:hover {
+  background: #dfdfdf;
+}
+
+.indexIcon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  image-rendering: pixelated;
+}
+
+.indexText {
+  display: block;
+  min-width: 0;
+}
+
+.indexTitleText {
+  display: block;
+  font-size: 18px;
+  font-weight: bold;
   color: #000080;
   text-decoration: underline;
 }
 
-.indexTitleLink:hover {
-  color: #0000ff;
-}
-
 .indexSummary {
+  /* Block so the span variant inside the row link keeps its margins. */
+  display: block;
   font-size: 13px;
   color: #333;
   margin: 4px 0 6px;
 }
 
 .indexMeta {
+  display: block;
   font-size: 11px;
   color: #444;
 }
@@ -829,7 +1069,9 @@ input[type="search"].searchInput:focus-visible {
     grid-template-columns: 1fr;
   }
   .tagLink,
-  .eofBtn {
+  .eofBtn,
+  .topicChip,
+  .viewBtn {
     /* Same touch-target reasoning as .titleBarLink above. */
     min-height: 32px;
   }
@@ -857,11 +1099,11 @@ input[type="search"].searchInput:focus-visible {
  * so the overhaul's wider measure, sticky chrome, and Tahoma prose are
  * opt-in per page. Defined after the mobile block above so they win
  * the equal-specificity cascade on small screens too. */
-.shellPost {
+.shellWide {
   max-width: 760px;
 }
 
-.bodyPost {
+.bodyProse {
   /* Fluid gutter replaces the fixed 56px + mobile override pair. */
   padding: 24px clamp(14px, 6vw, 56px) 36px;
   /* Post prose reads in Tahoma; window chrome (title/status bars)
@@ -955,6 +1197,9 @@ input[type="search"].searchInput:focus-visible {
   .searchRow,
   .footer,
   .eofCard,
+  .menuStrip,
+  .addressRow,
+  .topicsRow,
   .statusBar {
     display: none !important;
   }

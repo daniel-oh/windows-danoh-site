@@ -7,6 +7,8 @@ export type SearchStatus = {
   active: boolean;
   matched: number;
   total: number;
+  /** Topic-chip filters currently applied (shown in the status bar hint). */
+  topics: string[];
 };
 
 let status: SearchStatus | null = null;
