@@ -57,6 +57,14 @@ export function CopyAttribution({
           ? (anchor as Element)
           : anchor.parentElement;
       if (startEl?.closest("pre, [data-no-copy-attribution]")) return;
+      // The ancestor check misses selections that SPAN a code block plus
+      // surrounding prose (their common ancestor sits above the <pre>).
+      // Anything the selection so much as touches opts the copy out.
+      for (const el of host.querySelectorAll(
+        "pre, [data-no-copy-attribution]"
+      )) {
+        if (range.intersectsNode(el)) return;
+      }
 
       // Snapshot the HTML version of what the visitor highlighted so
       // links / inline formatting survive the round-trip.

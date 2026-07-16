@@ -69,7 +69,11 @@ export function Mail({ id }: { id: string }) {
 
   const emailValid = replyTo === "" || EMAIL_RE.test(replyTo.trim());
   const emailSuggestion = suggestEmailFix(replyTo.trim());
-  const hasDraft = (name + replyTo + subject + body).trim().length > 10;
+  // Guard on the content fields only: a subject or message of ANY length
+  // is work worth a confirm (the old combined >10 threshold let a short
+  // typed message close silently), while a lone autofilled name/email
+  // isn't a draft.
+  const hasDraft = subject.trim().length > 0 || body.trim().length > 0;
 
   useEffect(() => {
     mountedAtRef.current = Date.now();

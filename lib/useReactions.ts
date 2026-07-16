@@ -46,8 +46,9 @@ export function useReactions(slug: string) {
   const toggle = useCallback(
     async (reaction: ReactionKey) => {
       if (!visitorId) return;
-      // Optimistic update
-      setState((prev) => {
+      // Toggling is its own inverse, so the same updater does both the
+      // optimistic apply and the revert when the write doesn't land.
+      const applyToggle = (prev: State): State => {
         const hasIt = prev.mine.includes(reaction);
         return {
           counts: {
@@ -58,7 +59,8 @@ export function useReactions(slug: string) {
             ? prev.mine.filter((r) => r !== reaction)
             : [...prev.mine, reaction],
         };
-      });
+      };
+      setState(applyToggle);
       try {
         const res = await fetch("/api/reactions", {
           method: "POST",
@@ -68,9 +70,11 @@ export function useReactions(slug: string) {
         if (res.ok) {
           const data: State = await res.json();
           setState(data);
+        } else {
+          setState(applyToggle);
         }
       } catch {
-        /* swallow — optimistic state remains */
+        setState(applyToggle);
       }
     },
     [slug, visitorId]
