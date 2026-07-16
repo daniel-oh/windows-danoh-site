@@ -11,6 +11,11 @@ import { settingsAtom } from "@/state/settings";
 import wrappedFetch from "@/lib/wrappedFetch";
 import { alert } from "@/lib/alert";
 import { useServerPrograms } from "@/lib/useServerPrograms";
+import { registerCloseGuard } from "@/lib/windowCloseGuards";
+import {
+  isPendingFirstRun,
+  resolvePendingFirstRun,
+} from "@/lib/pendingFirstRun";
 
 // Shell document for live generation. The parent fetches the program
 // stream itself and forwards chunks here via postMessage; this script
@@ -77,26 +82,34 @@ function IframeInner({ id }: { id: string }) {
         return;
       }
       startedRef.current = true;
-      const res = await wrappedFetch(`/api/icon?name=${state.title}`, {
-        method: "POST",
-        body: JSON.stringify({ name: state.title, settings: getSettings() }),
-      });
+      // The icon is cosmetic — a failed fetch must reset the flag so a
+      // later render can retry, and a network throw must not surface as
+      // an unhandled rejection.
+      try {
+        const res = await wrappedFetch(`/api/icon?name=${state.title}`, {
+          method: "POST",
+          body: JSON.stringify({ name: state.title, settings: getSettings() }),
+        });
 
-      if (!res.ok) {
-        return;
+        if (!res.ok) {
+          return;
+        }
+        const dataUri = await res.text();
+        dispatch({ type: "SET_ICON", payload: dataUri });
+        dispatchPrograms({
+          type: "UPDATE_PROGRAM",
+          payload: {
+            id: programID,
+            name: state.title,
+            icon: dataUri,
+          },
+        });
+        saveProgram({ id: programID, name: state.title, prompt: program?.prompt ?? "", icon: dataUri });
+      } catch {
+        /* cosmetic — retry on a later render */
+      } finally {
+        startedRef.current = false;
       }
-      const dataUri = await res.text();
-      dispatch({ type: "SET_ICON", payload: dataUri });
-      dispatchPrograms({
-        type: "UPDATE_PROGRAM",
-        payload: {
-          id: programID,
-          name: state.title,
-          icon: dataUri,
-        },
-      });
-      saveProgram({ id: programID, name: state.title, prompt: program?.prompt ?? "", icon: dataUri });
-      startedRef.current = false;
     }
     if (!icon && model === "best") {
       fetchIcon();
@@ -183,19 +196,11 @@ function IframeInner({ id }: { id: string }) {
           break;
         }
         case "chat": {
-          // Only allow iframe chat if user has their own API key
+          // No client-side key gate: the server accepts an own key OR a
+          // signed-in session, and the client can't see the latter. Let
+          // the server decide and translate its 401 into the friendly
+          // string generated apps expect.
           const currentSettings = getSettings();
-          if (!currentSettings.apiKey) {
-            (event.source as Window).postMessage(
-              {
-                operation: "result",
-                value: "Chat API is not available. Add your own API key in Settings to enable this feature.",
-                id,
-              },
-              "*"
-            );
-            break;
-          }
           // Sanitize messages from iframe — only allow user/assistant roles, limit count
           const iframeMessages = Array.isArray(value)
             ? value
@@ -211,8 +216,14 @@ function IframeInner({ id }: { id: string }) {
               settings: currentSettings,
             }),
           });
+          // Generated apps bake the result string into their UI — a raw
+          // {"error":"Unauthorized"} object would render as gibberish.
+          const chatValue =
+            result.status === 401
+              ? "Chat API is not available. Add your own API key in Settings to enable this feature."
+              : await result.json();
           (event.source as Window).postMessage(
-            { operation: "result", value: await result.json(), id },
+            { operation: "result", value: chatValue, id },
             "*"
           );
           break;
@@ -247,7 +258,22 @@ function IframeInner({ id }: { id: string }) {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, [dispatch, ref]);
+  }, [dispatch, ref, programID]);
+
+  // A program whose first generation never succeeded (stream error, or
+  // the visitor closed mid-stream) must not survive as a dead desktop
+  // icon. A close guard rather than an unmount cleanup: guards only run
+  // on real closes, so StrictMode's dev double-mount can't delete a
+  // program that's still generating.
+  useEffect(() => {
+    return registerCloseGuard(id, () => {
+      if (isPendingFirstRun(programID)) {
+        resolvePendingFirstRun(programID);
+        dispatchPrograms({ type: "REMOVE_PROGRAM", payload: programID });
+      }
+      return true;
+    });
+  }, [id, programID, dispatchPrograms]);
 
   // Key changes when code updates, forcing iframe to remount with new content
   const codeVersion = program?.currentVersion || 0;
@@ -326,6 +352,7 @@ function IframeInner({ id }: { id: string }) {
         // non-2xx status; freezing one as the program's code would
         // make the failure permanent.
         if (res.ok && html && !html.includes('name="danoh-error"')) {
+          resolvePendingFirstRun(programID);
           dispatchPrograms({
             type: "UPDATE_PROGRAM",
             payload: { id: programID, code: html },

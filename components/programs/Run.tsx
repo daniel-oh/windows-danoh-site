@@ -14,9 +14,33 @@ import { AccessCodePrompt } from "../AccessCodePrompt";
 import { ByokPrompt } from "../ByokPrompt";
 import { openProgram } from "@/lib/programs";
 import { openDemoProgram } from "@/lib/demoPrograms";
+import { markPendingFirstRun } from "@/lib/pendingFirstRun";
+import { getFsManager } from "@/state/fsManager";
+import { PROGRAMS_PATH } from "@/lib/filesystem/defaultFileSystem";
 
 function hasSession() {
   return document.cookie.includes("lr_session=");
+}
+
+// The program id doubles as its VFS folder name and the registry
+// namespace prefix (`${id}:key` in Iframe), so path separators and
+// colons in an AI-generated name would corrupt both. Uniquifying stops
+// two same-named apps from silently sharing one folder and one
+// registry namespace.
+function sanitizeProgramName(raw: string): string {
+  const cleaned = raw.replace(/[/\\:]/g, "-").replace(/\s+/g, " ").trim();
+  return cleaned || "Untitled";
+}
+
+async function uniqueProgramId(base: string): Promise<string> {
+  const fsManager = await getFsManager();
+  const folder = await fsManager.getFolder(PROGRAMS_PATH, "shallow");
+  const taken = new Set(Object.keys(folder?.items ?? {}));
+  let id = base;
+  for (let n = 2; taken.has(id); n++) {
+    id = `${base} (${n})`;
+  }
+  return id;
 }
 
 const PROMPT_EXAMPLES = [
@@ -75,14 +99,20 @@ export function Run({ id }: { id: string }) {
           setIsLoading(false);
         }
       }
+      const programId = await uniqueProgramId(sanitizeProgramName(name));
       const program: ProgramEntry = {
-        id: name,
+        id: programId,
         prompt: trimmed,
-        name,
+        // name mirrors id because getProgramEntry rebuilds both from the
+        // folder name on the next read anyway.
+        name: programId,
       };
       programsDispatch({ type: "ADD_PROGRAM", payload: program });
+      // If the first generation never succeeds, the close guard in
+      // Iframe deletes this entry so no dead icon lingers on the desktop.
+      markPendingFirstRun(program.id);
       createWindow({
-        title: name,
+        title: program.name,
         program: { type: "iframe", programID: program.id },
         loading: true,
         size: { width: 700, height: 550 },
