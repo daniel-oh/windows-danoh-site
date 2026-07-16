@@ -114,7 +114,20 @@ export default async function Post({ params }: Props) {
     keywords: post.tags.join(", "),
     url: `https://danoh.com/blog/${post.slug}`,
     mainEntityOfPage: `https://danoh.com/blog/${post.slug}`,
-    publisher: authorPerson,
+    // Google's Article rich-result guidelines require publisher to be an
+    // Organization carrying a logo ImageObject; a Person here makes the
+    // post ineligible. Author stays the Person (the byline identity).
+    publisher: {
+      "@type": "Organization",
+      name: "danoh.com",
+      url: "https://danoh.com",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://danoh.com/icon-192.png",
+        width: 192,
+        height: 192,
+      },
+    },
     copyrightHolder: authorPerson,
     copyrightYear: Number(postYear),
     // CC-style implicit terms: byline + canonical link required on

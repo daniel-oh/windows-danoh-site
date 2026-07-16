@@ -61,10 +61,17 @@ function rfc822(date: string): string {
 
 export async function GET() {
   const render = await getRenderer();
-  const latest = sortedPosts[0];
+  // The registry's sortedPosts floats pinned posts first for the UI, so
+  // sortedPosts[0] can be an old pinned post. A feed must be strictly
+  // newest-first — both for the item order and lastBuildDate — or
+  // readers show it as stale. Build a date-descending copy just for here.
+  const feedPosts = [...sortedPosts].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const latest = feedPosts[0];
   const lastBuildDate = rfc822(latest?.date ?? new Date().toISOString());
 
-  const items = sortedPosts
+  const items = feedPosts
     .map((post) => {
       const url = `${SITE}/blog/${post.slug}`;
       return `    <item>

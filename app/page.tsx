@@ -48,6 +48,16 @@ const personLd = {
       name: "danoh.com",
       url: "https://danoh.com",
       publisher: { "@id": "https://danoh.com/#person" },
+      // Sitelinks search box: the blog index reads ?q= on mount
+      // (BlogIndexContent.tsx) so this target actually filters.
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: "https://danoh.com/blog?q={search_term_string}",
+        },
+        "query-input": "required name=search_term_string",
+      },
     },
   ],
 };

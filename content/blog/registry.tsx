@@ -103,11 +103,16 @@ export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
 export function getAdjacentPosts(
   slug: string
 ): { previous: BlogPost | null; next: BlogPost | null } {
-  const unpinned = sortedPosts.filter((p) => !p.pinned);
-  const idx = unpinned.findIndex((p) => p.slug === slug);
+  // Pure chronology, ignoring the pin: pinning is an index-page
+  // presentation choice, but excluding pinned posts here left them with
+  // no prev/next at all and punched a hole in every neighbor's chain.
+  const byDate = [...sortedPosts].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  const idx = byDate.findIndex((p) => p.slug === slug);
   if (idx === -1) return { previous: null, next: null };
   return {
-    next: idx > 0 ? unpinned[idx - 1] : null,
-    previous: idx < unpinned.length - 1 ? unpinned[idx + 1] : null,
+    next: idx > 0 ? byDate[idx - 1] : null,
+    previous: idx < byDate.length - 1 ? byDate[idx + 1] : null,
   };
 }
