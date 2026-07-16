@@ -281,7 +281,14 @@ export function Help({ id }: { id: string }) {
 
   return (
     <div className={styles.chatContainer}>
-      <div className={styles.chatBox} role="log" aria-label="Chat messages">
+      {/* aria-busy keeps the log's letter-by-letter LOADING indicator
+       * from being spelled out into a screen reader one span at a time. */}
+      <div
+        className={styles.chatBox}
+        role="log"
+        aria-label="Chat messages"
+        aria-busy={isLoading}
+      >
         <ChatMessage
           msg={{
             role: "system",

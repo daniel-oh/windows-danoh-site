@@ -154,7 +154,10 @@
 }
 
 .windowButton {
-  min-width: inherit;
+  min-width: 64px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition: transform 50ms ease;
 }
 
@@ -180,8 +183,21 @@
   }
 }
 
-.taskbarSpacer {
+/* The window-button strip fills the space between the divider and the
+ * clock. Scrollbar hidden — wheel, drag, and keyboard focus still
+ * scroll it when buttons hit their minimum width. */
+.windowStrip {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.windowStrip::-webkit-scrollbar {
+  display: none;
 }
 
 /* On narrow phones the logo + clock were eating ~43% of the taskbar,

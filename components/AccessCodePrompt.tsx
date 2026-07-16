@@ -50,6 +50,8 @@ export function AccessCodePrompt({
         <input
           type="password"
           aria-label="Access code"
+          aria-invalid={error ? "true" : undefined}
+          aria-describedby={error ? "access-code-error" : undefined}
           value={code}
           onChange={(e) => setCode(e.target.value)}
           // Skip on touch: auto-focusing pops the soft keyboard and
@@ -67,7 +69,11 @@ export function AccessCodePrompt({
         </button>
       </div>
       {error && (
-        <div role="alert" style={{ color: "red", fontSize: 11 }}>
+        <div
+          id="access-code-error"
+          role="alert"
+          style={{ color: "red", fontSize: 11 }}
+        >
           {error}
         </div>
       )}

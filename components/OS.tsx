@@ -22,6 +22,7 @@ import { alert } from "@/lib/alert";
 import { BootScreen } from "./boot/BootScreen";
 import { Screensaver } from "./Screensaver";
 import { settingsAtom } from "@/state/settings";
+import { isStartupSoundOff } from "@/lib/soundOptOut";
 
 // Validate the (cross-program-writable) wallpaper URL before it reaches
 // an inline CSS url(). Rejects anything that could break out of the
@@ -161,6 +162,17 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
         document.getElementById(next)?.focus({ preventScroll: true });
         return;
       }
+      // Ctrl+Escape jumps focus to the Start button — the keyboard route
+      // out of a focused window down to the taskbar, mirroring the real
+      // Windows Ctrl+Esc. Handled before the plain-Escape window-close
+      // below so it doesn't also close the focused window.
+      if (e.key === "Escape" && e.ctrlKey) {
+        e.preventDefault();
+        document
+          .querySelector<HTMLButtonElement>("[data-start-button]")
+          ?.focus();
+        return;
+      }
       if (e.key !== "Escape") return;
       // The Start menu swallows Escape first, like the real shell —
       // otherwise Esc would close the focused window underneath it.
@@ -198,11 +210,17 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
 
   // The Win98 startup sound, once per browser session, on the first
   // user gesture (autoplay policy forbids sooner). Skipped for
-  // reduced-motion users — they opted out of theatrics.
+  // reduced-motion users — they opted out of theatrics — and for
+  // anyone who unticked it in Settings. The opt-out is re-read at
+  // play time so flipping the toggle before the first gesture counts.
   useEffect(() => {
     if (sessionStorage.getItem("danoh_boot_sound")) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const playBootSound = () => {
+      if (isStartupSoundOff()) {
+        cleanup();
+        return;
+      }
       sessionStorage.setItem("danoh_boot_sound", "1");
       const audio = new Audio("/start.mp3");
       audio.volume = 0.35;
@@ -326,10 +344,14 @@ function TaskBar() {
       </button>
       {startMenuOpen && <StartMenu />}
       <div className={styles.divider}></div>
-      {windows.map((id) => (
-        <WindowTaskBarItem key={id} id={id} />
-      ))}
-      <div className={styles.taskbarSpacer} />
+      {/* Own strip (not bare flex children): with many windows open the
+       * buttons would otherwise shove the clock and logo off the tray.
+       * Buttons shrink to a readable floor, then the strip scrolls. */}
+      <div className={styles.windowStrip}>
+        {windows.map((id) => (
+          <WindowTaskBarItem key={id} id={id} />
+        ))}
+      </div>
       <TaskbarClock />
       <LogoEasterEgg />
     </div>

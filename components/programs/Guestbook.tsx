@@ -174,6 +174,9 @@ export function Guestbook() {
             maxLength={MAX_MESSAGE}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Leave a note, a thought, or just a hello."
+            aria-required="true"
+            aria-invalid={feedback && !message.trim() ? "true" : undefined}
+            aria-describedby={feedback ? "gb-feedback" : undefined}
             style={{ width: "100%", resize: "vertical" }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -196,7 +199,7 @@ export function Guestbook() {
           <span>{message.length}/{MAX_MESSAGE}</span>
           <div>
             {feedback && (
-              <span role="status" style={{ marginRight: 8 }}>
+              <span id="gb-feedback" role="status" style={{ marginRight: 8 }}>
                 {feedback}
               </span>
             )}

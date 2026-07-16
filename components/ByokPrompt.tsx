@@ -47,6 +47,8 @@ export function ByokPrompt({ onSuccess }: { onSuccess: () => void }) {
         <input
           type="password"
           aria-label="Anthropic API key"
+          aria-invalid={status === "invalid" ? "true" : undefined}
+          aria-describedby={status === "invalid" ? "byok-error" : undefined}
           placeholder="sk-ant-..."
           value={key}
           onChange={(e) => {
@@ -61,7 +63,11 @@ export function ByokPrompt({ onSuccess }: { onSuccess: () => void }) {
         </button>
       </div>
       {status === "invalid" && (
-        <div role="alert" style={{ color: "#800000", fontSize: 11 }}>
+        <div
+          id="byok-error"
+          role="alert"
+          style={{ color: "#800000", fontSize: 11 }}
+        >
           That key didn&apos;t work. Check it and try again.
         </div>
       )}

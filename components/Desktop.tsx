@@ -144,11 +144,11 @@ export const Desktop = () => {
 
   useEffect(() => {
     setIconPositions((prev: IconPositions) => getDefaultPositions(programs, prev));
-  }, [programs]);
+  }, [programs, setIconPositions]);
 
   const moveIcon = useCallback((id: string, col: number, row: number) => {
     setIconPositions((prev: IconPositions) => ({ ...prev, [id]: { col, row } }));
-  }, []);
+  }, [setIconPositions]);
 
   // Window configs live in the shared PROGRAMS table (lib/programs.ts);
   // these just name which program each desktop icon opens.
@@ -370,6 +370,7 @@ function DesktopIcon({
 }) {
   const createContextMenu = useCreateContextMenu();
   const contextMenuHandlers = createContextMenu(contextItems);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const lastClickRef = useRef(0);
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState<{ x: number; y: number } | null>(null);
@@ -383,18 +384,27 @@ function DesktopIcon({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isDraggingRef.current) return;
-    if (mobile) {
-      // Mobile: single tap opens.
+    // Keyboard activation (Enter/Space) reports detail === 0; on mobile a
+    // single tap opens. Both open immediately — the select-then-open
+    // double-click is a mouse-only affordance, and routing keyboard users
+    // through it would force a double-Enter to launch a program (WCAG
+    // 2.1.1).
+    if (mobile || e.detail === 0) {
       onOpen();
       return;
     }
-    // Desktop: double-click opens, single click selects.
+    // Desktop mouse: double-click opens, single click selects.
     const now = Date.now();
     if (now - lastClickRef.current < DOUBLE_CLICK_MS) {
       onOpen();
       lastClickRef.current = 0;
     } else {
       onSelect();
+      // onMouseDown preventDefault (to suppress native drag) also blocks
+      // the icon from taking focus, so after a click activeElement is
+      // <body> and the desktop's arrow-key nav restarts from the first
+      // icon. Focus the icon explicitly so roving nav continues from it.
+      buttonRef.current?.focus();
       lastClickRef.current = now;
     }
   };
@@ -488,6 +498,7 @@ function DesktopIcon({
 
   return (
     <button
+      ref={buttonRef}
       className={cx(styles.programIcon, {
         [styles.selected]: isSelected,
         [styles.dragging]: dragging,

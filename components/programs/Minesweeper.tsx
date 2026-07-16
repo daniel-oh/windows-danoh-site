@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Cell = {
   mine: boolean;
@@ -166,6 +166,14 @@ export function Minesweeper() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [flagMode, setFlagMode] = useState(false);
+  // Roving tabindex: the grid is a single Tab stop and arrow keys move a
+  // virtual cursor between cells, so keyboard users don't Tab through all
+  // 81–256 cells. Only the cursor cell is tabbable; the rest are -1.
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [focusCell, setFocusCell] = useState<{ r: number; c: number }>({
+    r: 0,
+    c: 0,
+  });
 
   // Tick the timer once per second while playing. setInterval is
   // intentional here — we only display whole seconds, so rAF's 60fps
@@ -185,6 +193,34 @@ export function Minesweeper() {
     setStatus("idle");
     setStartedAt(null);
     setElapsedMs(0);
+    setFocusCell({ r: 0, c: 0 });
+  };
+
+  // Arrow keys move the roving cursor within the grid bounds; Home/End
+  // jump to the first/last column of the current row. Focus follows the
+  // cursor so the visible focus ring tracks it.
+  const onGridKeyDown = (e: React.KeyboardEvent) => {
+    const keys = [
+      "ArrowUp",
+      "ArrowDown",
+      "ArrowLeft",
+      "ArrowRight",
+      "Home",
+      "End",
+    ];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    let { r, c } = focusCell;
+    if (e.key === "ArrowUp") r = Math.max(0, r - 1);
+    else if (e.key === "ArrowDown") r = Math.min(difficulty.rows - 1, r + 1);
+    else if (e.key === "ArrowLeft") c = Math.max(0, c - 1);
+    else if (e.key === "ArrowRight") c = Math.min(difficulty.cols - 1, c + 1);
+    else if (e.key === "Home") c = 0;
+    else c = difficulty.cols - 1;
+    setFocusCell({ r, c });
+    gridRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-r="${r}"][data-c="${c}"]`)
+      ?.focus();
   };
 
   const handleReveal = (r: number, c: number) => {
@@ -371,8 +407,10 @@ export function Minesweeper() {
       </div>
 
       <div
+        ref={gridRef}
         role="grid"
         aria-label="Minesweeper board"
+        onKeyDown={onGridKeyDown}
         style={{
           display: "grid",
           gridTemplateColumns: `repeat(${difficulty.cols}, ${cellSize}px)`,
@@ -389,19 +427,28 @@ export function Minesweeper() {
         }}
         onContextMenu={(e) => e.preventDefault()}
       >
-        {board.map((row, r) =>
-          row.map((cell, c) => (
-            <CellButton
-              key={`${r}-${c}`}
-              cell={cell}
-              size={cellSize}
-              onReveal={() => handleReveal(r, c)}
-              onFlag={() => handleFlag(r, c)}
-              flagMode={flagMode}
-              disabled={status === "won" || status === "lost"}
-            />
-          ))
-        )}
+        {board.map((row, r) => (
+          // display:contents keeps the row semantics (grid > row >
+          // gridcell) without adding a box that would break the single
+          // flat CSS grid the cells are placed into.
+          <div key={r} role="row" style={{ display: "contents" }}>
+            {row.map((cell, c) => (
+              <CellButton
+                key={`${r}-${c}`}
+                cell={cell}
+                size={cellSize}
+                row={r}
+                col={c}
+                tabIndex={r === focusCell.r && c === focusCell.c ? 0 : -1}
+                onFocusCell={() => setFocusCell({ r, c })}
+                onReveal={() => handleReveal(r, c)}
+                onFlag={() => handleFlag(r, c)}
+                flagMode={flagMode}
+                disabled={status === "won" || status === "lost"}
+              />
+            ))}
+          </div>
+        ))}
       </div>
 
       {status === "won" && (
@@ -421,6 +468,10 @@ export function Minesweeper() {
 function CellButton({
   cell,
   size,
+  row,
+  col,
+  tabIndex,
+  onFocusCell,
   onReveal,
   onFlag,
   flagMode,
@@ -428,6 +479,10 @@ function CellButton({
 }: {
   cell: Cell;
   size: number;
+  row: number;
+  col: number;
+  tabIndex: number;
+  onFocusCell: () => void;
   onReveal: () => void;
   onFlag: () => void;
   flagMode: boolean;
@@ -453,6 +508,16 @@ function CellButton({
       ? NUMBER_COLORS[cell.adjacent]
       : undefined;
 
+  // A bare button announces as an unnamed "button"; spell out the
+  // position and state so screen-reader users can play. Rows/columns are
+  // 1-indexed for humans.
+  const pos = `Row ${row + 1}, column ${col + 1}`;
+  const label = !cell.revealed
+    ? `${pos}, ${cell.flagged ? "flagged" : "hidden"}`
+    : cell.mine
+    ? `${pos}, mine`
+    : `${pos}, ${cell.adjacent === 0 ? "empty" : cell.adjacent}`;
+
   const handleClick = (e: React.MouseEvent) => {
     if (disabled) return;
     if (flagMode) {
@@ -471,6 +536,12 @@ function CellButton({
 
   return (
     <button
+      role="gridcell"
+      aria-label={label}
+      data-r={row}
+      data-c={col}
+      tabIndex={tabIndex}
+      onFocus={onFocusCell}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
       disabled={disabled && !cell.revealed}

@@ -9,6 +9,7 @@ const SHORTCUTS: { section: string; items: Shortcut[] }[] = [
       { keys: ["Esc"], description: "Close the focused window" },
       { keys: ["Ctrl", "`"], description: "Switch to the next open window" },
       { keys: ["Ctrl", "Shift", "`"], description: "Switch to the previous window" },
+      { keys: ["Ctrl", "Esc"], description: "Move focus to the Start button" },
       { keys: ["Tab"], description: "Move focus between controls" },
       { keys: ["Shift", "Tab"], description: "Move focus backwards" },
       { keys: ["Enter"], description: "Activate focused button" },
