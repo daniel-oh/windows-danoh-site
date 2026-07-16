@@ -45,10 +45,42 @@ export function Screensaver() {
     events.forEach((e) =>
       window.addEventListener(e, activity, { passive: true })
     );
+
+    // Interaction inside the generated mini-apps happens in a sandboxed,
+    // cross-origin iframe, so none of the events above ever reach the
+    // parent — someone mid-game looks perfectly idle. While an iframe
+    // holds focus, no events arrive at all, so poll instead: keep the
+    // countdown reset as long as the iframe stays focused.
+    let iframePoll: ReturnType<typeof setInterval> | null = null;
+    const stopIframePoll = () => {
+      if (iframePoll != null) {
+        clearInterval(iframePoll);
+        iframePoll = null;
+      }
+    };
+    const iframeFocused = () => document.activeElement?.tagName === "IFRAME";
+    const onBlur = () => {
+      if (!iframeFocused() || iframePoll != null) return;
+      arm();
+      iframePoll = setInterval(() => {
+        if (iframeFocused()) arm();
+        else stopIframePoll();
+      }, 5000);
+    };
+    const onFocus = () => {
+      stopIframePoll();
+      arm();
+    };
+    window.addEventListener("blur", onBlur);
+    window.addEventListener("focus", onFocus);
+
     arm();
     return () => {
       clearTimeout(timer);
+      stopIframePoll();
       events.forEach((e) => window.removeEventListener(e, activity));
+      window.removeEventListener("blur", onBlur);
+      window.removeEventListener("focus", onFocus);
     };
   }, []);
 

@@ -110,6 +110,17 @@ function WindowInner({ id }: { id: string }) {
     return () => window.removeEventListener("blur", onBlur);
   }, [id, setFocusedWindow, state.program.type]);
 
+  // Pin the window's live rendered height before a resize begins. Auto-
+  // height windows (Welcome, Mail, alerts, ...) have no numeric height in
+  // state; without this the first resize frame would grow from zero and
+  // clamp to the minimum, snapping the window shut before it grows.
+  const measureBeforeResize = () => {
+    const el = windowRef.current;
+    if (el) {
+      dispatch({ type: "MATERIALIZE_HEIGHT", payload: el.offsetHeight });
+    }
+  };
+
   return (
     <div
       className={cx("window", {
@@ -157,7 +168,7 @@ function WindowInner({ id }: { id: string }) {
         className={cx("title-bar", {
           inactive: focusedWindow !== id,
         })}
-        {...createResizeEvent((_e, delta) => {
+        {...createResizeEvent((e, delta) => {
           // Read status from the store, not the render closure: the drag
           // listeners installed at mousedown outlive this render, so the
           // captured `state` goes stale after the first TOGGLE_MAXIMIZE
@@ -171,6 +182,25 @@ function WindowInner({ id }: { id: string }) {
               return;
             }
             dispatch({ type: "TOGGLE_MAXIMIZE" });
+            // Restoring snaps back to the stored pre-maximize pos, which
+            // teleports the window out from under the pointer. Re-place
+            // it so the cursor keeps the same proportional spot along
+            // the title bar and the drag continues seamlessly.
+            const point = "touches" in e ? e.touches[0] : e;
+            if (point) {
+              const targetX =
+                point.clientX -
+                (point.clientX / window.innerWidth) * live.size.width;
+              const targetY = point.clientY - 10;
+              dispatch({
+                type: "MOVE",
+                payload: {
+                  dx: targetX - live.pos.x,
+                  dy: targetY - live.pos.y,
+                },
+              });
+              return;
+            }
           }
           dispatch({
             type: "MOVE",
@@ -244,9 +274,30 @@ function WindowInner({ id }: { id: string }) {
             onClick={() => {
               const finish = () => {
                 dispatch({ type: "TOGGLE_MINIMIZE" });
-                if (focusedWindow === id) {
+                if (focusedWindow !== id) return;
+                // Mirror the close path (state/windowsList.tsx): hand focus
+                // to the top remaining non-minimized window instead of
+                // stranding keyboard/screen-reader users on <body>.
+                const store = getDefaultStore();
+                const remaining = store
+                  .get(windowsListAtom)
+                  .filter(
+                    (w) => store.get(windowAtomFamily(w)).status !== "minimized"
+                  );
+                if (!remaining.length) {
                   setFocusedWindow(null);
+                  return;
                 }
+                const z = store.get(zOrderAtom);
+                const top = remaining.reduce((a, b) =>
+                  (z[a] ?? 0) >= (z[b] ?? 0) ? a : b
+                );
+                setFocusedWindow(top);
+                setTimeout(
+                  () =>
+                    document.getElementById(top)?.focus({ preventScroll: true }),
+                  0
+                );
               };
               const el = windowRef.current;
               const btn = document.querySelector(
@@ -357,7 +408,7 @@ function WindowInner({ id }: { id: string }) {
                 type: "RESIZE",
                 payload: { side: "right", dx: delta.x, dy: delta.y },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
           {/* left side */}
           <div
@@ -374,7 +425,7 @@ function WindowInner({ id }: { id: string }) {
                 type: "RESIZE",
                 payload: { side: "left", dx: delta.x, dy: delta.y },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
           {/* bottom side */}
           <div
@@ -391,7 +442,7 @@ function WindowInner({ id }: { id: string }) {
                 type: "RESIZE",
                 payload: { side: "bottom", dx: delta.x, dy: delta.y },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
           {/* top side */}
           <div
@@ -408,7 +459,7 @@ function WindowInner({ id }: { id: string }) {
                 type: "RESIZE",
                 payload: { side: "top", dx: delta.x, dy: delta.y },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
           {/* top left */}
           <div
@@ -425,7 +476,7 @@ function WindowInner({ id }: { id: string }) {
                 type: "RESIZE",
                 payload: { side: "top-left", dx: delta.x, dy: delta.y },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
           {/* top right */}
           <div
@@ -442,7 +493,7 @@ function WindowInner({ id }: { id: string }) {
                 type: "RESIZE",
                 payload: { side: "top-right", dx: delta.x, dy: delta.y },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
           {/* bottom left */}
           <div
@@ -459,7 +510,7 @@ function WindowInner({ id }: { id: string }) {
                 type: "RESIZE",
                 payload: { side: "bottom-left", dx: delta.x, dy: delta.y },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
           {/* bottom right */}
           <div
@@ -480,7 +531,7 @@ function WindowInner({ id }: { id: string }) {
                   dy: delta.y,
                 },
               });
-            })}
+            }, measureBeforeResize)}
           ></div>
         </>
       )}
@@ -505,7 +556,7 @@ function WindowInner({ id }: { id: string }) {
               type: "RESIZE",
               payload: { side: "bottom-right", dx: delta.x, dy: delta.y },
             });
-          })}
+          }, measureBeforeResize)}
         >
           ⟋
         </div>
@@ -515,9 +566,11 @@ function WindowInner({ id }: { id: string }) {
 }
 
 function createResizeEvent<T>(
-  cb: (e: MouseEvent | TouchEvent, delta: { x: number; y: number }) => void
+  cb: (e: MouseEvent | TouchEvent, delta: { x: number; y: number }) => void,
+  onStart?: () => void
 ): { onMouseDown: React.MouseEventHandler<T>; onTouchStart: React.TouchEventHandler<T> } {
   const handleStart = (e: MouseEvent | TouchEvent) => {
+    onStart?.();
     let last = { x: 0, y: 0 };
     if ("clientX" in e) {
       last = { x: e.clientX, y: e.clientY };
