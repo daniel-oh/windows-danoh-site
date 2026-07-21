@@ -66,7 +66,7 @@ export function SitePreview({
         <div className={styles.shot}>
           <Image
             src={`/blog/work/${file}.jpg`}
-            alt={`${name} — website preview`}
+            alt={`${name} website preview`}
             width={1280}
             height={800}
             sizes="(max-width: 760px) 100vw, 672px"
