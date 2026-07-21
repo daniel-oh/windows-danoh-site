@@ -13,6 +13,7 @@
 import type { ComponentType } from "react";
 import type { MDXComponents } from "mdx/types";
 
+import Eleven, { meta as eleven } from "./posts/eleven-sites-one-operator.mdx";
 import Fable5, { meta as fable5 } from "./posts/letting-fable-5-loose.mdx";
 import TwoSites, { meta as twoSites } from "./posts/two-sites-one-operator.mdx";
 import Floeberg, { meta as floeberg } from "./posts/building-floeberg.mdx";
@@ -47,6 +48,7 @@ type MDXContent = ComponentType<{ components?: MDXComponents }>;
 // `satisfies` typo-proofs every meta against the BlogPost shape at
 // compile time — a missing field in an MDX meta fails tsc, not prod.
 const entries = [
+  [eleven, Eleven],
   [fable5, Fable5],
   [twoSites, TwoSites],
   [floeberg, Floeberg],

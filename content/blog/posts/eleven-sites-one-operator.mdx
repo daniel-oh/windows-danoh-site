@@ -1,0 +1,150 @@
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "eleven-sites-one-operator",
+  title: "Eleven sites, one operator",
+  date: "2026-07-21",
+  author: "Daniel Oh",
+  summary:
+    "A tour of the work: eleven live sites shipped mostly in the last few months, and the reason one person can run that many. Screenshots, not adjectives.",
+  tags: ["portfolio", "engineering", "ai"],
+  readingTime: "7 min",
+};
+
+import { SitePreview } from "@/components/mdx/SitePreview";
+
+In [Two sites, one operator](/blog/two-sites-one-operator) I called danoh.com "a portfolio in the literal sense, a folder of things I made." That post argued for keeping the personal site and the consulting site separate. It never actually opened the folder.
+
+This one does.
+
+Here is the work: eleven live sites, most of them shipped in the last few months. Client builds, a couple of my own ventures, and the two personal sites you already know. I would rather show them than describe them, because a screenshot is more honest than an adjective. But first the thing that makes eleven of anything possible for one person.
+
+## Eleven brands, a handful of platforms
+
+None of this is eleven separate stacks. Under the brands there are maybe four reusable spines, and almost every site is one of them wearing a costume.
+
+The **app spine**: Next.js 16 (App Router, standalone output) on self-hosted Supabase for auth, one Postgres per app with deny-by-default row-level security, all of it in Docker behind Traefik with Watchtower rolling deploys, on a couple of Hetzner boxes. When I start a new app I am not choosing a stack. I am cloning a known-good one and changing only the parts that are genuinely different.
+
+The **directory spine**: 312 Eats is a fork of 312 Built. Same marketplace engine, re-skinned for a new city and a new vertical by swapping a single config file.
+
+The **two-surface spine**: Active Krew and AM Training Hall share one backend. A public lead page and an operator platform are two faces of the same system.
+
+The **design-system spine**: AsianMasc and Kayrage share a "2000s Japanese magazine" visual language, factored into tokens and components so a second magazine is a re-theme, not a rebuild.
+
+Reuse is the whole trick. Eleven sites is not eleven times the work. It is a small number of well-factored platforms, each pointed at a different audience.
+
+Now the folder.
+
+## The coaching stack
+
+The longest-running client engagement. Coach Tri Nguyen was running a coaching practice on five apps glued together with screenshots: programming in one tool, delivery over DMs, notes in Notion, compliance in spreadsheets, community on Discord. He was the integration layer between all of them.
+
+AM Training Hall collapsed that into one system: a coach dashboard with the whole roster's status, alerts, and compliance in a single view; members logging weight, workouts, sleep, and nutrition from the web app or from Discord, whichever fits the moment; a waitlist CRM with lead scoring and coach assignment; and a Discord bot (6AMbot) that automates the check-ins, roll calls, and compliance nudges that used to eat his evenings.
+
+<SitePreview
+  domain="amtraininghall.com"
+  name="AM Training Hall"
+  caption="Next.js + Postgres/Prisma + a Discord bot. Five apps became one operator surface."
+/>
+
+Then Active Krew: the public front door for the same practice. A brand-voiced lead page that routes serious applicants straight into the platform's waitlist CRM. Same backend, second surface. A cold visitor lands on Active Krew, applies, appears in the CRM inside AM Training Hall, gets coach-assigned, becomes a roster member.
+
+<SitePreview
+  domain="activekrew.com"
+  name="Active Krew"
+  caption="The lead-gen surface that feeds the coaching platform's CRM. One system, two faces."
+/>
+
+## The white-label AI workforce
+
+IntelliYap is the app spine at its most serious. It gives a professional-services firm a secure, governed AI workforce under its own name — white-labeled, so the firm's clients never see a third-party tool.
+
+The interesting part is the boring part: the database is least-privilege with deny-by-default row-level security keyed on the tenant's user ID, auth runs on a self-hosted Supabase stack the firm's data never leaves, and there is a `SECURITY.md` you are meant to read before you touch it. This is the depth-layer thesis behind [Floeberg](/blog/building-floeberg) turned into a product: the impressive layer is the AI, but the layer that decides whether the firm can trust it with client data is the governance underneath.
+
+<SitePreview
+  domain="intelliyap.com"
+  name="IntelliYap"
+  caption="A governed, white-label AI workforce for professional-services firms. Self-hosted auth, deny-by-default RLS."
+/>
+
+## Software that moves money
+
+Lootrunners runs contractor pay cycles: approve work, then pay global contractors in USDC. Once a build moves real money, the whole risk profile changes. The same Next.js and self-hosted Supabase spine is there, but the row-level security stops being hygiene and starts being the thing standing between a bug and someone's payout landing in the wrong wallet. Payout keys don't live in plain env. The database is deny-by-default because it has to be.
+
+<SitePreview
+  domain="lootrunners.com"
+  name="Lootrunners"
+  caption="Contractor pay cycles with USDC payouts. When the software moves money, the security posture is the product."
+/>
+
+## Two cities, one directory engine
+
+312 Built is a Chicago contractor marketplace, built as a production system rather than a directory mockup: 1,600+ contractors indexed across Chicagoland, area-based search on Leaflet maps, a claim flow that lets verified pros take ownership of their listing, and SEO routing per neighborhood and trade. Next.js, Drizzle on Postgres, auth and admin cleanly separated.
+
+<SitePreview
+  domain="312built.com"
+  name="312 Built"
+  caption="1,600+ Chicago contractors, area search, a contractor claim flow. A Floeberg-owned venture."
+/>
+
+312 Eats is what happens when a marketplace engine is factored well: it is a fork of 312 Built pointed at restaurants. Roughly 3,700 Chicago spots pulled from Google Maps, enriched with Claude-generated descriptions and scores in a batch pipeline, and surfaced across programmatic cuisine × neighborhood × vibe pages. The entire re-skin lives in one `city.config.ts` — swap it and you have launched a new city or vertical.
+
+<SitePreview
+  domain="312eats.com"
+  name="312 Eats"
+  caption="~3,700 restaurants, AI-written descriptions, programmatic SEO. A fork of 312 Built, re-skinned via one config file."
+/>
+
+## Magazines with a backend
+
+AsianMasc reads like a magazine and runs like a platform. It is a two-world publishing system: the AsianMasc magazine and the WuxiaMaxxing serial-fiction universe, one family with two design languages (2000s Japanese magazine and classic Chinese serial novel), plus a Discord-role-gated members hub for an audience north of 200K.
+
+<SitePreview
+  domain="asianmasc.com"
+  name="AsianMasc"
+  caption="A two-world publishing system — magazine plus serial-fiction universe — with a role-gated members hub."
+/>
+
+Kayrage shares that magazine DNA and adds a live channel. It is a technology-and-culture men's lifestyle title: stories of artists, DJs, founders, and athletes, a live Owncast stream, a small-run store, and reader membership. Same app spine underneath, self-hosted auth and all.
+
+<SitePreview
+  domain="kayrage.com"
+  name="Kayrage"
+  caption="A culture magazine with a live stream, a store, and membership — the magazine design system, re-themed."
+/>
+
+And Jupiter Wax, the tightest of the set: brand and site for an independent Chicago electronic-music label. Not every build needs a backend. Some need a look and a place to live.
+
+<SitePreview
+  domain="jupiterwax.com"
+  name="Jupiter Wax"
+  caption="Brand and site for an independent Chicago electronic-music label."
+/>
+
+## The personal two
+
+You are standing in one of them. danoh.com is a playable Windows 98 desktop with a blog, a pile of experiments, and an AI app generator that builds a working program in a window from a sentence you type. It is the folder this post opens.
+
+<SitePreview
+  domain="danoh.com"
+  name="danoh.com"
+  caption="This site: a playable Win98 desktop, a blog, and an AI app generator. The literal portfolio folder."
+/>
+
+And Floeberg, the other half of [the split](/blog/two-sites-one-operator): the studio and the depth-layer consulting practice, built on its own content operating system. The [build log](/blog/building-floeberg) covers its stack in detail; it runs the same self-hosted spine as everything else here, because a brand about owning your foundations should own its own.
+
+<SitePreview
+  domain="floeberg.com"
+  name="Floeberg"
+  caption="The studio, the OS, and the depth-layer consulting practice. The work side of the two-site split."
+/>
+
+## The operator's note
+
+The tooling is reusable. The taste is not.
+
+Every site above shares a spine with several others, and that is the only reason one person ships this many. But the platform is the copy-paste part. What could not be cloned was the decision, per brand, about who the reader is and what the site is allowed to sound like. Active Krew is blunt because coaching men who want results is a blunt business. AsianMasc is a glossy magazine because its audience came for a world, not a product. IntelliYap is quiet and institutional because it is asking a law firm to trust it with client data. Eleven positions, eleven voices, eleven judgment calls that no config file makes for you.
+
+That is the same division of labor I wrote about in [Letting Fable 5 loose](/blog/letting-fable-5-loose): the stack executes, and I decide. It just turns out to scale further than I expected. The engine is one thing. Eleven brands is what you get when you point it at eleven different people and make the human calls in between.
+
+If you want the depth-layer version of this for your own stack, that is what [floeberg.com](https://floeberg.com) is for. If you just like watching things get built, you already know where the desktop is.
