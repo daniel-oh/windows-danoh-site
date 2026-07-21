@@ -59,7 +59,7 @@ Then Active Krew: the public front door for the same practice. A brand-voiced le
 
 IntelliYap is the app spine at its most serious. It gives a professional-services firm a secure, governed AI workforce under its own name — white-labeled, so the firm's clients never see a third-party tool.
 
-The interesting part is the boring part: the database is least-privilege with deny-by-default row-level security keyed on the tenant's user ID, auth runs on a self-hosted Supabase stack the firm's data never leaves, and there is a `SECURITY.md` you are meant to read before you touch it. This is the depth-layer thesis behind [Floeberg](/blog/building-floeberg) turned into a product: the impressive layer is the AI, but the layer that decides whether the firm can trust it with client data is the governance underneath.
+The interesting part is the boring part: the database is least-privilege with deny-by-default row-level security, so the database — not the model — decides what any given agent run is allowed to read; auth runs on a self-hosted Supabase stack the firm's data never leaves; and there is a `SECURITY.md` you are meant to read before you touch it. This is the depth-layer thesis behind [Floeberg](/blog/building-floeberg) turned into a product: the impressive layer is the AI, but the layer that decides whether the firm can trust it with client data is the governance underneath.
 
 <SitePreview
   domain="intelliyap.com"
@@ -69,12 +69,12 @@ The interesting part is the boring part: the database is least-privilege with de
 
 ## Software that moves money
 
-Lootrunners runs contractor pay cycles: approve work, then pay global contractors in USDC. Once a build moves real money, the whole risk profile changes. The same Next.js and self-hosted Supabase spine is there, but the row-level security stops being hygiene and starts being the thing standing between a bug and someone's payout landing in the wrong wallet. Payout keys don't live in plain env. The database is deny-by-default because it has to be.
+Lootrunners runs approval-gated contractor pay cycles for agencies and settles them in USDC on Base. The interesting part is what it deliberately does *not* do: it never holds your money. The app prepares the batch — one transfer per contractor, a double-entry ledger behind it, a signed evidence pack of exactly what will move — and your own multisig signs and sends it. Lootrunners never touches a hot wallet or a payout key. Once software sits in the path of real money, that non-custodial line is the whole product, and the row-level security under it (deny-by-default, forced on every table, scoped per request so an unset user context returns zero rows) stops being hygiene and becomes the reason an agency can trust it at all.
 
 <SitePreview
   domain="lootrunners.com"
   name="Lootrunners"
-  caption="Contractor pay cycles with USDC payouts. When the software moves money, the security posture is the product."
+  caption="Approval-gated pay runs in USDC on Base, non-custodial by design: it prepares the batch, your own multisig executes it. Double-entry ledger, deny-by-default RLS."
 />
 
 ## Two cities, one directory engine
@@ -97,12 +97,12 @@ Lootrunners runs contractor pay cycles: approve work, then pay global contractor
 
 ## Magazines with a backend
 
-AsianMasc reads like a magazine and runs like a platform. It is a two-world publishing system: the AsianMasc magazine and the WuxiaMaxxing serial-fiction universe, one family with two design languages (2000s Japanese magazine and classic Chinese serial novel), plus a Discord-role-gated members hub for an audience north of 200K.
+AsianMasc reads like a magazine and runs like a platform. It is a two-world publishing system: the AsianMasc magazine and the WuxiaMaxxing serial-fiction universe, one family with two design languages — 2000s Japanese magazine and classic Chinese serial novel — over one shared set of design tokens. Content ships through a real editorial gate (draft to staged to published), with a Discord community behind it.
 
 <SitePreview
   domain="asianmasc.com"
   name="AsianMasc"
-  caption="A two-world publishing system — magazine plus serial-fiction universe — with a role-gated members hub."
+  caption="A two-world publishing system — magazine plus serial-fiction universe — over one shared design system."
 />
 
 Kayrage shares that magazine DNA and adds a live channel. It is a technology-and-culture men's lifestyle title: stories of artists, DJs, founders, and athletes, a live Owncast stream, a small-run store, and reader membership. Same app spine underneath, self-hosted auth and all.
