@@ -1,0 +1,62 @@
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "one-day-128-feelings",
+  title: "One day, 128 feelings: shipping findmyfeels.com",
+  date: "2026-08-03",
+  author: "Daniel Oh",
+  summary:
+    "I built findmyfeels.com in a day: an emotional-vocabulary site with a private check-in, a 128-word wheel, and an AI room with hard safety rails. Notes on where the day actually went.",
+  tags: ["launch", "ai", "engineering"],
+  readingTime: "5 min",
+};
+
+import { SitePreview } from "@/components/mdx/SitePreview";
+
+I shipped a new site yesterday: [findmyfeels.com](https://findmyfeels.com). First commit at 1:47 in the afternoon, last real commit at 7:36 that evening, a polish pass the next morning. One day, more or less.
+
+It finds you the word for what you're feeling. A quick check-in that never leaves your device. A 128-word emotion wheel. A guided naming path for when you know something is happening but don't have the word. A blend lab, a dictionary, a public wall where a feeling lives for exactly seven days, and The Room, a contained AI space for getting something out before you have to say it to a person.
+
+<SitePreview
+  domain="findmyfeels.com"
+  name="FindMyFeels"
+  caption="Warm paper, soft chips, a spiral logo. Baloo 2 and Nunito over Postgres and a safety triage."
+/>
+
+The one-day part is the least interesting thing about it, but it's worth being honest about why it was possible. This is the same spine as [everything else I ship](/blog/eleven-sites-one-operator): Next.js standalone, Postgres with numbered migrations that run before the server binds, magic-link auth, Docker behind the same proxy on the same box. None of that consumed the day. The day went into the two things a site like this actually has to get right, and neither of them is a feature.
+
+## The words are the product
+
+The wheel holds 128 feelings, and each one carries more than a label. Every entry in the taxonomy has a definition, what the feeling signals, what it does *not* prove, where it shows up in the body, a useful question to ask yourself, and the feelings it's commonly confused with. "Resentment" tells you it signals a boundary you didn't enforce, and that it does not prove the other person wronged you.
+
+That last field is the whole editorial stance. A feelings site that only validates is a horoscope. The useful move is the precise one: here is the word, here is what it's evidence of, here is what it isn't. Writing 128 of those with a straight face took a real slice of the day, and it's the slice I'd defend hardest.
+
+## Private by default, provably
+
+The quick check-in on the homepage never touches the server. Not "we don't store it": the private save makes zero network requests. It writes to localStorage and stops. You can watch the network tab while you use it, which is the only privacy claim that doesn't require trusting me.
+
+Everything shareable is scoped the same way:
+
+- **Wall pins live for exactly seven days.** One constant in one file drives the copy, the purge job, and the read-time expiry, so the promise and the behavior can't drift apart. Removal is a one-time token delivered in the URL fragment, which never reaches the server logs.
+- **Room transcripts exist nowhere.** Browser memory only. The server relays each turn with provider storage disabled and logs no bodies. What's kept: anonymous usage seconds and content-free safety-event counts.
+- **Analytics is a 28-event allowlist**, and emotion words are prohibited properties. The analytics layer is structurally unable to learn what you felt. There is even a prohibited-copy gate in CI that fails the build if the wrong kind of sentence sneaks into the UI.
+
+None of this is hard engineering. All of it is deciding, before the first component renders, that the answer to "can we peek?" is no, and then making the no structural instead of behavioral.
+
+## The Room fails closed
+
+The Room is the part that could hurt someone if built carelessly, so it got the most careful hours. It's an AI space for rehearsing hard sentences, and a site like this will occasionally receive messages that are not rehearsal. The design assumes that from the start.
+
+Every turn passes a three-layer triage before the model ever responds: deterministic phrase rules first (free, instant, highest precision), then the moderation endpoint, then a small classifier only for text the first two layers couldn't resolve. The layers can only escalate. Moderation can never soften a rule hit; the classifier can never override a danger route the rules already found.
+
+The posture I care most about is the failure mode. If the classifier is needed and unavailable, the Room does not shrug and treat the turn as normal. It returns a system failure and shows a degraded-mode card, because "we couldn't check, so we assumed it was fine" is exactly the sentence you never want in the incident writeup. Safety stops are never billed, responses are validated after generation with one regenerate allowed, and a red-team eval script lives in the repo so the rules carry the known hard cases.
+
+And on the honest-copy front: the site says plainly that it's for reflection, not therapy, not crisis support, and the safety page routes to real resources. A tool like this earns trust by knowing what it isn't.
+
+## Where the day went
+
+So: one day. Maybe a fifth of it was the app you can see, the wheel and the chips and the confetti. The rest was words, retention math, triage rules, and CI gates, including an accessibility sweep on both viewports, and a migration test that replays the chain twice against an empty and a production-shaped database.
+
+That ratio is the real lesson of shipping fast in 2026. The visible layer is nearly free now. [The stack executes, and I decide](/blog/letting-fable-5-loose), and what I spent the day deciding was what the site refuses to do: refuse to phone home your check-in, refuse to keep your transcript, refuse to answer when the safety check can't run. The feature list took an afternoon. The refusals are the product.
+
+If today has a feeling attached and you can't quite name it, [the wheel is open](https://findmyfeels.com). Mine, at the end of that day, was somewhere between "spent" and "satisfied." The dictionary says those blend.
