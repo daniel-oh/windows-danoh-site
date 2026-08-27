@@ -37,8 +37,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # 127.0.0.1, NOT localhost: alpine resolves localhost to ::1 first and
+    # Node binds IPv4 only, so "localhost" is refused, the container goes
+    # unhealthy, and Traefik stops routing to it (site returns 404).
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
       interval: 30s
       timeout: 5s
       retries: 3
