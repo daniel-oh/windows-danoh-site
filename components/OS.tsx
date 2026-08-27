@@ -799,18 +799,31 @@ const WindowTaskBarItem = memo(function WindowTaskBarItem({ id }: { id: string }
         }
       }}
       style={{
-        whiteSpace: "nowrap",
-        overflow: "hidden",
-        textOverflow: "ellipsis",
         maxWidth: "256px",
         display: "flex",
         alignItems: "center",
+        // 98.css gives every button a 75px minimum so short titles
+        // ("Run") would otherwise sit flush-left with dead space on the
+        // right. Centering keeps the hit target and reads as intended.
+        justifyContent: "center",
       }}
     >
       {/* Text only: program icons in the taskbar buttons read as
         * clutter at 16px and drift from the spare Win98 look. The
         * icon still lives on the desktop and the window title bar. */}
-      <span>{state.title}</span>
+      <span
+        style={{
+          // The ellipsis has to live on the flex CHILD: text-overflow on
+          // the flex container itself never renders, long titles just
+          // clipped mid-glyph.
+          minWidth: 0,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {state.title}
+      </span>
     </button>
   );
 });
