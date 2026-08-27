@@ -22,7 +22,7 @@ import { alert } from "@/lib/alert";
 import { BootScreen } from "./boot/BootScreen";
 import { Screensaver } from "./Screensaver";
 import { settingsAtom } from "@/state/settings";
-import { isStartupSoundOff } from "@/lib/soundOptOut";
+import { isStartupSoundOn } from "@/lib/startupSound";
 
 // Validate the (cross-program-writable) wallpaper URL before it reaches
 // an inline CSS url(). Rejects anything that could break out of the
@@ -183,10 +183,18 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
           ?.focus();
         return;
       }
-      // Don't steal Escape from inputs/textareas or iframes
-      const active = document.activeElement;
+      // Don't steal Escape from form controls, editable text or iframes
+      // (Esc on Minesweeper's difficulty <select> closed the game).
+      const active = document.activeElement as HTMLElement | null;
       const tag = active?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "IFRAME") return;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        tag === "IFRAME" ||
+        active?.isContentEditable
+      )
+        return;
       const focusedId = store.get(focusedWindowAtom);
       if (!focusedId) return;
       store.set(windowsListAtom, {
@@ -209,19 +217,32 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   }, []);
 
   // The Win98 startup sound, once per browser session, on the first
-  // user gesture (autoplay policy forbids sooner). Skipped for
-  // reduced-motion users — they opted out of theatrics — and for
-  // anyone who unticked it in Settings. The opt-out is re-read at
-  // play time so flipping the toggle before the first gesture counts.
+  // user gesture (autoplay policy forbids sooner). Off unless the
+  // visitor ticked it in Settings, and always skipped for
+  // reduced-motion users. The preference is re-read at play time so
+  // flipping the toggle before the first gesture counts.
   useEffect(() => {
-    if (sessionStorage.getItem("danoh_boot_sound")) return;
+    // Storage access itself throws under Safari's "Block all cookies";
+    // a chime is not worth an error boundary, so treat that as "played".
+    const storage = (() => {
+      try {
+        return window.sessionStorage;
+      } catch {
+        return null;
+      }
+    })();
+    if (!storage || storage.getItem("danoh_boot_sound")) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const playBootSound = () => {
-      if (isStartupSoundOff()) {
+      if (!isStartupSoundOn()) {
         cleanup();
         return;
       }
-      sessionStorage.setItem("danoh_boot_sound", "1");
+      try {
+        storage.setItem("danoh_boot_sound", "1");
+      } catch {
+        /* quota / private mode: play anyway, once per mount */
+      }
       const audio = new Audio("/start.mp3");
       audio.volume = 0.35;
       audio.play().catch(() => {

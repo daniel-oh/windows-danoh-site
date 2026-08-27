@@ -39,6 +39,7 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(entry.key); } }}
               className={entry.key === selectedEntry ? styles.selected : ""}
+              aria-current={entry.key === selectedEntry ? "true" : undefined}
             >
               <span>{entry.title}</span>
               {entry.key === selectedEntry && (
@@ -332,8 +333,9 @@ const contentByKey = {
             three.js. Windows genie into the taskbar when minimized,
             and Settings grew an optional CRT scanline mode. Also new:
             Snake.exe in neon (the walls are lethal now, as nature
-            intended), a live taskbar clock, the startup sound, and{" "}
-            <code>Ctrl+`</code> to cycle windows from the keyboard.
+            intended), a live taskbar clock, an optional startup chime
+            (off by default, lives in Settings), and <code>Ctrl+`</code>{" "}
+            to cycle windows from the keyboard.
           </p>
           <p style={{ margin: "0 0 12px" }}>
             Under the hood: the blog got a Win98 design pass and a

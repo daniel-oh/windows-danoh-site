@@ -21,7 +21,7 @@ import {
   isAnalyticsOptedOut,
   setAnalyticsOptedOut,
 } from "@/lib/analyticsOptOut";
-import { isStartupSoundOff, setStartupSoundOff } from "@/lib/soundOptOut";
+import { isStartupSoundOn, setStartupSoundOn } from "@/lib/startupSound";
 
 type KeyStatus = "idle" | "testing" | "valid" | "invalid" | "saved" | "cleared";
 
@@ -176,7 +176,7 @@ function DisplaySection() {
   const [settings, setSettings] = useAtom(settingsAtom);
   // Same lazy-initializer reasoning as AnalyticsSection: windows only
   // mount client-side, so localStorage is readable on first render.
-  const [soundOff, setSoundOff] = useState(() => isStartupSoundOff());
+  const [soundOn, setSoundOn] = useState(() => isStartupSoundOn());
   return (
     <fieldset>
       <legend>Display</legend>
@@ -199,17 +199,18 @@ function DisplaySection() {
         <input
           id="startup-sound"
           type="checkbox"
-          checked={!soundOff}
+          checked={soundOn}
           onChange={(e) => {
-            const off = !e.target.checked;
-            setSoundOff(off);
-            setStartupSoundOff(off);
+            const on = e.target.checked;
+            setSoundOn(on);
+            setStartupSoundOn(on);
           }}
         />
         <label htmlFor="startup-sound">Play the startup sound</label>
       </div>
       <p className={styles.note} style={{ fontSize: 11 }}>
-        The Win98 chime, once per visit, on your first click or keypress.
+        Off by default. When on, the Win98 chime plays once per visit
+        on your first click or keypress. Remembered on this device.
       </p>
     </fieldset>
   );
