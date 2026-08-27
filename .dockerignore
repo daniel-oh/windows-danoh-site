@@ -1,0 +1,18 @@
+# Keep the build context to what `next build` needs. Without this the
+# builder stage (and the GHA layer cache) picked up .git, any local .env,
+# and node_modules; the runner image was already clean since it only
+# copies the standalone output, but the intermediate layers were not.
+.git
+.github
+.env
+.env.*
+!.env.example
+node_modules
+.next
+docs
+specs
+supabase
+*.md
+!README.md
+.DS_Store
+tsconfig.tsbuildinfo

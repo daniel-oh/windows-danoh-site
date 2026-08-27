@@ -10,15 +10,30 @@ services:
       - ACCESS_CODE=${ACCESS_CODE}
       - NEXT_PUBLIC_POSTHOG_KEY=${NEXT_PUBLIC_POSTHOG_KEY:-}
       - NEXT_PUBLIC_POSTHOG_HOST=${NEXT_PUBLIC_POSTHOG_HOST:-}
+      # Guestbook / contact notifications (lib/notify.ts). Optional: with
+      # RESEND_API_KEY unset the wrapper is a no-op.
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      # Admin bearer for /api/invite. Separate from ACCESS_CODE on purpose:
+      # the visitor code must not double as the invite-minting credential.
+      # Unset = invite admin endpoints answer 503.
+      - INVITE_ADMIN_TOKEN=${INVITE_ADMIN_TOKEN:-}
+      # Cloudflare-only origin lock (middleware.ts). Leave EMPTY until a
+      # Transform Rule sets x-origin-token to the same value on every
+      # proxied request, or the whole site 403s. See .env.example.
+      - ORIGIN_TOKEN=${ORIGIN_TOKEN:-}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.danoh.rule=Host(`danoh.com`) || Host(`www.danoh.com`)"
       - "traefik.http.routers.danoh.entrypoints=websecure"
-      - "traefik.http.routers.danoh.tls.certresolver=letsencrypt"
+      # DNS-01 through Cloudflare (the origin sits behind the orange cloud, so
+      # HTTP-01 can't reach it). Resolver name must match the Traefik stack.
+      - "traefik.http.routers.danoh.tls.certresolver=cloudflare"
       - "traefik.http.services.danoh.loadbalancer.server.port=3000"
       - "com.centurylinklabs.watchtower.enable=true"
     networks:
       - proxy
+      - danoh-net
     depends_on:
       db:
         condition: service_healthy
@@ -40,7 +55,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - proxy
+      - danoh-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U danoh"]
       interval: 5s
@@ -53,3 +68,7 @@ volumes:
 networks:
   proxy:
     external: true
+  # Per-stack private network (2026-08-15 M-06): only this stack's services can
+  # reach the database; nothing else on the shared proxy network can.
+  danoh-net:
+    driver: bridge

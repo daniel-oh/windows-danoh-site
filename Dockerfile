@@ -40,4 +40,10 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Readiness signal for Watchtower / compose: a container whose server
+# crashed on boot must not sit "Up" while serving nothing. Busybox wget
+# ships with alpine, so no extra package.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://127.0.0.1:3000/robots.txt || exit 1
+
 CMD ["node", "server.js"]

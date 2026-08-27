@@ -8,6 +8,11 @@ on:
 env:
   IMAGE_NAME: dddd4444/danoh-site
 
+# The job only reads the repo; the registry push uses Docker Hub secrets,
+# not GITHUB_TOKEN. Default token permissions are broader than that.
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
