@@ -252,7 +252,7 @@ function WindowInner({ id }: { id: string }) {
         >
           {state.program.type !== "iframe" ? null : (
             <button
-              aria-label="Help"
+              aria-label="Fix & Iterate"
               title="Fix & Iterate"
               style={{
                 marginRight: 2,
@@ -393,14 +393,20 @@ function WindowInner({ id }: { id: string }) {
       </div>
       {!mobile && (
         <>
+          {/* Handles sit INSIDE the frame (offset 0, not -4): the window
+           * root clips overflow, so anything hanging outside it was cut
+           * down to a 3px grab strip. Sides are 5px, not 7: the title-bar
+           * buttons end 5px short of the frame edge, so a wider strip
+           * would sit on top of the outer pixels of the X. Corners keep
+           * 7x7 since nothing clickable lives there. */}
           {/* right side */}
           <div
             style={{
               top: 0,
-              right: -4,
+              right: 0,
               bottom: 0,
               position: "absolute",
-              width: 7,
+              width: 5,
               cursor: "ew-resize",
             }}
             {...createResizeEvent((_e, delta) => {
@@ -414,10 +420,10 @@ function WindowInner({ id }: { id: string }) {
           <div
             style={{
               top: 0,
-              left: -4,
+              left: 0,
               bottom: 0,
               position: "absolute",
-              width: 7,
+              width: 5,
               cursor: "ew-resize",
             }}
             {...createResizeEvent((_e, delta) => {
@@ -432,9 +438,9 @@ function WindowInner({ id }: { id: string }) {
             style={{
               left: 0,
               right: 0,
-              bottom: -4,
+              bottom: 0,
               position: "absolute",
-              height: 7,
+              height: 5,
               cursor: "ns-resize",
             }}
             {...createResizeEvent((_e, delta) => {
@@ -447,11 +453,11 @@ function WindowInner({ id }: { id: string }) {
           {/* top side */}
           <div
             style={{
-              top: -4,
+              top: 0,
               left: 0,
               right: 0,
               position: "absolute",
-              height: 7,
+              height: 5,
               cursor: "ns-resize",
             }}
             {...createResizeEvent((_e, delta) => {
@@ -464,8 +470,8 @@ function WindowInner({ id }: { id: string }) {
           {/* top left */}
           <div
             style={{
-              top: -4,
-              left: -4,
+              top: 0,
+              left: 0,
               position: "absolute",
               width: 7,
               height: 7,
@@ -481,8 +487,8 @@ function WindowInner({ id }: { id: string }) {
           {/* top right */}
           <div
             style={{
-              top: -4,
-              right: -4,
+              top: 0,
+              right: 0,
               position: "absolute",
               width: 7,
               height: 7,
@@ -498,8 +504,8 @@ function WindowInner({ id }: { id: string }) {
           {/* bottom left */}
           <div
             style={{
-              bottom: -4,
-              left: -4,
+              bottom: 0,
+              left: 0,
               position: "absolute",
               width: 7,
               height: 7,
@@ -515,8 +521,8 @@ function WindowInner({ id }: { id: string }) {
           {/* bottom right */}
           <div
             style={{
-              bottom: -4,
-              right: -4,
+              bottom: 0,
+              right: 0,
               position: "absolute",
               width: 7,
               height: 7,

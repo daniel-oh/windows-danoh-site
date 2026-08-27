@@ -51,11 +51,11 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 // server-side (lib/helpPrompt.ts), which wraps this as untrusted data so
 // a client can't substitute its own system prompt. Sent as the first
 // "system" message; the server re-frames it.
-const makePrompt = (program: ProgramEntry, keys: string[]) => {
+const makePrompt = (program: ProgramEntry | undefined, keys: string[]) => {
   return `Here is the app's current source:
 
 \`\`\`html
-${program.code}
+${program?.code ?? ""}
 \`\`\`
 
 OS APIs available on window:
@@ -104,28 +104,27 @@ export function Help({ id }: { id: string }) {
     windowAtomFamily(helpWindow.program.targetWindowID)
   );
   const programsDispatch = useSetAtom(programsAtom);
-  assert(
-    targetWindow.program.type === "iframe",
-    "Target window is not an iframe"
-  );
-
-  const programID = targetWindow.program.programID;
+  // windowsList REMOVE closes this window when its target goes, but the
+  // family can hand back a default ("welcome") atom for a closed id in
+  // the render between the two removals. Degrade to a notice instead of
+  // asserting; an assert here escapes to the root error boundary and
+  // takes the whole desktop down with it.
+  const programID =
+    targetWindow.program.type === "iframe" ? targetWindow.program.programID : "";
+  const targetGone = targetWindow.program.type !== "iframe";
 
   useEffect(() => {
-    if (!targetWindow) {
-      windowsListDispatch({
-        type: "REMOVE",
-        payload: id,
-      });
+    if (targetGone) {
+      windowsListDispatch({ type: "REMOVE", payload: id, force: true });
     }
-  }, [id, targetWindow, windowsListDispatch]);
+  }, [id, targetGone, windowsListDispatch]);
 
   const program = useAtomValue(programAtomFamily(programID));
 
   const keys = getRegistryKeys(registry);
 
   const [messages, setMessages] = useState<Messages>(() => [
-    { role: "system", content: makePrompt(program!, keys) },
+    { role: "system", content: makePrompt(program, keys) },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -278,6 +277,15 @@ export function Help({ id }: { id: string }) {
     // the change event.
     e.target.value = "";
   };
+
+  if (targetGone) {
+    return (
+      <div className={styles.chatContainer} role="status" style={{ padding: 8 }}>
+        That app window was closed. Reopen the app and press its ? button
+        to keep iterating.
+      </div>
+    );
+  }
 
   return (
     <div className={styles.chatContainer}>

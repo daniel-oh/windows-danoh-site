@@ -1,6 +1,12 @@
 import { getDefaultStore } from "jotai";
-import { programsAtom, type ProgramEntry } from "@/state/programs";
+import {
+  programsAtom,
+  ProgramLimitError,
+  PROGRAM_LIMIT,
+  type ProgramEntry,
+} from "@/state/programs";
 import { createWindow } from "./createWindow";
+import { alert } from "./alert";
 
 // A pre-baked "generated" program. The Welcome window promises
 // describe-an-app-and-watch-it-build, but anonymous visitors hit the
@@ -225,10 +231,25 @@ export async function openDemoProgram(): Promise<void> {
   const store = getDefaultStore();
   const { programs } = await store.get(programsAtom);
   if (!programs.some((p) => p.id === SNAKE_ID)) {
-    await store.set(programsAtom, {
-      type: "ADD_PROGRAM",
-      payload: DEMO_PROGRAM,
-    });
+    try {
+      await store.set(programsAtom, {
+        type: "ADD_PROGRAM",
+        payload: DEMO_PROGRAM,
+      });
+    } catch (err) {
+      // Same cap Run.tsx enforces; opening a window for a program that
+      // never got stored would just show "Generating..." forever.
+      if (err instanceof ProgramLimitError) {
+        alert({
+          alertId: "PROGRAM_LIMIT",
+          title: "Snake.exe",
+          icon: "x",
+          message: `Program limit reached (${PROGRAM_LIMIT}). Delete one from the desktop to make room.`,
+        });
+        return;
+      }
+      throw err;
+    }
   }
   createWindow({
     title: SNAKE_ID,

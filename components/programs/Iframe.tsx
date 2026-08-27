@@ -86,10 +86,13 @@ function IframeInner({ id }: { id: string }) {
       // later render can retry, and a network throw must not surface as
       // an unhandled rejection.
       try {
-        const res = await wrappedFetch(`/api/icon?name=${state.title}`, {
-          method: "POST",
-          body: JSON.stringify({ name: state.title, settings: getSettings() }),
-        });
+        const res = await wrappedFetch(
+          `/api/icon?name=${encodeURIComponent(state.title)}`,
+          {
+            method: "POST",
+            body: JSON.stringify({ name: state.title, settings: getSettings() }),
+          }
+        );
 
         if (!res.ok) {
           return;

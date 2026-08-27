@@ -52,7 +52,16 @@ export function useCreateContextMenu() {
         }
       };
 
-      return { onContextMenu, onTouchStart, onTouchEnd, onTouchMove };
+      // touchcancel (incoming call, browser gesture, scroll takeover)
+      // never reaches touchend; without this the pending long-press
+      // fires a context menu after the finger is long gone.
+      return {
+        onContextMenu,
+        onTouchStart,
+        onTouchEnd,
+        onTouchMove,
+        onTouchCancel: onTouchEnd,
+      };
     },
     [setContextMenu]
   );

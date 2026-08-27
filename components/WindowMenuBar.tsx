@@ -33,7 +33,12 @@ export function WindowMenuBar({ id }: { id: string }) {
                     const store = getDefaultStore();
                     const iframe = getIframe(id)!;
                     const handleSaveComplete = async (event: MessageEvent) => {
-                      if (event.data.operation === "saveComplete") {
+                      // Only THIS program's frame may answer: while the
+                      // Save picker is pending, any other generated app
+                      // could otherwise post saveComplete and have its
+                      // content written to the path the visitor picks.
+                      if (event.source !== iframe.contentWindow) return;
+                      if (event.data?.operation === "saveComplete") {
                         window.removeEventListener(
                           "message",
                           handleSaveComplete

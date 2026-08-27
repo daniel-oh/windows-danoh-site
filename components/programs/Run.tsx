@@ -3,7 +3,13 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { windowsListAtom } from "@/state/windowsList";
 import { windowAtomFamily } from "@/state/window";
 import { createWindow } from "../../lib/createWindow";
-import { ProgramEntry, programsAtom } from "@/state/programs";
+import {
+  PROGRAM_LIMIT,
+  ProgramEntry,
+  ProgramLimitError,
+  programsAtom,
+} from "@/state/programs";
+import { alert } from "@/lib/alert";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getSettings } from "@/lib/getSettings";
 import { settingsAtom } from "@/state/settings";
@@ -74,50 +80,70 @@ export function Run({ id }: { id: string }) {
       const trimmed = desc.trim();
       if (!trimmed) return;
       setIsLoading(true);
-      // The name is a nicety — if /api/name fails (rate limit, network),
-      // fall back to a truncated prompt instead of bricking the dialog
-      // or creating a program literally named "undefined".
-      let name = trimmed.length > 24 ? `${trimmed.slice(0, 24).trimEnd()}…` : trimmed;
-      if (trimmed.length > 20) {
-        try {
-          const nameResp = await wrappedFetch("/api/name", {
-            method: "POST",
-            body: JSON.stringify({
-              desc: trimmed,
-              settings: getSettings(),
-            }),
-          });
-          if (nameResp.ok) {
-            const generated = (await nameResp.json()).name;
-            if (typeof generated === "string" && generated.trim()) {
-              name = generated;
+      // isLoading stays up until the window exists: resetting it after
+      // the name fetch let a second Cmd+Enter during uniqueProgramId
+      // create two programs from one prompt.
+      try {
+        // The name is a nicety — if /api/name fails (rate limit, network),
+        // fall back to a truncated prompt instead of bricking the dialog
+        // or creating a program literally named "undefined".
+        let name = trimmed.length > 24 ? `${trimmed.slice(0, 24).trimEnd()}…` : trimmed;
+        if (trimmed.length > 20) {
+          try {
+            const nameResp = await wrappedFetch("/api/name", {
+              method: "POST",
+              body: JSON.stringify({
+                desc: trimmed,
+                settings: getSettings(),
+              }),
+            });
+            if (nameResp.ok) {
+              const generated = (await nameResp.json()).name;
+              if (typeof generated === "string" && generated.trim()) {
+                name = generated;
+              }
             }
+          } catch {
+            /* keep the fallback name */
           }
-        } catch {
-          /* keep the fallback name */
-        } finally {
-          setIsLoading(false);
         }
+        const programId = await uniqueProgramId(sanitizeProgramName(name));
+        const program: ProgramEntry = {
+          id: programId,
+          prompt: trimmed,
+          // name mirrors id because getProgramEntry rebuilds both from the
+          // folder name on the next read anyway.
+          name: programId,
+        };
+        // Awaited so the window below never opens for a program the
+        // reducer refused (the cap), which used to hang on "Generating".
+        try {
+          await programsDispatch({ type: "ADD_PROGRAM", payload: program });
+        } catch (err) {
+          if (err instanceof ProgramLimitError) {
+            alert({
+              alertId: "PROGRAM_LIMIT",
+              title: "Run",
+              icon: "x",
+              message: `Program limit reached (${PROGRAM_LIMIT}). Delete one from the desktop to make room.`,
+            });
+            return;
+          }
+          throw err;
+        }
+        // If the first generation never succeeds, the close guard in
+        // Iframe deletes this entry so no dead icon lingers on the desktop.
+        markPendingFirstRun(program.id);
+        createWindow({
+          title: program.name,
+          program: { type: "iframe", programID: program.id },
+          loading: true,
+          size: { width: 700, height: 550 },
+        });
+        windowsDispatch({ type: "REMOVE", payload: id });
+      } finally {
+        setIsLoading(false);
       }
-      const programId = await uniqueProgramId(sanitizeProgramName(name));
-      const program: ProgramEntry = {
-        id: programId,
-        prompt: trimmed,
-        // name mirrors id because getProgramEntry rebuilds both from the
-        // folder name on the next read anyway.
-        name: programId,
-      };
-      programsDispatch({ type: "ADD_PROGRAM", payload: program });
-      // If the first generation never succeeds, the close guard in
-      // Iframe deletes this entry so no dead icon lingers on the desktop.
-      markPendingFirstRun(program.id);
-      createWindow({
-        title: program.name,
-        program: { type: "iframe", programID: program.id },
-        loading: true,
-        size: { width: 700, height: 550 },
-      });
-      windowsDispatch({ type: "REMOVE", payload: id });
     },
     [id, isLoading, programsDispatch, windowsDispatch]
   );

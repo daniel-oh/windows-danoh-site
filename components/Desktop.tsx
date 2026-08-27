@@ -10,6 +10,7 @@ import { createWindow } from "@/lib/createWindow";
 import { openProgram } from "@/lib/programs";
 import { useCreateContextMenu } from "@/state/contextMenu";
 import { useServerPrograms } from "@/lib/useServerPrograms";
+import { alert } from "@/lib/alert";
 import { useEffect, useRef, useState, useCallback } from "react";
 import cx from "classnames";
 import { useIsMobile } from "@/lib/useIsMobile";
@@ -135,6 +136,8 @@ export const Desktop = () => {
               code: sp.code ?? undefined,
               icon: sp.icon ?? undefined,
             },
+          }).catch(() => {
+            /* at the program cap: the server copy is still there */
           });
         }
       }
@@ -220,6 +223,8 @@ export const Desktop = () => {
               code: sp.code ?? undefined,
               icon: sp.icon ?? undefined,
             },
+          }).catch(() => {
+            /* at the program cap: the server copy is still there */
           });
         }
       }
@@ -468,6 +473,7 @@ function DesktopIcon({
       window.removeEventListener("mouseup", onMouseUp);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", cancel);
       window.removeEventListener("blur", cancel);
       cleanupRef.current = null;
     };
@@ -477,6 +483,10 @@ function DesktopIcon({
     if (isTouch) {
       window.addEventListener("touchmove", onTouchMove);
       window.addEventListener("touchend", onTouchEnd);
+      // A cancelled touch (scroll takeover, incoming call) never gets a
+      // touchend; without this the icon floats at its drag offset until
+      // the next touch anywhere.
+      window.addEventListener("touchcancel", cancel);
     } else {
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("mouseup", onMouseUp);
@@ -529,6 +539,7 @@ function DesktopIcon({
       }}
       onTouchEnd={contextMenuHandlers.onTouchEnd}
       onTouchMove={contextMenuHandlers.onTouchMove}
+      onTouchCancel={contextMenuHandlers.onTouchCancel}
     >
       <Image
         unoptimized
@@ -586,10 +597,26 @@ function ProgramIcon({
         { label: "Run", onClick: runProgram },
         {
           label: "Delete",
-          onClick: () => {
-            dispatch({ type: "REMOVE_PROGRAM", payload: program.name });
-            deleteProgram(program.id);
-          },
+          // Confirm first: this removes the program locally AND on the
+          // server with no Recycle Bin copy, and on phones the menu is
+          // one mis-tap away from the icon.
+          onClick: () =>
+            alert({
+              alertId: `DELETE_PROGRAM_${program.id}`,
+              title: "Confirm Delete",
+              message: `Delete "${program.name}"? This can't be undone.`,
+              actions: [
+                { label: "Cancel", callback: (close) => close() },
+                {
+                  label: "Delete",
+                  callback: (close) => {
+                    close();
+                    dispatch({ type: "REMOVE_PROGRAM", payload: program.name });
+                    deleteProgram(program.id);
+                  },
+                },
+              ],
+            }),
         },
       ]}
     />

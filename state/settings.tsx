@@ -43,9 +43,17 @@ export function setApiKeyRemembered(
   }
 }
 
-const sessionStore = createJSONStorage<Settings>(() =>
-  typeof window !== "undefined" ? window.sessionStorage : undefined!
-);
+// jotai only try/catches its DEFAULT storage getter; a custom one runs
+// bare. Safari with "Block all cookies" throws SecurityError on the
+// sessionStorage accessor itself, which would take the desktop down at
+// first render. Fall back to in-memory (undefined) instead.
+const sessionStore = createJSONStorage<Settings>(() => {
+  try {
+    return typeof window !== "undefined" ? window.sessionStorage : undefined!;
+  } catch {
+    return undefined!;
+  }
+});
 
 // Read-through wrapper: a fresh tab has empty sessionStorage, so reads
 // hydrate the key from the localStorage mirror when the visitor opted

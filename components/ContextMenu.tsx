@@ -11,16 +11,26 @@ export function ContextMenu() {
   const triggerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    // Any click closes the menu, including a click on one of its items
+    // (the item's own handler has already run by the time this bubbles).
     const handleClick = () => {
+      setContextMenu(null);
+    };
+    // touchstart fires BEFORE the tap's click. Closing on a touch inside
+    // the menu unmounted the item mid-tap and let the click fall through
+    // to whatever sat underneath (on phones: a desktop icon, which opens
+    // on a single tap). Only a touch outside the menu dismisses it.
+    const handleTouchStart = (e: TouchEvent) => {
+      if (menuRef.current?.contains(e.target as Node)) return;
       setContextMenu(null);
     };
 
     window.addEventListener("click", handleClick);
-    window.addEventListener("touchstart", handleClick);
+    window.addEventListener("touchstart", handleTouchStart);
 
     return () => {
       window.removeEventListener("click", handleClick);
-      window.removeEventListener("touchstart", handleClick);
+      window.removeEventListener("touchstart", handleTouchStart);
     };
   }, [setContextMenu]);
 

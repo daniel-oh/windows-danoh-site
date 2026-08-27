@@ -323,13 +323,50 @@ export function Explorer({ id }: { id: string }) {
           onDoubleClick={() => handleDoubleClick(itemPath)}
           className={cx({ highlighted: selectedItem === itemPath })}
           onClick={() => handleClick(itemPath)}
+          // Rows were mouse-only: no way to select, open or rename from
+          // the keyboard (including the Save/Open pickers). Enter opens,
+          // Space selects, arrows move between rows.
+          tabIndex={0}
+          aria-selected={selectedItem === itemPath}
+          onKeyDown={(e) => {
+            if (e.target !== e.currentTarget) return; // rename <input>
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleDoubleClick(itemPath);
+            } else if (e.key === " ") {
+              e.preventDefault();
+              handleClick(itemPath);
+            } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+              e.preventDefault();
+              const row = e.currentTarget;
+              const next =
+                e.key === "ArrowDown"
+                  ? row.nextElementSibling
+                  : row.previousElementSibling;
+              (next as HTMLElement | null)?.focus();
+            }
+          }}
           {...createContextMenu([
             {
               label: "Delete",
-              onClick: async () => {
-                const fs = await getFsManager();
-                await fs.delete(itemPath);
-              },
+              // No Recycle Bin for files, so confirm before wiping.
+              onClick: () =>
+                alert({
+                  alertId: `DELETE_FILE_${itemPath}`,
+                  title: "Confirm Delete",
+                  message: `Delete "${item.name}"? This can't be undone.`,
+                  actions: [
+                    { label: "Cancel", callback: (close) => close() },
+                    {
+                      label: "Delete",
+                      callback: async (close) => {
+                        close();
+                        const fs = await getFsManager();
+                        await fs.delete(itemPath);
+                      },
+                    },
+                  ],
+                }),
             },
             {
               label: "Rename",
@@ -384,21 +421,23 @@ export function Explorer({ id }: { id: string }) {
   return (
     <div className={styles.explorer}>
       <div className={styles.actions}>
+        {/* alt="" on the glyphs: the visible label already names each
+         * button, so a non-empty alt read as "Up Up". */}
         <button onClick={handleNavigateUp}>
-          <Image src={up} alt="Up" />
+          <Image src={up} alt="" />
           <span>Up</span>
         </button>
         <button onClick={handleNewFolder}>
-          <Image src={newFolder} alt="New Folder" />
+          <Image src={newFolder} alt="" />
           <span>New Folder</span>
         </button>
         <button onClick={handlePaste}>
-          <Image src={paste} alt="Paste" />
+          <Image src={paste} alt="" />
           <span>Paste</span>
         </button>
         {canMountDirectory && (
           <button onClick={handleMount}>
-            <Image src={disk} alt="Mount" />
+            <Image src={disk} alt="" />
             <span>Mount</span>
           </button>
         )}

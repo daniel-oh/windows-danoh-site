@@ -76,6 +76,17 @@ export const windowsListAtom = atom(
         set(_listAtom, (prev) => prev.filter((v) => v !== id));
         set(pruneWindowFocusAtom, id);
         clearCloseGuard(id);
+        // A Fix & Iterate window only makes sense next to the app it
+        // targets: once the per-window atom below is dropped, a later
+        // read of the target id yields a fresh DEFAULT window, and Help
+        // would crash on it. Close dependents first so the focus-restore
+        // step never hands focus to a window about to disappear.
+        for (const other of get(_listAtom)) {
+          const p = get(windowAtomFamily(other)).program;
+          if (p.type === "help" && p.targetWindowID === id) {
+            set(windowsListAtom, { type: "REMOVE", payload: other, force: true });
+          }
+        }
         // Focus restore: closing the focused window otherwise strands
         // keyboard/screen-reader users on <body>. Hand focus to the
         // top remaining non-minimized window, both in the atom and in

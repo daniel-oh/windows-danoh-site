@@ -49,10 +49,19 @@ function MenuBarButton({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // The dropdown is portaled to document.body, so it is NOT inside
+    // `ref`. Without the data-attribute check a press on a menu item
+    // counts as "outside", the menu unmounts on mousedown, and the click
+    // never lands (only keyboard Enter worked).
+    const isOutside = (target: EventTarget | null) => {
+      const el = target as Element | null;
+      if (!ref.current || !el) return false;
+      if (ref.current.contains(el)) return false;
+      return !el.closest?.("[data-menubar-dropdown]");
+    };
+
     const handleMouseDown = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        closeMenu();
-      }
+      if (isOutside(event.target)) closeMenu();
     };
 
     const handleBlur = () => {
@@ -60,9 +69,7 @@ function MenuBarButton({
     };
 
     const handleTouchStart = (event: TouchEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        closeMenu();
-      }
+      if (isOutside(event.target)) closeMenu();
     };
 
     window.addEventListener("mousedown", handleMouseDown);
@@ -178,6 +185,7 @@ function MenuBarDropdown({
   return (
     <div
       ref={menuRef}
+      data-menubar-dropdown=""
       className={cx(styles.menuBarDropdown, "window")}
       role="menu"
       style={{

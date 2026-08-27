@@ -17,6 +17,17 @@ type ProgramsState = {
   programs: ProgramEntry[];
 };
 
+/** Cap on generated programs per browser (each is a VFS folder with a
+ * version history, so this bounds IndexedDB growth). */
+export const PROGRAM_LIMIT = 50;
+
+export class ProgramLimitError extends Error {
+  constructor() {
+    super(`Program limit reached (${PROGRAM_LIMIT})`);
+    this.name = "ProgramLimitError";
+  }
+}
+
 type ProgramAction =
   | { type: "ADD_PROGRAM"; payload: ProgramEntry }
   | { type: "REMOVE_PROGRAM"; payload: string }
@@ -33,7 +44,13 @@ type ProgramAction =
       payload: { id: string; version: number };
     };
 
-export const programsAtom = atom<Promise<ProgramsState>, [ProgramAction], void>(
+// Write result typed as the promise it actually is, so callers can await
+// it (Run) or attach a catch (Desktop sync) for the program-cap error.
+export const programsAtom = atom<
+  Promise<ProgramsState>,
+  [ProgramAction],
+  Promise<void>
+>(
   async (get) => {
     const fsManager = await getFsManager();
     const programs = await get(fsManager.getFolderAtom(PROGRAMS_PATH, "deep"));
@@ -99,9 +116,12 @@ async function programsReducer(
   switch (action.type) {
     case "ADD_PROGRAM": {
       const existing = await fsManager.getFolder(PROGRAMS_PATH, "shallow");
-      if (existing && Object.keys(existing.items).length >= 50) {
-        console.warn("Maximum program limit reached");
-        break;
+      if (existing && Object.keys(existing.items).length >= PROGRAM_LIMIT) {
+        // Silently skipping left Run's already-open window on
+        // "Generating program..." forever. Throw so the caller can tell
+        // the visitor and not open a window for a program that was never
+        // written.
+        throw new ProgramLimitError();
       }
       const { code, id: _id, name: _name, ...rest } = action.payload;
       const path = `${PROGRAMS_PATH}/${action.payload.id}`;

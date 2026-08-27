@@ -451,16 +451,20 @@ export function Minesweeper() {
         ))}
       </div>
 
-      {status === "won" && (
-        <div style={{ fontWeight: "bold" }}>
-          🏴‍☠️ Avast! You cleared the deck in {seconds}s.
-        </div>
-      )}
-      {status === "lost" && (
-        <div style={{ fontWeight: "bold", color: "#800000" }}>
-          💀 Walked the plank. Try again?
-        </div>
-      )}
+      {/* Always mounted so the live region exists before the outcome
+       * lands in it; screen readers ignore regions created with content. */}
+      <div role="status" aria-live="polite">
+        {status === "won" && (
+          <div style={{ fontWeight: "bold" }}>
+            🏴‍☠️ Avast! You cleared the deck in {seconds}s.
+          </div>
+        )}
+        {status === "lost" && (
+          <div style={{ fontWeight: "bold", color: "#800000" }}>
+            💀 Walked the plank. Try again?
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -544,7 +548,10 @@ function CellButton({
       onFocus={onFocusCell}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      disabled={disabled && !cell.revealed}
+      // aria-disabled, not disabled: a disabled element drops keyboard
+      // focus, and the roving-tabindex cell is often unrevealed when the
+      // game ends. handleClick/handleContextMenu already no-op.
+      aria-disabled={disabled && !cell.revealed ? true : undefined}
       style={{
         // Overriding 98.css's global button min-width:75 / min-height:23
         // so CSS Grid's fixed cell track is respected on every row and

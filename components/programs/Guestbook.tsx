@@ -218,7 +218,6 @@ export function Guestbook() {
           flex: 1,
           minHeight: 80,
         }}
-        aria-live="polite"
       >
         {loading && <div style={{ fontSize: 12, color: "#444" }}>Loading…</div>}
         {!loading && error && (
