@@ -15,6 +15,7 @@ import type { MDXComponents } from "mdx/types";
 import { SitePreview } from "@/components/mdx/SitePreview";
 import { Rive } from "@/components/mdx/Rive";
 
+import Pivots, { meta as pivots } from "./posts/three-pivots-and-a-lowercase-k.mdx";
 import Feels, { meta as feels } from "./posts/one-day-128-feelings.mdx";
 import Eleven, { meta as eleven } from "./posts/eleven-sites-one-operator.mdx";
 import Fable5, { meta as fable5 } from "./posts/letting-fable-5-loose.mdx";
@@ -51,6 +52,7 @@ type MDXContent = ComponentType<{ components?: MDXComponents }>;
 // `satisfies` typo-proofs every meta against the BlogPost shape at
 // compile time — a missing field in an MDX meta fails tsc, not prod.
 const entries = [
+  [pivots, Pivots],
   [feels, Feels],
   [eleven, Eleven],
   [fable5, Fable5],

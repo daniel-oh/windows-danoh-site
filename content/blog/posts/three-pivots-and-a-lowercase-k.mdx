@@ -1,0 +1,107 @@
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "three-pivots-and-a-lowercase-k",
+  title: "Three pivots and a lowercase k",
+  date: "2026-08-27",
+  author: "Daniel Oh",
+  summary:
+    "August across the sites: three of them changed what they are, one got rebuilt in six waves, two learned to say less, and a typeface's k went through seven angles. What shipped, and what it actually cost.",
+  tags: ["portfolio", "engineering", "ai"],
+  readingTime: "8 min",
+};
+
+
+Five weeks ago I wrote [Eleven sites, one operator](/blog/eleven-sites-one-operator) and described each site in a sentence. Three of those sentences are now wrong. Not because the sites broke. Because I changed my mind about what they were for, and the engine underneath let me act on it inside a week each time.
+
+This is the August log. Same folder, opened again.
+
+## Three pivots
+
+**Lootrunners** was contractor pay cycles settled in USDC. It is now [financial control for AI agents](https://lootrunners.com): the same non-custodial rail, pointed at a customer that did not exist as a category a year ago. Agents get a mandate. Every spend is evaluated by one deterministic policy engine, twelve predicates, and lands as AUTO, ASK, or BLOCK. Scout answers "what happened" in plain English by playing back the transaction trace.
+
+The backend for that landed in thirty-eight commits between 3:50 one afternoon and 2:33 the next. B0 through B16 on the server, FE-0 through FE-7 on the front, and a launch-gates table that ended the day at 38 of 42 proven. The four that remain are the ones a human has to sign: security review, counsel, custody review, mainnet credentials. The old `/contractors` page is still up, quietly carrying the SEO it earned, because a pivot is not an excuse to throw away a year of links.
+
+<SitePreview
+  domain="lootrunners.com"
+  name="Lootrunners"
+  caption="Was: contractor pay cycles. Now: mandates, a policy engine, and a Scout that replays the trace. Cut over on August 15."
+/>
+
+**IntelliYap** did not change customers. It changed its sentence. The old positioning was a governed AI workforce, which is accurate and sounds like a procurement document. The new hero says [Make AI more predictable](https://intelliyap.com), which is what the buyer actually wants and what the governance layer actually does. The marketing site was rebuilt from prototypes, all seven pages, and the dead v2 surface was deleted rather than left to rot.
+
+The app went from v0.92 to v0.100 in five days and from migration 0032 to 0059. Closed signups with a request-access mode, an operator pipeline so I can see the funnel, a publish plane with per-request metering, and a learning layer (skills, a teach flow, a private training plane with LoRA jobs, a private runtime) that is built and dormant until a customer needs it. The marketing for that learning layer exists too, behind a flag that defaults to off. I would rather ship a feature I cannot yet say than say a feature I cannot yet ship. 426 unit tests, 59 migrations replayed under the RLS harness, 75 end-to-end.
+
+<SitePreview
+  domain="intelliyap.com"
+  name="IntelliYap"
+  caption="Same governance, a truer sentence. Seven pages rebuilt, v2 deleted, the learning layer live in code and off in copy."
+/>
+
+**Kayrage** is the one I thought about longest. It launched as a culture magazine with a live stream and a membership. The membership was the wrong center of gravity. On August 24 the commit log says, in capital letters, THE PIVOT DEPLOY: about fifty commits in a day, the homepage rebuilt around a TV projection hero, the nav collapsed to STORIES · SHOP · LIVE · COMMISSION · ACCOUNT, and the tagline set to *Things of Interest*. Publication foundations underneath: immutable story snapshots enforced by database grants, a story renderer, saves and comments, a moderation queue, an RSS feed, one-click unsubscribe per RFC 8058, and a four-email design family with an order confirmation that looks like a paper receipt.
+
+The next morning I retired the community funnel. The members page redirects to signup and the member-pass popup is gone. The footer now signs off in broadcast voice, *End of transmission · stay tuned*, instead of a returns-policy line, which tells you which side won.
+
+<SitePreview
+  domain="kayrage.com"
+  name="Kayrage"
+  caption="From magazine plus membership to publication plus shop. Fifty commits on the 24th, the community funnel retired on the 25th."
+/>
+
+## The lowercase k
+
+Kayrage also shipped its own typeface this month: a `/typeface` page with a live specimen, a six-weight waterfall, a type tester, a glyph inspector, a pay-what-you-want type package with a five dollar floor, and a specimen poster. The house face is now used sitewide.
+
+Then the commits get honest about what design work looks like. *Type: the k leans 12 degrees.* Then 22. Then 24. Then 26. Then 28. Then back to 24. Then, five days after the first one: *final lowercase k, 20 degrees, user-approved after live A/B.* Twelve commits for one glyph. I do not think any of them were wasted.
+
+Behind the magazine there is now Kayrage Studio, a Discord-native editorial second brain. The rule that makes it work is in the package description: canonical state lives in Postgres and Discord is a projection. Twenty packages in a monorepo, a research engine that shows its sources, a creative system with brand kits and a production task state machine that posts task cards to the channel, and a bridge that turns a Studio candidate into a preview on the live site. It is a week old.
+
+## Six waves, two days
+
+[Jupiter Wax](https://jupiterwax.com), the record label site, got a full redesign in two days, organized as six waves. Wave one retired the Paper/Void theme toggle, moved to an icy palette with a two-bar chrome, and unified every broadcast surface on one state model. Wave two was likes and saves end to end. Waves three through six were detail pages, the live room, commerce and accounts, editorial. 372 tests green after wave one.
+
+The part I keep opening is the orrery: an etched Jupiter in the center, artists and releases as bodies on tinted orbits, inertia and parallax on the drag, and a tap that eases a body into a held close-up with its detail panel. On phones the record platter has physics now. Spring wobble on hover, a finger brake on hold, motor spin-up on release, with a WebGL-free path for devices that would rather not.
+
+Two small things from that log that I would defend in a code review. The hero's live state is *honest, never fake-live*: it says Archive Radio, On Air, or Next Live with a reminder, and it does not pretend to be broadcasting when it is not. And the play button is a real SVG triangle now instead of the U+25B6 character, because iOS renders that character as an emoji and a record label should not have a cartoon play button.
+
+<SitePreview
+  domain="jupiterwax.com"
+  name="Jupiter Wax"
+  caption="Six waves in two days. An orrery for navigation, platter physics on phones, and a hero that never fakes being live."
+/>
+
+## Two directories learn to say less
+
+[312 Built](https://312built.com) shipped a guided project brief: describe a job once in six steps, get a structured brief, a ZIP resolved to a region with live contractor counts, a shortlist with a *why it fits* and honest concerns pulled from real review data, and a fan-out of one normalized brief to the pros you pick. The verification line in the commit body reads like a receipt: roof leak in 60647, six matched pros with real explainability, sent to three, three leads created. A follow-up loop closes it: how it went, what it cost, and a consented review that becomes a site review.
+
+The commit I am proudest of on that site removed words. *Retire "vetted" from site copy, 36 occurrences.* The tier we called vetted verified nothing: not license, not insurance, not identity, not workmanship. It was replaced with what is true: evaluated, reviewed, ranked by real reviews. The same day the shortlist stopped ranking by paid placement.
+
+<SitePreview
+  domain="312built.com"
+  name="312 Built"
+  caption="A six-step brief that becomes a real lead, and 36 fewer uses of a word the site could not back up."
+/>
+
+[312 Eats](https://312eats.com), the fork, got a group-dinner flow. A request is matched to restaurants that can actually take the party, an unclaimed restaurant can reply through a tokened link with no signup, the diner compares replies side by side, and after the dinner the site asks what the real per-person price was, so the next person gets a number instead of a dollar-sign rating. The matcher scores fit and reviews only. Never ad priority, never subscription tier. That rule is in the commit message so nobody, including me, forgets.
+
+<SitePreview
+  domain="312eats.com"
+  name="312 Eats"
+  caption="Group inquiries end to end. Restaurants answer through a link, and the matcher ignores who is paying."
+/>
+
+## Chores, including this site
+
+On August 3, seven repos got the identical commit: *db: upgrade postgres 16 to 17 (major, dump/restore applied on server).* One of them was this one. One of them found the sharp edges for the rest: a role password that did not survive the restore, and a `BYPASSRLS` attribute that quietly did not either. Both are written up in the repo that hit them, which is the kind of note you only appreciate on the next restore.
+
+This desktop got an end-to-end audit this week: security, accessibility, SEO, and a live probe of production. Most of it was the usual, dependencies with advisories, an admin token that should not have been the same string visitors type in, a rate-limit identity that trusted a header it should not. Two findings I liked more. The File menu on every window had stopped working with a mouse; the dropdown had been moved to a portal in an earlier refactor and the outside-click handler was closing it a millisecond before the click landed. Keyboard still worked, so nobody noticed. And the RSS feed had been silently shipping summaries for any post with a screenshot in it. Fixed, and every item carries its full body now.
+
+Also: the startup chime is off by default. It was a good joke for one visit. It is a setting now.
+
+## The pattern
+
+Four of the biggest landings this month had the same shape. A program document or a handoff spec first. Then lettered, numbered slices, B0 to B16, FE-0 to FE-7, Wave 1 to 6, Phase 1 to 8. Then a build-complete document with a gates table that says out loud what is proven and what a human still has to sign. Nothing in that shape is new. What is new is that the middle part, the slices, takes hours instead of quarters, so the document at the front and the gates at the back are where the actual work is.
+
+The other pattern is a word: honest. It shows up in commit messages across five unrelated repos this month. *Honest, never fake-live.* *Never a fake spinner.* *Retire vetted.* *Never ad priority.* *Substantiate every marketing claim.* When the visible layer is nearly free, the only thing that separates a site from a slide deck is whether it is allowed to say things it cannot do. So that rule moved into the tooling: features gated behind flags that default to off, copy linted in CI for the trust-language regression list, and an em-dash guard that has now spread from this blog into Jupiter Wax's test suite, which I find funnier than I should.
+
+[The stack executes, and I decide](/blog/letting-fable-5-loose). This month, deciding mostly meant un-deciding: three positions I had been sure of five weeks ago, corrected in a week each, with the same engine underneath. The engine is the reusable part. The sentences were the work.
