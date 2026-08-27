@@ -10,14 +10,20 @@ import { log } from "@/lib/log";
 import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
+import { parseJson } from "@/lib/api/json";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "name");
   if (denied) return denied;
   const capped = await costGuard(req);
   if (capped) return capped;
-  const body = await req.json();
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const body = (parsed.body ?? {}) as Record<string, unknown>;
   const { desc } = body;
+  if (typeof desc !== "string" || !desc.trim()) {
+    return Response.json({ error: "desc is required" }, { status: 400 });
+  }
 
   const settings = await getSettingsFromJSON(body);
 

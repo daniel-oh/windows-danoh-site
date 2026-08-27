@@ -31,9 +31,13 @@ export async function checkAccess(
     );
   }
 
-  // Check if session exists and whether it's an invite code session
+  // Check if session exists and whether it's an invite code session.
+  // Bound by age to match the cookie's 24h maxAge: rows live 90 days,
+  // so without this a captured cookie value stayed valid long after the
+  // browser had dropped it.
   const sessionResult = await query(
-    "SELECT id, code_hash, invite_code_hash FROM sessions WHERE id = $1",
+    `SELECT id, code_hash, invite_code_hash FROM sessions
+     WHERE id = $1 AND created_at > NOW() - INTERVAL '1 day'`,
     [sessionId]
   );
 

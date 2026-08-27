@@ -15,13 +15,16 @@ import { costGuard } from "@/lib/api/costGuard";
 import { sanitizeUserMessages } from "@/lib/sanitizeMessages";
 import { buildHelpSystem, extractAppContext } from "@/lib/helpPrompt";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
+import { parseJson } from "@/lib/api/json";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "help");
   if (denied) return denied;
   const capped = await costGuard(req);
   if (capped) return capped;
-  const body = await req.json();
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const body = (parsed.body ?? {}) as Record<string, unknown>;
   const settings = await getSettingsFromJSON(body);
   const user = await getUser();
   // A visitor who brings their own Anthropic API key pays for their own

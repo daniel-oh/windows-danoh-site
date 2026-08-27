@@ -21,13 +21,18 @@ function truncateContent(content: any): any {
 }
 
 export function sanitizeUserMessages(
-  messages: RawMessage[],
+  messages: unknown,
   maxCount = 20
 ): SanitizedMessage[] {
-  return messages
+  // Request bodies are untrusted: a non-array `messages` used to throw
+  // here and surface as a 500.
+  if (!Array.isArray(messages)) return [];
+  return (messages as RawMessage[])
     .filter(
       (m): m is SanitizedMessage =>
-        m.role === "user" || m.role === "assistant"
+        !!m &&
+        typeof m === "object" &&
+        (m.role === "user" || m.role === "assistant")
     )
     .slice(-maxCount)
     .map((m) => ({ ...m, content: truncateContent(m.content) }));

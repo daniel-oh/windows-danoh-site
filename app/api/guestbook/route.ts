@@ -4,6 +4,7 @@ import { getCheapestModel } from "@/ai/client";
 import { notifyAdmin } from "@/lib/notify";
 import { getClientIP } from "@/lib/api/clientIP";
 import { createLastSeenBucket, createRateLimitBucket } from "@/lib/api/rateLimit";
+import { parseJson, requireJson } from "@/lib/api/json";
 
 const MAX_NAME = 40;
 const MAX_MESSAGE = 280;
@@ -123,12 +124,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const {
     name,

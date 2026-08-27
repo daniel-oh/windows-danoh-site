@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getCodeHash } from "@/lib/accessCode";
 import { hashInviteCode } from "@/lib/inviteHash";
 import { getClientIP } from "@/lib/api/clientIP";
+import { parseJson } from "@/lib/api/json";
 import crypto from "crypto";
 
 function constantTimeEqual(a: string, b: string): boolean {
@@ -57,7 +58,9 @@ export async function POST(req: Request) {
   const limited = rateLimit(req);
   if (limited) return limited;
 
-  const { code } = await req.json();
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const { code } = (parsed.body ?? {}) as { code?: unknown };
 
   if (typeof code !== "string" || code.length === 0) {
     return new Response(JSON.stringify({ error: "Access code required" }), {

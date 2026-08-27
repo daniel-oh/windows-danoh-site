@@ -14,13 +14,16 @@ import { createPaymentRequiredResponse } from "@/server/paymentRequiredResponse"
 import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
+import { parseJson } from "@/lib/api/json";
 
 export async function POST(req: Request) {
   const denied = await checkAccess(req, "icon");
   if (denied) return denied;
   const capped = await costGuard(req);
   if (capped) return capped;
-  const body = await req.json();
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const body = (parsed.body ?? {}) as Record<string, unknown>;
   const settings = await getSettingsFromJSON(body);
 
   // A visitor who brings their own Anthropic API key pays for their own
@@ -41,6 +44,9 @@ export async function POST(req: Request) {
   }
 
   const prompt = body.name;
+  if (typeof prompt !== "string" || !prompt.trim()) {
+    return Response.json({ error: "name is required" }, { status: 400 });
+  }
 
   let imagePrompt: string | null;
   try {

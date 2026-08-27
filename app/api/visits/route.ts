@@ -1,6 +1,7 @@
 import { query, hasDatabase } from "@/lib/db";
 import { getClientIP } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
+import { parseJson, requireJson } from "@/lib/api/json";
 
 // Per-IP rate limit to make it harder to inflate the counter by forging
 // visitor_ids client-side.
@@ -24,7 +25,8 @@ async function getTotal(): Promise<number> {
 
 export async function GET() {
   const total = await getTotal();
-  return Response.json({ total });
+  // Live counter: never let an intermediary heuristically cache it.
+  return Response.json({ total }, { headers: { "cache-control": "no-store" } });
 }
 
 export async function POST(req: Request) {
@@ -35,12 +37,11 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const { visitorId } = (body ?? {}) as { visitorId?: unknown };
   if (!isValidVisitor(visitorId)) {

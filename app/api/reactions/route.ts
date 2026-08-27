@@ -1,6 +1,7 @@
 import { query, hasDatabase } from "@/lib/db";
 import { getClientIP } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
+import { parseJson, requireJson } from "@/lib/api/json";
 
 // Emoji set. Change here to add/remove reaction types — the UI reads this list.
 export const REACTION_TYPES = ["like", "love", "fire"] as const;
@@ -92,12 +93,11 @@ export async function POST(req: Request) {
     return Response.json({ counts: EMPTY_COUNTS, mine: [] });
   }
 
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const { slug, reaction, visitorId } = (body ?? {}) as {
     slug?: unknown;

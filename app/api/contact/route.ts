@@ -1,5 +1,6 @@
 import { canSendEmail, notifyAdmin, sendEmail } from "@/lib/notify";
 import { getClientIP } from "@/lib/api/clientIP";
+import { parseJson, requireJson } from "@/lib/api/json";
 import {
   createLastSeenBucket,
   createRateLimitBucket,
@@ -62,12 +63,11 @@ function countUrls(s: string): number {
 }
 
 export async function POST(req: Request) {
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON" }, { status: 400 });
-  }
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
+  const parsed = await parseJson(req);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.body;
 
   const {
     name,
