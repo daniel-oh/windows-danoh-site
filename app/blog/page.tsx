@@ -9,6 +9,14 @@ import { StatusBarCount, StatusBarHint } from "./StatusBarCount";
 import styles from "./blog.module.css";
 import { FolderIcon } from "./FolderIcon";
 
+// This route is fully static, so `new Date()` here would freeze at build
+// time and go stale every January until the next deploy. The newest
+// post's year is honest and only moves when content does.
+const copyrightYear = sortedPosts.reduce(
+  (y, p) => Math.max(y, new Date(p.date).getFullYear()),
+  0
+);
+
 export const metadata = buildMetadata({
   title: "Blog · Daniel Oh",
   description:
@@ -99,7 +107,7 @@ export default function BlogIndex() {
         <main id="main" className={`${styles.body} ${styles.bodyProse}`}>
           <BlogIndexContent posts={sortedPosts} />
           <p className={styles.copyright}>
-            © {new Date().getFullYear()} Daniel Oh · danoh.com
+            © {copyrightYear} Daniel Oh · danoh.com
           </p>
           <div className={styles.footer}>
             <Link href="/" className={styles.footerLink}>

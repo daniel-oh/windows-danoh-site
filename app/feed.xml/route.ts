@@ -1,6 +1,7 @@
 import { createElement } from "react";
-import { sortedPosts } from "@/content/blog/registry";
-import { getPostComponent } from "@/content/blog/registry";
+import type { MDXComponents } from "mdx/types";
+import { sortedPosts, getPostComponent } from "@/content/blog/registry";
+import { shotSlug, type SitePreviewProps } from "@/components/mdx/SitePreview";
 
 const SITE = "https://danoh.com";
 const TITLE = "Daniel Oh · Blog";
@@ -37,14 +38,62 @@ async function getRenderer(): Promise<RenderFn | null> {
   }
 }
 
+// Server-safe stand-ins for the rich embeds (registry.postComponents).
+// The real SitePreview uses next/image and Rive is a next/dynamic client
+// component; both are opaque client references inside a route handler,
+// so renderToStaticMarkup throws on them. Feed readers get a plain
+// linked screenshot / a text description instead.
+const feedComponents: MDXComponents = {
+  SitePreview: ({ domain, name, caption, slug }: SitePreviewProps) =>
+    createElement(
+      "figure",
+      null,
+      createElement(
+        "a",
+        { href: `https://${domain}` },
+        createElement("img", {
+          src: `${SITE}/blog/work/${slug ?? shotSlug(domain)}.jpg`,
+          alt: `${name} website preview`,
+          width: 1280,
+          height: 800,
+        })
+      ),
+      createElement("figcaption", null, caption ?? `${name} (${domain})`)
+    ),
+  Rive: ({ alt, caption }: { alt?: string; caption?: string }) =>
+    createElement(
+      "figure",
+      null,
+      createElement("p", null, alt ?? "Animation"),
+      createElement(
+        "figcaption",
+        null,
+        `${caption ? caption + " " : ""}(animation plays on the site)`
+      )
+    ),
+};
+
+// RSS has no base URL: readers show "/blog/x" links and "/_next/image"
+// srcs as dead. Absolutize root-relative href/src (not protocol-relative
+// "//host" ones).
+function absolutize(html: string): string {
+  return html.replace(/\b(href|src)="\/(?!\/)/g, `$1="${SITE}/`);
+}
+
 function renderPostHtml(render: RenderFn | null, slug: string): string | null {
   if (!render) return null;
   try {
     const Component = getPostComponent(slug);
     if (!Component) return null;
-    return render(createElement(Component));
+    return absolutize(
+      render(createElement(Component, { components: feedComponents }))
+    );
   } catch (err) {
-    console.warn("[feed] failed to render", slug, err);
+    // One line, not a stack: this runs every cache miss and the
+    // fallback (summary-only item) is by design.
+    console.warn(
+      `[feed] ${slug}: falling back to summary (${(err as Error)?.message ?? err})`
+    );
     return null;
   }
 }

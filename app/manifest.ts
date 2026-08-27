@@ -16,14 +16,16 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "192x192",
         type: "image/png",
       },
+      // Declared sizes must match the files: Chrome's installability
+      // check and Lighthouse both flag a mismatch. Both PNGs are 256px.
       {
         src: "/icon.png",
-        sizes: "512x512",
+        sizes: "256x256",
         type: "image/png",
       },
       {
         src: "/icon-maskable.png",
-        sizes: "512x512",
+        sizes: "256x256",
         type: "image/png",
         purpose: "maskable",
       },

@@ -12,6 +12,8 @@
 
 import type { ComponentType } from "react";
 import type { MDXComponents } from "mdx/types";
+import { SitePreview } from "@/components/mdx/SitePreview";
+import { Rive } from "@/components/mdx/Rive";
 
 import Feels, { meta as feels } from "./posts/one-day-128-feelings.mdx";
 import Eleven, { meta as eleven } from "./posts/eleven-sites-one-operator.mdx";
@@ -76,6 +78,14 @@ export function getPostComponent(slug: string): MDXContent | null {
   return bySlug.get(slug) ?? null;
 }
 
+/** Rich embeds available to every post as bare JSX tags (`<SitePreview>`,
+ * `<Rive>`) with NO import line in the .mdx. Posts must not import these
+ * directly: an explicit import can't be overridden by the `components`
+ * prop, and both are client-only (next/image, next/dynamic), which
+ * throws under the feed's renderToStaticMarkup. feed.xml passes its own
+ * server-safe stand-ins for the same names. */
+export const postComponents: MDXComponents = { SitePreview, Rive };
+
 /** The one shared post-body renderer (was duplicated verbatim in the
  * route page and the in-OS Blog program). */
 export function PostBody({ slug }: { slug: string }) {
@@ -85,7 +95,7 @@ export function PostBody({ slug }: { slug: string }) {
   const Component = getPostComponent(slug);
   if (!Component) return <p>Post content not found.</p>;
   // eslint-disable-next-line react-hooks/static-components
-  return <Component />;
+  return <Component components={postComponents} />;
 }
 
 // --- Related / adjacent helpers -------------------------------------

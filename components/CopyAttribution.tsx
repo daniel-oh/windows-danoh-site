@@ -57,6 +57,11 @@ export function CopyAttribution({
           ? (anchor as Element)
           : anchor.parentElement;
       if (startEl?.closest("pre, [data-no-copy-attribution]")) return;
+      // Inline <code> too, but only when the WHOLE selection sits inside
+      // it (a long path or command). Prose that merely contains a code
+      // span should still get the citation.
+      const codeEl = startEl?.closest("code");
+      if (codeEl && codeEl.contains(range.commonAncestorContainer)) return;
       // The ancestor check misses selections that SPAN a code block plus
       // surrounding prose (their common ancestor sits above the <pre>).
       // Anything the selection so much as touches opts the copy out.

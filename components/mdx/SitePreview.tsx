@@ -12,19 +12,14 @@ import styles from "./SitePreview.module.css";
 
 // domain -> shot slug: strip the TLD and any punctuation. "312built.com"
 // -> "312built", "amtraininghall.com" -> "amtraininghall".
-function shotSlug(domain: string): string {
+export function shotSlug(domain: string): string {
   return domain
     .replace(/\.[a-z]+$/i, "")
     .replace(/[^a-z0-9]+/gi, "")
     .toLowerCase();
 }
 
-export function SitePreview({
-  domain,
-  name,
-  caption,
-  slug,
-}: {
+export type SitePreviewProps = {
   /** Bare domain, e.g. "floeberg.com". Also the title-bar label + link. */
   domain: string;
   /** Human name, used for alt text. */
@@ -33,7 +28,9 @@ export function SitePreview({
   caption?: string;
   /** Override the derived shot filename slug if it differs from the domain. */
   slug?: string;
-}) {
+};
+
+export function SitePreview({ domain, name, caption, slug }: SitePreviewProps) {
   const file = slug ?? shotSlug(domain);
   return (
     <figure className={styles.figure}>

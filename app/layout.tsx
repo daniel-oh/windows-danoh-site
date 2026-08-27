@@ -51,6 +51,12 @@ export const metadata: Metadata = {
   keywords: ["Daniel Oh", "platform engineer", "Nike", "cybersecurity", "DevOps", "Kubernetes", "cloud infrastructure", "Michigan Engineering"],
   authors: [{ name: "Daniel Oh", url: "https://danoh.com" }],
   icons: {
+    // Setting `icons` at all replaces the app/icon.png file-convention
+    // link, so the tab favicon has to be listed here explicitly too.
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon.png", sizes: "256x256", type: "image/png" },
+    ],
     // iOS ignores manifest icons; without this, add-to-home-screen
     // falls back to a page screenshot.
     apple: "/apple-touch-icon.png",

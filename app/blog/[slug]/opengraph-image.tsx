@@ -109,7 +109,7 @@ export default async function OpengraphImage({
                 fontWeight: 700,
               }}
             >
-              danoh.com — blog
+              danoh.com · blog
             </div>
             {/* Minimize and maximize are drawn shapes, not glyphs — the
              * pixel font has no ▭/□ and satori's fallback renders a

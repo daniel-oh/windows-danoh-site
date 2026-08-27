@@ -21,6 +21,17 @@ const nextConfig = {
   output: "standalone",
   images: {
     remotePatterns: [{ hostname: "localhost" }],
+    // Only these same-origin paths go through the optimizer. Without an
+    // allowlist /_next/image?url=<anything local> is an open resize
+    // service (scanners hit it with url=/ and the logs fill with
+    // "isn't a valid image"); with it, junk URLs 400 before any fetch.
+    // Static imports resolve under /_next/static/media.
+    localPatterns: [
+      { pathname: "/blog/**" },
+      { pathname: "/headshot.jpg" },
+      { pathname: "/headshot-resume.jpg" },
+      { pathname: "/_next/static/media/**" },
+    ],
     formats: ["image/avif", "image/webp"],
   },
   transpilePackages: ["file-system-access", "fetch-blob"],

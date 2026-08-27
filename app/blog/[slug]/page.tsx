@@ -49,7 +49,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url,
       type: "article",
       publishedTime: post.date,
-      authors: [post.author],
+      // article:author expects a profile URL, not a display name (the
+      // name lives in JSON-LD's Person).
+      authors: ["https://danoh.com"],
       tags: post.tags,
     },
     twitter: {
