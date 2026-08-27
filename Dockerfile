@@ -1,4 +1,7 @@
-FROM node:24-alpine AS base
+# Pinned by digest so a rebuild is reproducible and a poisoned tag can't
+# slip in. Refresh (amd64+arm64 manifest list digest):
+#   curl -s https://hub.docker.com/v2/repositories/library/node/tags/24-alpine | jq -r .digest
+FROM node:24-alpine@sha256:e67514e5d0f6c46656005e1b693b2ec9d52e80b641307de684d4a015ba7a4eaf AS base
 
 FROM base AS deps
 RUN apk add --no-cache libc6-compat

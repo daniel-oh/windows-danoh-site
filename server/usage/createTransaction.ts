@@ -1,4 +1,9 @@
-import { Client } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/generated/supabase/types";
+
+// Any Database-typed client; in practice the service client from the
+// Stripe webhook, since a purchase is credited with no user session.
+type Client = SupabaseClient<Database>;
 
 export async function createTransaction({
   client,

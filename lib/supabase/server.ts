@@ -5,9 +5,12 @@ import { cookies } from "next/headers";
 export async function createClient() {
   const cookieStore = await cookies();
 
+  // Anon key, not the service key: this client carries the visitor's
+  // session cookie, so RLS must apply to it. RLS-bypassing work goes
+  // through lib/supabase/service.ts on purpose.
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {

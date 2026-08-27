@@ -6,9 +6,12 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
+  // Anon key: this runs on the Edge for every request and only needs
+  // to refresh the visitor's session. The service key must never be
+  // bundled into middleware.
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {

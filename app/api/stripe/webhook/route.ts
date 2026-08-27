@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { headers } from "next/headers";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import { createTransaction } from "@/server/usage/createTransaction";
 import { query, hasDatabase } from "@/lib/db";
 
@@ -83,7 +83,11 @@ export async function POST(req: Request) {
       return Response.json({ received: true, ignored: "not paid" });
     }
 
-    const supabase = await createClient();
+    // Webhooks arrive with no user session, so a cookie-backed client
+    // would insert as anon and RLS would reject it. The service client
+    // is the intended RLS bypass here: the userId comes from metadata
+    // we set at checkout, and the signature above proves Stripe sent it.
+    const supabase = createServiceClient();
     const { error } = await createTransaction({
       client: supabase,
       userId,

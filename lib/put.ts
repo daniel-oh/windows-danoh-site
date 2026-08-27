@@ -1,5 +1,5 @@
 import { isLocal } from "./isLocal";
-import { createClient } from "./supabase/server";
+import { createServiceClient } from "./supabase/service";
 
 export async function put(path: string, blob: Blob): Promise<string> {
   if (isLocal()) {
@@ -11,7 +11,9 @@ export async function put(path: string, blob: Blob): Promise<string> {
 
     return `http://localhost:3000/blob/${path}`;
   }
-  const supabase = await createClient();
+  // Uploads to the public icons bucket on behalf of the app, not the
+  // visitor, so the service client is the right identity here.
+  const supabase = createServiceClient();
 
   const { error } = await supabase.storage.from("icons").upload(path, blob);
 
