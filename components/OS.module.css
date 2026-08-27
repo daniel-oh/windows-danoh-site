@@ -154,7 +154,11 @@
 }
 
 .windowButton {
-  min-width: 64px;
+  /* Hug the title: 98.css floors every button at 75px, which left a
+   * dead strip beside short titles ("Run"). Padding alone sets the
+   * width on desktop; the touch floor is restored in the mobile block. */
+  min-width: 0;
+  padding: 0 10px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -256,6 +260,8 @@
   .windowButton {
     font-size: 12px;
     min-height: 32px;
+    /* Touch floor: a thumb needs ~44px even when the title is "Run". */
+    min-width: 44px;
   }
 
   .taskbarLogo {
