@@ -134,6 +134,12 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
       // Start surface.
       if (insideStartSurface) return;
       getDefaultStore().set(startMenuOpenAtom, false);
+      // A press on the taskbar (window buttons, clock, logo) is not a
+      // press on the desktop: real Windows keeps the active window
+      // active. It also lets a taskbar button's click handler trust
+      // focusedWindow, which this mousedown would otherwise have just
+      // cleared, to decide between "minimize me" and "bring me up".
+      if (target.closest("[data-taskbar]")) return;
       const windowID = windowsRef.current.find((windowId) => {
         const windowElement = document.getElementById(windowId);
         return windowElement && windowElement.contains(target);
@@ -341,6 +347,7 @@ function TaskBar() {
       className={cx("window", styles.taskbar)}
       role="toolbar"
       aria-label="Taskbar"
+      data-taskbar
       onKeyDown={onTaskbarKeyDown}
     >
       <button
@@ -502,6 +509,29 @@ function StartMenu() {
     }
     cb();
     setStartMenuOpen(false);
+    // Entries that open a window get focus from the window's own mount
+    // effect. The rest (external links, which open a new tab) would
+    // leave focus on <body> once the menu unmounts; hand it back to
+    // the Start button so Tab/arrow navigation resumes where it began.
+    setTimeout(() => {
+      if (document.activeElement === document.body) {
+        document
+          .querySelector<HTMLButtonElement>("[data-start-button]")
+          ?.focus({ preventScroll: true });
+      }
+    }, 0);
+  };
+
+  // Focus leaving the menu closes it. Tab past the last item, or any
+  // focus move to something outside the menu and the Start button,
+  // used to leave a dead menu open with focus somewhere behind it.
+  // relatedTarget is null for non-focusable click targets; the global
+  // pointerdown handler already closes the menu for those, and for a
+  // new tab (window.open) closing is what we want anyway.
+  const onMenuBlur = (e: React.FocusEvent) => {
+    const next = e.relatedTarget as HTMLElement | null;
+    if (next?.closest("[data-start-menu], [data-start-button]")) return;
+    setStartMenuOpen(false);
   };
 
   // Resolve the currently-focused window's program type, so the
@@ -593,6 +623,7 @@ function StartMenu() {
       onTouchStart={onMenuTouchStart}
       onTouchMove={onMenuTouchMove}
       onKeyDown={onMenuKeyDown}
+      onBlur={onMenuBlur}
     >
       {/* Decorative brand strip down the left edge — the Win98 banner,
        * rebadged. aria-hidden so screen readers jump straight to the
@@ -703,7 +734,26 @@ const WindowTaskBarItem = memo(function WindowTaskBarItem({ id }: { id: string }
       data-taskbar-for={id}
       onClick={(e) => {
         e.stopPropagation();
+        // Win98: the button of the ACTIVE window minimizes it. The
+        // minimize path (genie toward this button, then focus handoff
+        // to the next window) lives on the title-bar button and reads
+        // live element rects, so delegate to it rather than copy it.
+        if (focusedWindow === id && state.status !== "minimized") {
+          document
+            .getElementById(id)
+            ?.querySelector<HTMLButtonElement>('button[aria-label="Minimize"]')
+            ?.click();
+          return;
+        }
         setFocusedWindow(id);
+        // Put DOM focus in the window too, not just the focus atom:
+        // the window's own focus-on-open effect runs on mount only, so
+        // without this a keyboard user who restores or switches from
+        // the taskbar is left with focus on the taskbar button.
+        setTimeout(
+          () => document.getElementById(id)?.focus({ preventScroll: true }),
+          0
+        );
         if (state.status === "minimized") {
           const btnRect = e.currentTarget.getBoundingClientRect();
           dispatch({ type: "RESTORE" });

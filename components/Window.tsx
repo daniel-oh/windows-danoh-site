@@ -88,7 +88,9 @@ function WindowInner({ id }: { id: string }) {
         "input, textarea, [autofocus], button:not([aria-label='Close'])"
       ) ?? el;
     focusTarget.focus({ preventScroll: true });
-    // Run only once on mount (and when restoring from minimized).
+    // Runs once on mount only. Restoring from the taskbar does NOT
+    // re-run it (the element stays mounted while minimized); the
+    // taskbar button moves focus into the window itself in that case.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
