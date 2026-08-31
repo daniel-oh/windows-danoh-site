@@ -68,8 +68,9 @@ export function BackToTop() {
         shapeRendering="crispEdges"
         aria-hidden="true"
       >
+        {/* Solid up-triangle, row by row — the Win98 scrollbar arrow. */}
         <path
-          d="M7 3h2v2h2v2h2v2h-3V7H8v2H5V7h2V5h2V3zM4 9h3v2H4zm8 0h3v2h-3zM7 7h2v6H7z"
+          d="M7 5h2v1H7zM6 6h4v1H6zM5 7h6v1H5zM4 8h8v1H4zM3 9h10v1H3z"
           fill="#000"
         />
       </svg>
