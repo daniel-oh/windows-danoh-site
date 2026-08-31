@@ -68,11 +68,10 @@ export function BackToTop() {
         shapeRendering="crispEdges"
         aria-hidden="true"
       >
-        {/* "To top" glyph: a pixel arrow hitting a ceiling bar. The bare
-          * scrollbar triangle read as a button ornament; the bar is what
-          * says "top". */}
+        {/* One big pixel up-arrow, near full-glyph height: wide head,
+          * thick shaft. Nothing to decode. */}
         <path
-          d="M3 3h10v2H3zM7 6h2v1H7zM6 7h4v1H6zM5 8h6v1H5zM7 9h2v4H7z"
+          d="M7 2h2v1H7zM6 3h4v1H6zM5 4h6v1H5zM4 5h8v1H4zM3 6h10v1H3zM6 7h4v7H6z"
           fill="#000"
         />
       </svg>
