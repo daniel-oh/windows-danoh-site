@@ -1200,7 +1200,9 @@ input[type="search"].searchInput:focus-visible {
   .menuStrip,
   .addressRow,
   .topicsRow,
-  .statusBar {
+  .statusBar,
+  .tocRail,
+  .backToTop {
     display: none !important;
   }
   .markdown pre {
@@ -1210,5 +1212,164 @@ input[type="search"].searchInput:focus-visible {
   }
   .markdown pre::before {
     display: none;
+  }
+}
+
+/* --- Post reading rail + back-to-top ------------------------------- */
+/* Appended after everything (incl. the print block): these are new
+ * selectors, so ordering only matters for their own media overrides
+ * below, but the post-modifier cascade rule (see .shellWide comment)
+ * says new post-page rules live down here. */
+
+/* Anchor jumps must clear the sticky title bar (~26px) plus air. */
+.markdown h2,
+.markdown h3 {
+  scroll-margin-top: 44px;
+}
+
+/* Contents rail: hidden by default, shown only where it fits beside
+ * the centered 760px shell. At exactly 1280px: 640 + 404 + 216 =
+ * 1260 < 1280, so nothing pokes past the viewport for html/body's
+ * overflow-x: clip to eat. */
+.tocRail {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .tocRail {
+    display: block;
+    position: fixed;
+    top: 96px;
+    left: calc(50% + 404px);
+    width: 216px;
+    max-height: calc(100dvh - 180px);
+    overflow-y: auto;
+    /* Beside the shell, never over its sticky bars (z-index 5). */
+    z-index: 1;
+    background: #c0c0c0;
+    padding: 2px;
+    box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf,
+      inset -2px -2px #808080, inset 2px 2px #fff;
+  }
+}
+
+.tocTitle {
+  /* Explorer column-header, same reasoning as .yearHeading. */
+  background: #c0c0c0;
+  color: #000;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.4px;
+  padding: 3px 8px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
+}
+
+.tocList {
+  list-style: none;
+  margin: 0;
+  padding: 4px 2px 2px;
+}
+
+.tocList a {
+  display: block;
+  padding: 4px 6px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #000;
+  text-decoration: none;
+  transition: filter 120ms ease, opacity 120ms ease;
+}
+
+.tocList a:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -1px;
+}
+
+.tocSub a {
+  padding-left: 22px;
+}
+
+.tocNum {
+  color: #000080;
+  margin-right: 6px;
+  font-weight: bold;
+}
+
+/* Hover focus-blur: the pointer's row stays sharp, every other entry
+ * softens out of focus. Pure CSS; undone for reduced motion below. */
+.tocList:hover a:not(:hover) {
+  filter: blur(1.2px);
+  opacity: 0.7;
+}
+
+/* Current section: bold sunken row, the Win98 read of Cloudflare's
+ * orange rail segment. */
+.tocActive {
+  font-weight: bold;
+  background: #dfdfdf;
+  box-shadow: inset 1px 1px #808080, inset -1px -1px #fff;
+}
+
+/* Back-to-top: beveled square with a pixel chevron; the navy trace
+ * draws around it (in BackToTop.tsx) as reading progress grows. */
+.backToTop {
+  position: fixed;
+  right: 14px;
+  bottom: 44px;
+  /* Under the sticky bars (5): scrolled to the very bottom, the status
+   * bar wins the corner. */
+  z-index: 4;
+  /* 98.css floors every button at 75px wide; without this the square
+   * is a 75x40 slab and the trace stretches with it. */
+  min-width: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: silver;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px grey, inset 2px 2px #dfdfdf;
+}
+
+.backToTop:active {
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff,
+    inset 2px 2px grey, inset -2px -2px #dfdfdf;
+}
+
+.backToTop:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: -6px;
+}
+
+.backToTopTrace {
+  position: absolute;
+  inset: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + 6px);
+  pointer-events: none;
+  overflow: visible;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  .backToTop {
+    /* Thumb-sized, and lifted clear of the sticky status bar. */
+    width: 44px;
+    height: 44px;
+    right: 10px;
+    bottom: 52px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tocList a {
+    transition: none;
+  }
+  .tocList:hover a:not(:hover) {
+    filter: none;
+    opacity: 1;
   }
 }

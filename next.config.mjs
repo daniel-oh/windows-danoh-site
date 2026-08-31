@@ -12,7 +12,9 @@ const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
     remarkPlugins: [["remark-gfm"]],
-    rehypePlugins: [["rehype-highlight", { ignoreMissing: true }]],
+    // rehype-slug gives every heading a server-rendered id so the post
+    // page's Contents rail and #section deep links work without JS.
+    rehypePlugins: [["rehype-slug"], ["rehype-highlight", { ignoreMissing: true }]],
   },
 });
 

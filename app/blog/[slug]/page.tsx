@@ -16,6 +16,8 @@ import { SkipLink } from "@/components/SkipLink";
 import styles from "../blog.module.css";
 import { CaptionIcon } from "../CaptionIcon";
 import { ReadingProgress } from "./ReadingProgress";
+import { TocRail } from "./TocRail";
+import { BackToTop } from "./BackToTop";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -244,6 +246,12 @@ export default async function Post({ params }: Props) {
           <span className={styles.statusCell}>danoh.com</span>
         </div>
       </div>
+      {/* Outside the shell: the wide-desktop Contents rail and the
+        * floating back-to-top square. Route-page only, deliberately —
+        * the in-OS Blog program scrolls an inner div where window-scroll
+        * logic (and a fixed rail) would be wrong. */}
+      <TocRail />
+      <BackToTop />
     </div>
   );
 }
