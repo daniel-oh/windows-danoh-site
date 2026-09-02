@@ -33,6 +33,9 @@ export type BlogPost = {
   summary: string;
   tags: string[];
   readingTime: string;
+  /** Set after a substantive edit; surfaces as JSON-LD dateModified so
+   * search engines see updates. Falls back to `date`. */
+  updated?: string;
   pinned?: boolean;
   /** Optional hero image shown at the top of the post. Share/OG cards
    * are generated per post by app/blog/[slug]/opengraph-image.tsx and

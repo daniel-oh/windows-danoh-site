@@ -9,7 +9,7 @@ import styles from "../blog/blog.module.css";
 export const metadata = buildMetadata({
   title: "Resume · Daniel Oh",
   description:
-    "Daniel Oh: Sr. Platform Engineer at Nike. 8+ years of cloud-native infrastructure across Azure, AWS, and GCP. Kubernetes, Terraform, and the platforms engineering teams ship on.",
+    "Daniel Oh: Sr. Platform Engineer at Nike. 8+ years of cloud-native infrastructure across Azure, AWS, and GCP. Kubernetes, Terraform, platform engineering.",
   url: "https://danoh.com/resume",
 });
 

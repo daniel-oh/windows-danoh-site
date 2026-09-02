@@ -95,7 +95,7 @@ export default async function Post({ params }: Props) {
     headline: post.title,
     description: post.summary,
     datePublished: post.date,
-    dateModified: post.date,
+    dateModified: post.updated ?? post.date,
     // Always provide an image — required for Discover/article rich
     // treatment. The generated per-post card (opengraph-image.tsx).
     image: [`https://danoh.com/blog/${post.slug}/opengraph-image`],
@@ -295,9 +295,16 @@ function EndOfFileCard({ post }: { post: BlogPost }) {
           <a href="/feed.xml" className={styles.eofBtn}>
             Subscribe via RSS
           </a>
-          <a href="mailto:hello@danoh.com" className={styles.eofBtn}>
-            Say hello
-          </a>
+          {/* email_off comments opt this one link out of Cloudflare's
+            * Email Address Obfuscation, which rewrites the href to a
+            * /cdn-cgi/ URL that 404s for no-JS crawlers — every post
+            * carried a link to a 404. JSX can't emit HTML comments, so
+            * the anchor ships as a raw string. */}
+          <span
+            dangerouslySetInnerHTML={{
+              __html: `<!--email_off--><a href="mailto:hello@danoh.com" class="${styles.eofBtn}">Say hello</a><!--/email_off-->`,
+            }}
+          />
         </div>
       </div>
     </section>
