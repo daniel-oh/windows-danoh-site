@@ -15,60 +15,63 @@ let currId = 0;
 const PARENT_TARGET = "*";
 const fromParent = (event: MessageEvent) => event.source === window.parent;
 
+// One request/response round trip with the desktop. The listener removes
+// itself when its reply arrives: get() and listKeys() used to add a
+// listener per call and never remove it, so an app that polls the
+// registry leaked one for every call it ever made.
+function request<T>(message: Record<string, unknown>, timeoutMs?: number): Promise<T> {
+  const id = currId++;
+  return new Promise<T>((resolve) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onReply = (event: MessageEvent) => {
+      if (!fromParent(event)) return;
+      if (event.data?.id !== id) return;
+      window.removeEventListener("message", onReply);
+      if (timer) clearTimeout(timer);
+      resolve(event.data.value);
+    };
+    window.addEventListener("message", onReply);
+    if (timeoutMs != null) {
+      timer = setTimeout(() => {
+        window.removeEventListener("message", onReply);
+        resolve(undefined as T);
+      }, timeoutMs);
+    }
+    window.parent.postMessage({ ...message, id }, PARENT_TARGET);
+  });
+}
+
+// Writes wait for the desktop to confirm the value is stored, so
+// `await registry.set(k, v)` followed by `registry.get(k)` reads v. They
+// used to resolve immediately, before anything was written.
+//
+// The timeout is for version skew, not for slowness: this file is cached
+// by the CDN for hours and tabs stay open across deploys, so it can end up
+// talking to an older desktop that never acknowledges writes. Waiting
+// forever would hang every generated app that awaits a set. Past the
+// timeout it behaves exactly like the old fire-and-forget.
+const WRITE_ACK_TIMEOUT_MS = 400;
+
 class Registry {
-  async get(key: string): Promise<any> {
-    const id = currId++;
-    window.parent.postMessage({ operation: "get", key, id }, PARENT_TARGET);
-    return new Promise((resolve, _reject) => {
-      window.addEventListener("message", (event) => {
-        if (!fromParent(event)) return;
-        if (event.data.id === id) {
-          resolve(event.data.value);
-        }
-      });
-    });
-  }
-  async set(key: string, value: any): Promise<void> {
-    const id = currId++;
-    window.parent.postMessage({ operation: "set", key, value, id }, PARENT_TARGET);
+  get(key: string): Promise<any> {
+    return request({ operation: "get", key });
   }
 
-  async delete(key: string): Promise<void> {
-    const id = currId++;
-    window.parent.postMessage({ operation: "delete", key, id }, PARENT_TARGET);
+  set(key: string, value: any): Promise<void> {
+    return request<void>({ operation: "set", key, value }, WRITE_ACK_TIMEOUT_MS);
   }
 
-  async listKeys(): Promise<string[]> {
-    const id = currId++;
-    window.parent.postMessage({ operation: "listKeys", id }, PARENT_TARGET);
-    return new Promise((resolve, _reject) => {
-      window.addEventListener("message", (event) => {
-        if (!fromParent(event)) return;
-        if (event.data.id === id) {
-          resolve(event.data.value);
-        }
-      });
-    });
+  delete(key: string): Promise<void> {
+    return request<void>({ operation: "delete", key }, WRITE_ACK_TIMEOUT_MS);
+  }
+
+  listKeys(): Promise<string[]> {
+    return request({ operation: "listKeys" });
   }
 }
 
-(window as any).chat = (messages: any[], returnJson?: boolean) => {
-  const id = currId++;
-  window.parent.postMessage(
-    { operation: "chat", value: messages, id, returnJson },
-    PARENT_TARGET
-  );
-  return new Promise((resolve, _reject) => {
-    const messageHandler = (event: MessageEvent) => {
-      if (!fromParent(event)) return;
-      if (event.data.id === id) {
-        window.removeEventListener("message", messageHandler);
-        resolve(event.data.value);
-      }
-    };
-    window.addEventListener("message", messageHandler);
-  });
-};
+(window as any).chat = (messages: any[], returnJson?: boolean) =>
+  request({ operation: "chat", value: messages, returnJson });
 
 let onSaveCallback: (() => string) | null = null;
 (window as any).registerOnSave = (callback: () => string) => {

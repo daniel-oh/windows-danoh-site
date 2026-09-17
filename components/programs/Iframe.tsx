@@ -1,10 +1,10 @@
 "use client";
-import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { getIframeID, windowAtomFamily } from "@/state/window";
 import { useEffect, useRef } from "react";
 import { programAtomFamily, programsAtom } from "@/state/programs";
 import assert from "assert";
-import { registryAtom } from "@/state/registry";
+import { registryAtom, readRegistry, updateRegistry } from "@/state/registry";
 import { getProgramRequestBody } from "@/lib/programRequest";
 import { getSettings } from "@/lib/getSettings";
 import { settingsAtom } from "@/state/settings";
@@ -164,11 +164,23 @@ function IframeInner({ id }: { id: string }) {
         return null;
       };
 
-      const store = getDefaultStore();
-      const registry = await store.get(registryAtom);
+      // Every reply goes to the iframe with "*"; see the note on "get".
+      const reply = (value?: unknown) =>
+        (event.source as Window).postMessage(
+          { operation: "result", id, value },
+          "*"
+        );
 
       switch (operation) {
         case "get": {
+          // readRegistry / updateRegistry (state/registry.ts) are one
+          // serialized queue over the file itself, so a get always sees
+          // every set that was sent before it.
+          if (typeof key !== "string") {
+            reply(undefined); // no key: answer rather than leave the app hanging
+            break;
+          }
+          const registry = await readRegistry();
           (event.source as Window).postMessage(
             {
               operation: "result",
@@ -183,21 +195,27 @@ function IframeInner({ id }: { id: string }) {
           );
           break;
         }
+        // set / delete now ACK once the write is durable, so api.js can
+        // make `await registry.set()` mean something. An old cached api.js
+        // never listens for this id and simply ignores the message.
         case "set": {
-          store.set(registryAtom, {
-            ...registry,
-            [namespaceKey(key)]: value,
-          });
+          if (typeof key !== "string") break;
+          await updateRegistry((r) => ({ ...r, [namespaceKey(key)]: value }));
+          reply();
           break;
         }
         case "delete": {
-          store.set(registryAtom, {
-            ...registry,
-            [namespaceKey(key)]: undefined,
+          if (typeof key !== "string") break;
+          await updateRegistry((r) => {
+            const next = { ...r };
+            delete next[namespaceKey(key)];
+            return next;
           });
+          reply();
           break;
         }
         case "listKeys": {
+          const registry = await readRegistry();
           const visible = Object.keys(registry)
             .map(denamespaceKey)
             .filter((k): k is string => k !== null);

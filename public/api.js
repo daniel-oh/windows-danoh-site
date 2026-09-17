@@ -2,58 +2,47 @@
 var currId = 0;
 var PARENT_TARGET = "*";
 var fromParent = (event) => event.source === window.parent;
-
-class Registry {
-  async get(key) {
-    const id = currId++;
-    window.parent.postMessage({ operation: "get", key, id }, PARENT_TARGET);
-    return new Promise((resolve, _reject) => {
-      window.addEventListener("message", (event) => {
-        if (!fromParent(event))
-          return;
-        if (event.data.id === id) {
-          resolve(event.data.value);
-        }
-      });
-    });
-  }
-  async set(key, value) {
-    const id = currId++;
-    window.parent.postMessage({ operation: "set", key, value, id }, PARENT_TARGET);
-  }
-  async delete(key) {
-    const id = currId++;
-    window.parent.postMessage({ operation: "delete", key, id }, PARENT_TARGET);
-  }
-  async listKeys() {
-    const id = currId++;
-    window.parent.postMessage({ operation: "listKeys", id }, PARENT_TARGET);
-    return new Promise((resolve, _reject) => {
-      window.addEventListener("message", (event) => {
-        if (!fromParent(event))
-          return;
-        if (event.data.id === id) {
-          resolve(event.data.value);
-        }
-      });
-    });
-  }
-}
-window.chat = (messages, returnJson) => {
+function request(message, timeoutMs) {
   const id = currId++;
-  window.parent.postMessage({ operation: "chat", value: messages, id, returnJson }, PARENT_TARGET);
-  return new Promise((resolve, _reject) => {
-    const messageHandler = (event) => {
+  return new Promise((resolve) => {
+    let timer;
+    const onReply = (event) => {
       if (!fromParent(event))
         return;
-      if (event.data.id === id) {
-        window.removeEventListener("message", messageHandler);
-        resolve(event.data.value);
-      }
+      if (event.data?.id !== id)
+        return;
+      window.removeEventListener("message", onReply);
+      if (timer)
+        clearTimeout(timer);
+      resolve(event.data.value);
     };
-    window.addEventListener("message", messageHandler);
+    window.addEventListener("message", onReply);
+    if (timeoutMs != null) {
+      timer = setTimeout(() => {
+        window.removeEventListener("message", onReply);
+        resolve(undefined);
+      }, timeoutMs);
+    }
+    window.parent.postMessage({ ...message, id }, PARENT_TARGET);
   });
-};
+}
+var WRITE_ACK_TIMEOUT_MS = 400;
+
+class Registry {
+  get(key) {
+    return request({ operation: "get", key });
+  }
+  set(key, value) {
+    return request({ operation: "set", key, value }, WRITE_ACK_TIMEOUT_MS);
+  }
+  delete(key) {
+    return request({ operation: "delete", key }, WRITE_ACK_TIMEOUT_MS);
+  }
+  listKeys() {
+    return request({ operation: "listKeys" });
+  }
+}
+window.chat = (messages, returnJson) => request({ operation: "chat", value: messages, returnJson });
 var onSaveCallback = null;
 window.registerOnSave = (callback) => {
   onSaveCallback = callback;
