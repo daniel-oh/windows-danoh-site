@@ -96,7 +96,7 @@ background-remover -d out/ *.jpg           # a batch through one loaded model
 background-remover --mask photo.jpg        # just the mask
 ```
 
-The first run downloads the model (178 MB), verifies its checksum, and caches it. After that a 1600 pixel photo takes about 1.3 seconds on an M1 Pro. There is a container image for x86 and Arm, release binaries for Linux, macOS and Windows, and `cargo install background-remover-server` if you'd rather build it. The plain crate name was taken, which is its own small lesson about shipping early.
+The first run downloads the model (178 MB), verifies its checksum, and caches it. After that a 1600 pixel photo takes about 1.3 seconds on an M1 Pro. There is a container image for x86 and Arm, release binaries for Linux, macOS and Windows, and it builds from source with one `cargo build` if you'd rather.
 
 It is about 2,400 lines of Rust including the tests, MIT or Apache-2.0, your choice. All the intelligence in it belongs to other people: the DIS researchers who trained the model and the rembg project that packaged it and defined the behavior I matched. I wrote the quiet part, the part that makes it small enough to leave running and honest enough to swap in without anyone noticing.
 
