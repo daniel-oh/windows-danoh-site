@@ -46,7 +46,34 @@ export function createRateLimitBucket() {
     return false;
   }
 
-  return { tripAndRecord };
+  // Split check / record / reset, for failure lockouts. tripAndRecord
+  // counts every call, which is right for a budget but wrong for a
+  // lockout: /api/invite used it ahead of the token compare, so five
+  // CORRECT admin calls in 15 minutes locked the admin out. A lockout
+  // checks first, records only on failure, and clears on success.
+  function isTripped(key: string, limit: number, windowMs: number): boolean {
+    const cur = map.get(key);
+    if (!cur) return false;
+    if (Date.now() - cur.firstAt > windowMs) {
+      map.delete(key);
+      return false;
+    }
+    return cur.count >= limit;
+  }
+
+  function record(key: string, windowMs: number): void {
+    sweep(windowMs);
+    const now = Date.now();
+    const cur = map.get(key);
+    if (!cur || now - cur.firstAt > windowMs) map.set(key, { count: 1, firstAt: now });
+    else cur.count++;
+  }
+
+  function reset(key: string): void {
+    map.delete(key);
+  }
+
+  return { tripAndRecord, isTripped, record, reset };
 }
 
 /**

@@ -21,6 +21,17 @@ export async function POST(req: Request) {
   // can't spend a visitor's session or rate-limit budget.
   const notJson = requireJson(req);
   if (notJson) return notJson;
+  // Icons need Replicate. Without a token this route used to pass the
+  // gates (spending the visitor's rate-limit budget), pay for a Haiku call
+  // to write an image prompt, and only then fail inside generateIcon, on
+  // every single "best" generation. Say so up front; the client stops
+  // asking after the first 503 (see fetchIcon in Iframe.tsx).
+  if (!process.env.REPLICATE_API_TOKEN) {
+    return Response.json(
+      { error: "Icon generation is not configured" },
+      { status: 503 }
+    );
+  }
   const denied = await checkAccess(req, "icon");
   if (denied) return denied;
   const capped = await costGuard(req);
@@ -50,6 +61,10 @@ export async function POST(req: Request) {
   const prompt = body.name;
   if (typeof prompt !== "string" || !prompt.trim()) {
     return Response.json({ error: "name is required" }, { status: 400 });
+  }
+  // Same bound as MAX_NAME in /api/programs: this goes into a model prompt.
+  if (prompt.length > 200) {
+    return Response.json({ error: "name is too long (max 200)" }, { status: 400 });
   }
 
   let imagePrompt: string | null;

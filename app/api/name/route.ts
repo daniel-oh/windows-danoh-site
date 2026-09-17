@@ -28,6 +28,10 @@ export async function POST(req: Request) {
   if (typeof desc !== "string" || !desc.trim()) {
     return Response.json({ error: "desc is required" }, { status: 400 });
   }
+  // Same bound as /api/program: uncapped, a 1 MB desc went to the model.
+  if (desc.length > 2000) {
+    return Response.json({ error: "desc is too long (max 2000)" }, { status: 400 });
+  }
 
   const settings = await getSettingsFromJSON(body);
 

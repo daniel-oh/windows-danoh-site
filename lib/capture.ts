@@ -20,8 +20,21 @@ type AIEvent = {
  * below.
  *
  * Telemetry must never fail the request path; everything is wrapped
- * in try/catch and we always shutdown the client even on error.
+ * in try/catch.
  */
+
+// One client for the life of the process. This used to construct a client
+// and await its shutdown() for EVERY event, and the AI routes await
+// capture() before calling the model, so each generation paid a full
+// PostHog round trip up front. flushAt: 1 sends each event as soon as it
+// is queued (in the background), which also means there is no batch to
+// lose when Watchtower replaces the container.
+let client: PostHog | null = null;
+function getClient(key: string, host: string): PostHog {
+  if (!client) client = new PostHog(key, { host, flushAt: 1, flushInterval: 0 });
+  return client;
+}
+
 export async function captureServerEvent(
   event: string,
   properties: Record<string, unknown>,
@@ -37,9 +50,8 @@ export async function captureServerEvent(
   const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
   if (!key || !host) return;
-  let posthog: PostHog | null = null;
   try {
-    posthog = new PostHog(key, { host });
+    const posthog = getClient(key, host);
     const ip = getClientIP(req);
     const country = req.headers.get("X-Vercel-IP-Country") || "unknown";
     posthog.capture({
@@ -49,12 +61,6 @@ export async function captureServerEvent(
     });
   } catch (err) {
     console.warn("[captureServerEvent] send failed:", err);
-  } finally {
-    try {
-      await posthog?.shutdown();
-    } catch {
-      /* ignore shutdown errors */
-    }
   }
 }
 

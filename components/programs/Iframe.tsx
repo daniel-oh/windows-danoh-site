@@ -42,6 +42,10 @@ const STREAM_BOOTSTRAP = `<!doctype html><html><head><meta charset="utf-8"></hea
 })();
 </${"script"}></body></html>`;
 
+// Set once /api/icon answers 503 (see fetchIcon). Module-level on purpose:
+// it has to outlive any one window.
+let iconsUnavailable = false;
+
 export function Iframe({ id }: { id: string }) {
   const window = useAtomValue(windowAtomFamily(id));
   assert(window.program.type === "iframe", "Window is not an iframe");
@@ -86,15 +90,19 @@ function IframeInner({ id }: { id: string }) {
       // later render can retry, and a network throw must not surface as
       // an unhandled rejection.
       try {
-        const res = await wrappedFetch(
-          `/api/icon?name=${encodeURIComponent(state.title)}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: state.title, settings: getSettings() }),
-          }
-        );
+        // Plain fetch, not wrappedFetch: that helper pops a retro alert on
+        // 503/429, and an icon is cosmetic. Nobody should see a dialog
+        // because a decoration could not be drawn.
+        const res = await fetch("/api/icon", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: state.title, settings: getSettings() }),
+        });
 
+        // 503 = the server has no image provider configured. That will not
+        // change for the life of this page, so stop asking: without this,
+        // every window of every generated app re-sent the request.
+        if (res.status === 503) iconsUnavailable = true;
         if (!res.ok) {
           return;
         }
@@ -115,7 +123,7 @@ function IframeInner({ id }: { id: string }) {
         startedRef.current = false;
       }
     }
-    if (!icon && model === "best") {
+    if (!icon && model === "best" && !iconsUnavailable) {
       fetchIcon();
     }
   }, [state.title, dispatch, dispatchPrograms, icon, programID, model, saveProgram, program?.prompt]);

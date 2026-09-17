@@ -1,6 +1,6 @@
 import { query, hasDatabase } from "@/lib/db";
 import { cookies } from "next/headers";
-import { parseJson } from "@/lib/api/json";
+import { parseJson, requireJson } from "@/lib/api/json";
 
 // Upper bounds on what a session may store per program. The generation
 // stream is capped at 5 MB elsewhere; this row store had no limit at
@@ -12,6 +12,17 @@ const MAX_NAME = 200;
 const MAX_PROMPT = 4000;
 const MAX_ICON = 200_000;
 const MAX_CODE = 6_000_000;
+// Matches PROGRAM_LIMIT in state/programs.tsx, the client's own ceiling.
+// Without a server-side count one session could park 6 MB rows forever.
+const MAX_PROGRAMS_PER_SESSION = 50;
+
+// A cookie can outlive its sessions row (24h expiry, runCleanup, a rebuilt
+// volume). The FK on programs.session_id then turned every save into an
+// unhandled 500. Treat it like checkAccess does: drop the dead cookie.
+async function sessionExists(sessionId: string): Promise<boolean> {
+  const res = await query("SELECT 1 FROM sessions WHERE id = $1", [sessionId]);
+  return !!res && res.rows.length > 0;
+}
 
 function optionalString(v: unknown, max: number): string | null | undefined {
   if (v == null) return v as null | undefined;
@@ -44,6 +55,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  // The one JSON write route that skipped this gate (see lib/api/json.ts).
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
+
   if (!hasDatabase()) {
     return Response.json({ ok: true });
   }
@@ -51,8 +66,15 @@ export async function POST(req: Request) {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get("lr_session")?.value;
 
+  // No session is a normal state, not an error: own-key visitors never get
+  // one and keep their programs in the browser only. Stay a quiet no-op so
+  // their console isn't littered with 401s on every save.
   if (!sessionId) {
     return Response.json({ ok: true });
+  }
+  if (!(await sessionExists(sessionId))) {
+    cookieStore.delete("lr_session");
+    return Response.json({ error: "Session expired" }, { status: 401 });
   }
 
   const parsed = await parseJson(req);
@@ -83,6 +105,22 @@ export async function POST(req: Request) {
     return Response.json({ error: "Program icon too large" }, { status: 413 });
   }
 
+  // Updates to an existing program always go through; only NEW rows count
+  // against the cap.
+  const usage = await query(
+    `SELECT count(*)::int AS n,
+            bool_or(id = $2) AS has_this
+       FROM programs WHERE session_id = $1`,
+    [sessionId, id]
+  );
+  const row = usage?.rows[0];
+  if (row && !row.has_this && row.n >= MAX_PROGRAMS_PER_SESSION) {
+    return Response.json(
+      { error: `Program limit reached (${MAX_PROGRAMS_PER_SESSION})` },
+      { status: 409 }
+    );
+  }
+
   await query(
     `INSERT INTO programs (id, session_id, name, prompt, code, icon)
      VALUES ($1, $2, $3, $4, $5, $6)
@@ -95,6 +133,9 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
+
   if (!hasDatabase()) {
     return Response.json({ ok: true });
   }

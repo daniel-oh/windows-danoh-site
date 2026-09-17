@@ -3,6 +3,7 @@ import { hashInviteCode } from "@/lib/inviteHash";
 import { getClientIP } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson } from "@/lib/api/json";
+import { constantTimeEqual } from "@/lib/api/constantTimeEqual";
 import crypto from "crypto";
 
 // Admin credential is its own secret. It used to be ACCESS_CODE, the
@@ -21,17 +22,17 @@ function isAdmin(req: Request): boolean {
   if (!auth || !ADMIN_TOKEN) return false;
 
   const ip = getClientIP(req);
-  if (failBucket.tripAndRecord(ip, FAIL_LIMIT, FAIL_WINDOW_MS)) {
+  if (failBucket.isTripped(ip, FAIL_LIMIT, FAIL_WINDOW_MS)) {
     return false;
   }
 
-  const expected = `Bearer ${ADMIN_TOKEN}`;
-  const maxLen = Math.max(auth.length, expected.length);
-  const bufA = Buffer.alloc(maxLen, 0);
-  const bufB = Buffer.alloc(maxLen, 0);
-  bufA.write(auth);
-  bufB.write(expected);
-  return crypto.timingSafeEqual(bufA, bufB) && auth.length === expected.length;
+  // Only failures count toward the lockout; a good token clears it.
+  if (!constantTimeEqual(auth, `Bearer ${ADMIN_TOKEN}`)) {
+    failBucket.record(ip, FAIL_WINDOW_MS);
+    return false;
+  }
+  failBucket.reset(ip);
+  return true;
 }
 
 // One gate for all three handlers: 503 when the admin token was never

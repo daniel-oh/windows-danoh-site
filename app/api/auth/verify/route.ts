@@ -4,33 +4,19 @@ import { getCodeHash } from "@/lib/accessCode";
 import { hashInviteCode } from "@/lib/inviteHash";
 import { getClientIP } from "@/lib/api/clientIP";
 import { parseJson } from "@/lib/api/json";
+import { createRateLimitBucket } from "@/lib/api/rateLimit";
+import { constantTimeEqual } from "@/lib/api/constantTimeEqual";
 import crypto from "crypto";
 
-function constantTimeEqual(a: string, b: string): boolean {
-  const maxLen = Math.max(a.length, b.length);
-  const bufA = Buffer.alloc(maxLen, 0);
-  const bufB = Buffer.alloc(maxLen, 0);
-  bufA.write(a);
-  bufB.write(b);
-  return crypto.timingSafeEqual(bufA, bufB) && a.length === b.length;
-}
-
-// Per-IP sliding-window rate limit for access-code attempts. In-memory is
-// fine for single-container deploy; move to Redis if scaled horizontally.
+// Per-IP lockout for access-code attempts: failures only, cleared on
+// success. Shares the swept bucket in lib/api/rateLimit.ts; this route
+// used to keep its own Map that never evicted anything.
 const RATE_LIMIT_MAX = 10;
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-type Attempt = { count: number; firstAt: number };
-const attempts = new Map<string, Attempt>();
+const attempts = createRateLimitBucket();
 
 function rateLimit(req: Request): Response | null {
-  const ip = getClientIP(req);
-  const now = Date.now();
-  const prev = attempts.get(ip);
-  if (prev && now - prev.firstAt > RATE_LIMIT_WINDOW_MS) {
-    attempts.delete(ip);
-  }
-  const cur = attempts.get(ip);
-  if (cur && cur.count >= RATE_LIMIT_MAX) {
+  if (attempts.isTripped(getClientIP(req), RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
     return new Response(
       JSON.stringify({ error: "Too many attempts. Try again later." }),
       { status: 429 }
@@ -40,18 +26,11 @@ function rateLimit(req: Request): Response | null {
 }
 
 function recordFailure(req: Request): void {
-  const ip = getClientIP(req);
-  const now = Date.now();
-  const cur = attempts.get(ip);
-  if (!cur) {
-    attempts.set(ip, { count: 1, firstAt: now });
-  } else {
-    cur.count++;
-  }
+  attempts.record(getClientIP(req), RATE_LIMIT_WINDOW_MS);
 }
 
 function recordSuccess(req: Request): void {
-  attempts.delete(getClientIP(req));
+  attempts.reset(getClientIP(req));
 }
 
 export async function POST(req: Request) {

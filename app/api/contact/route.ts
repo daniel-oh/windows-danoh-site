@@ -62,6 +62,23 @@ function countUrls(s: string): number {
   return matches ? matches.length : 0;
 }
 
+// The receipt goes to an address the VISITOR typed, so whatever it quotes
+// is text a stranger can have delivered to someone else from
+// noreply@danoh.com. The per-recipient daily cap limits how often; this
+// limits how much: enough to recognise your own note, not enough to carry
+// a payload (it used to echo the full 4000 characters).
+const QUOTE_BACK_MAX = 300;
+function quoteBack(message: string): string {
+  const clipped =
+    message.length > QUOTE_BACK_MAX
+      ? `${message.slice(0, QUOTE_BACK_MAX).trimEnd()}…`
+      : message;
+  return clipped
+    .split("\n")
+    .map((l) => `> ${l}`)
+    .join("\n");
+}
+
 export async function POST(req: Request) {
   const notJson = requireJson(req);
   if (notJson) return notJson;
@@ -192,7 +209,7 @@ export async function POST(req: Request) {
         `Thanks for writing in. Your note arrived and I'll read it soon.\n` +
         `Replies come from me directly, usually within a few days.\n\n` +
         `For reference, you wrote:\n\n` +
-        cleanMessage.split("\n").map((l) => `> ${l}`).join("\n") +
+        quoteBack(cleanMessage) +
         `\n\n` +
         `Daniel\n` +
         `danoh.com\n`,
