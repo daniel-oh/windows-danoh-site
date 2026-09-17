@@ -1297,7 +1297,9 @@ input[type="search"].searchInput:focus-visible {
 
 /* Hover focus-blur: the pointer's row stays sharp, every other entry
  * softens out of focus. Pure CSS; undone for reduced motion below. */
-.tocList:hover a:not(:hover) {
+/* :focus-visible is exempt: blurring the link a keyboard user is on makes
+ * the focused row the hardest one on the rail to read. */
+.tocList:hover a:not(:hover):not(:focus-visible) {
   filter: blur(1.2px);
   opacity: 0.7;
 }

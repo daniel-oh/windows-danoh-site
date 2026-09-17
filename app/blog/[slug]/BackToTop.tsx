@@ -8,10 +8,6 @@ import {
   subscribeReadingPosition,
 } from "./readingPosition";
 
-// Appear only once the reader is genuinely into the article — about a
-// viewport down, past the hero and byline. Earlier is just clutter.
-const SHOW_AFTER_PX = 480;
-
 /**
  * Back-to-top control: a beveled Win98 square button with a pixel
  * up-chevron, wrapped by a navy square trace that draws clockwise from
@@ -24,19 +20,34 @@ export function BackToTop() {
     getReadingPosition,
     getServerReadingPosition
   );
-  if (pos.y <= SHOW_AFTER_PX) return null;
+  // Appear only once the reader is genuinely into the article (the store
+  // decides what "deep" means). Earlier is just clutter.
+  if (!pos.deep) return null;
 
   const pct = Math.round(pos.progress * 100);
   return (
     <button
       type="button"
       className={styles.backToTop}
-      aria-label={`Back to top (${pct}% read)`}
+      // Static name. With the percentage in it, the label changed on every
+      // 1% of scroll, which a screen reader re-announces on a focused
+      // control. The status bar's Reading gauge already reports progress.
+      aria-label="Back to top"
       title="Back to top"
-      onClick={() => {
+      onClick={(e) => {
         const reduced = window.matchMedia(
           "(prefers-reduced-motion: reduce)"
         ).matches;
+        // This button unmounts once the page is back at the top. For a
+        // keyboard user that dropped focus onto <body>, so Tab restarted
+        // from nowhere. Hand focus to the first stop on the page instead.
+        // Mouse and touch users are left alone: focusing the skip link
+        // would slide it into view for no reason.
+        if (e.currentTarget.matches(":focus-visible")) {
+          document
+            .querySelector<HTMLAnchorElement>('a[href="#main"]')
+            ?.focus({ preventScroll: true });
+        }
         window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
       }}
     >
