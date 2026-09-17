@@ -30,6 +30,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node scripts/check-posts.mjs
+      # next-env.d.ts (image-import and route types) is gitignored and only
+      # exists after Next has run once; a clean checkout can't typecheck
+      # without it.
+      - run: npx next typegen
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm test
