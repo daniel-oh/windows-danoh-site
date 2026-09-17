@@ -1,7 +1,8 @@
 import { type EmailOtpType } from "@supabase/supabase-js";
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
 
 import { createClient } from "@/lib/supabase/server";
+import { relativeRedirect } from "@/lib/relativeRedirect";
 
 // Creating a handler to a GET request to route /auth/confirm
 export async function GET(request: NextRequest) {
@@ -10,26 +11,34 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const next = "/";
 
-  // Create redirect link without the secret token
-  const redirectTo = request.nextUrl.clone();
-  redirectTo.pathname = next;
-  redirectTo.searchParams.delete("token_hash");
-  redirectTo.searchParams.delete("type");
+  // Redirect target keeps the visitor's other params but never the
+  // secret token.
+  const params = new URLSearchParams(searchParams);
+  params.delete("token_hash");
+  params.delete("type");
+  const withQuery = (path: string) => {
+    const qs = params.toString();
+    return qs ? `${path}?${qs}` : path;
+  };
 
   if (token_hash && type) {
-    const supabase = await createClient();
-
-    const { error } = await supabase.auth.verifyOtp({
-      type,
-      token_hash,
-    });
-    if (!error) {
-      redirectTo.searchParams.delete("next");
-      return NextResponse.redirect(redirectTo);
+    // createClient throws when Supabase isn't configured (local mode,
+    // i.e. prod today). That is a failed confirmation, not a 500.
+    try {
+      const supabase = await createClient();
+      const { error } = await supabase.auth.verifyOtp({
+        type,
+        token_hash,
+      });
+      if (!error) {
+        params.delete("next");
+        return relativeRedirect(withQuery(next));
+      }
+    } catch {
+      /* fall through to /error */
     }
   }
 
   // return the user to an error page with some instructions
-  redirectTo.pathname = "/error";
-  return NextResponse.redirect(redirectTo);
+  return relativeRedirect(withQuery("/error"));
 }
