@@ -97,7 +97,7 @@ export default function BlogIndex() {
           />
           <div>
             <div className={styles.taglineLine1}>
-              Curator + creative technologist
+              Curator + Creative Technologist
             </div>
             <div className={styles.taglineLine2}>
               Focused on design, craft, and the work of building things that last.

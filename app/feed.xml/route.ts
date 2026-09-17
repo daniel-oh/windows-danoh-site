@@ -6,7 +6,7 @@ import { shotSlug, type SitePreviewProps } from "@/components/mdx/SitePreview";
 const SITE = "https://danoh.com";
 const TITLE = "Daniel Oh · Blog";
 const DESCRIPTION =
-  "Curator + creative technologist. Notes on design, craft, and the work of building things that last.";
+  "Curator + Creative Technologist. Notes on design, craft, and the work of building things that last.";
 
 // Minimal XML escape for text nodes. Blog content escapes entities inside
 // CDATA anyway; this covers titles, summaries, author names, URLs.

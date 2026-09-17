@@ -33,7 +33,7 @@ export function StaticIntro() {
         >
           <h1 style={{ fontSize: 18, margin: "0 0 4px" }}>Daniel Oh</h1>
           <p style={{ margin: "0 0 8px", fontStyle: "italic" }}>
-            Curator + creative technologist, focused on design, craft, and the work of building things that last.
+            Curator + Creative Technologist, focused on design, craft, and the work of building things that last.
           </p>
           <p style={{ margin: "0 0 8px" }}>
             Platform engineer at Nike. Michigan Engineering alum. I build

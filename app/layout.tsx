@@ -12,8 +12,9 @@ const inter = Inter({ subsets: ["latin"], display: "swap" });
 // that helper sets a canonical URL, and anything on the ROOT layout is
 // inherited by every page that does not override it, which would mark
 // them all as duplicates of the home page.
-// Title case here only: this is the browser tab and the share-card
-// headline. The on-page tagline stays sentence case.
+// Title case everywhere the role appears (tab, share card, blog header,
+// intro, feed, manifest, og-image.png). The sentence that follows it,
+// "focused on design, craft, ...", stays sentence case.
 const TITLE = "Daniel Oh · Curator + Creative Technologist";
 const DESCRIPTION =
   "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.";
