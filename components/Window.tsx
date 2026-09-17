@@ -36,12 +36,17 @@ function WindowInner({ id }: { id: string }) {
   const prevStatusRef = useRef(state.status);
 
   useEffect(() => {
-    if (prevStatusRef.current !== "minimized" && state.status === "minimized") {
+    const wasMinimized = prevStatusRef.current === "minimized";
+    prevStatusRef.current = state.status;
+    if (!wasMinimized && state.status === "minimized") {
       setIsMinimizing(true);
       const timer = setTimeout(() => setIsMinimizing(false), 100);
       return () => clearTimeout(timer);
     }
-    prevStatusRef.current = state.status;
+    // Restored inside the 100ms window: the cleanup above already killed
+    // the timer, so nothing else would ever clear the flag and the window
+    // would keep its minimize styling while visible.
+    setIsMinimizing(false);
   }, [state.status]);
 
   const isHidden = state.status === "minimized" && !isMinimizing;
@@ -622,6 +627,7 @@ function createResizeEvent<T>(
       window.removeEventListener("blur", handleEnd);
       window.removeEventListener("touchmove", handleMove);
       window.removeEventListener("touchend", handleEnd);
+      window.removeEventListener("touchcancel", handleEnd);
       getDefaultStore().set(isResizingAtom, false);
     };
 
@@ -630,6 +636,12 @@ function createResizeEvent<T>(
     window.addEventListener("blur", handleEnd);
     window.addEventListener("touchmove", handleMove, { passive: true });
     window.addEventListener("touchend", handleEnd);
+    // touchcancel, not just touchend: when the browser takes a drag over
+    // (scroll, pull-to-refresh, an incoming call) it fires cancel and never
+    // end. Missing it left isResizingAtom stuck true, which keeps
+    // pointer-events off on EVERY window body: the whole desktop went
+    // click-dead on phones until some other drag happened to finish.
+    window.addEventListener("touchcancel", handleEnd);
   };
 
   return {

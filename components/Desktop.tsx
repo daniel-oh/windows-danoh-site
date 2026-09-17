@@ -330,7 +330,7 @@ export const Desktop = () => {
       />
       {programs.map((program) => (
         <ProgramIcon
-          key={program.name}
+          key={program.id}
           program={program}
           isSelected={selectedIcon === program.id}
           onSelect={() => setSelectedIcon(program.id)}
@@ -544,9 +544,13 @@ function DesktopIcon({
       <Image
         unoptimized
         src={iconSrc}
-        alt={name}
-        width={24}
-        height={24}
+        // Empty alt: the button carries aria-label and the name is rendered
+        // right below, so alt={name} made screen readers say it twice.
+        alt=""
+        // Displayed at 64px (56px mobile) via CSS; 24 made browsers treat
+        // the pixel-art sources as upscaled low-res images.
+        width={64}
+        height={64}
         draggable={false}
         style={iconStyle}
       />
@@ -611,7 +615,9 @@ function ProgramIcon({
                   label: "Delete",
                   callback: (close) => {
                     close();
-                    dispatch({ type: "REMOVE_PROGRAM", payload: program.name });
+                    // id, not name: the reducer deletes the folder PROGRAMS_PATH/<id>.
+                    // They only happen to be equal today (Run.tsx sets both).
+                    dispatch({ type: "REMOVE_PROGRAM", payload: program.id });
                     deleteProgram(program.id);
                   },
                 },
