@@ -10,9 +10,13 @@ import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
 import { sanitizeUserMessages } from "@/lib/sanitizeMessages";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
-import { parseJson } from "@/lib/api/json";
+import { parseJson, requireJson } from "@/lib/api/json";
 
 export async function POST(req: Request) {
+  // Before the gates: forces a CORS preflight, so a cross-site form
+  // can't spend a visitor's session or rate-limit budget.
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
   const denied = await checkAccess(req, "chat");
   if (denied) return denied;
   const capped = await costGuard(req);

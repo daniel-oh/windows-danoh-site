@@ -81,6 +81,32 @@ const nextConfig = {
           },
         ],
       },
+      // /api/program returns LLM-written text/html that is only ever
+      // meant to run inside the desktop's sandboxed iframe (the page
+      // fetches it and pipes it in, so this header never affects normal
+      // use). If a browser is ever tricked into rendering the response
+      // directly, `sandbox` gives it an opaque origin: no danoh.com
+      // localStorage, IndexedDB, or cookies. It has to live here, after
+      // the catch-all, because these config headers override whatever
+      // the route handler sets for the same key.
+      // Generated apps run in a sandboxed srcDoc iframe, i.e. an opaque
+      // ("null") origin, and fonts are always fetched in CORS mode. Without
+      // this the 98.css pixel font is blocked inside every generated app
+      // and they fall back to Arial. Static public font files, so "*" is
+      // the right answer.
+      {
+        source: "/vendor/:font(.*\\.woff2?)",
+        headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
+      {
+        source: "/api/program",
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: `${CSP}; sandbox allow-scripts`,
+          },
+        ],
+      },
     ];
   },
 };

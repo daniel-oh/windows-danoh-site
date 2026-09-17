@@ -90,6 +90,7 @@ function IframeInner({ id }: { id: string }) {
           `/api/icon?name=${encodeURIComponent(state.title)}`,
           {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: state.title, settings: getSettings() }),
           }
         );
@@ -213,6 +214,7 @@ function IframeInner({ id }: { id: string }) {
             : [];
           const result = await wrappedFetch(`/api/chat`, {
             method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               messages: iframeMessages,
               returnJson,

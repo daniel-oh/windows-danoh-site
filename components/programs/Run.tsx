@@ -92,6 +92,7 @@ export function Run({ id }: { id: string }) {
           try {
             const nameResp = await wrappedFetch("/api/name", {
               method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 desc: trimmed,
                 settings: getSettings(),

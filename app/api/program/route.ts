@@ -17,6 +17,7 @@ import { getMaxTokens } from "@/ai/getMaxTokens";
 import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
+import { requireJson } from "@/lib/api/json";
 
 // POST, not GET: the response streams into the sandboxed bootstrap
 // iframe via parent fetch + postMessage (see Iframe.tsx), so nothing
@@ -27,6 +28,13 @@ export async function POST(req: Request) {
   // The response renders inside a window, so a raw JSON 429 would
   // show as literal JSON text. Both gates here get converted to a
   // styled 98.css HTML page if they reject.
+  // Before the gates. This one matters most here: the response is
+  // attacker-promptable text/html, and a cross-site <form
+  // enctype="text/plain"> can POST a valid JSON body as a top-level
+  // navigation. Requiring application/json (not form-settable) stops it.
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
+
   const denied = await checkAccess(req, "program");
   if (denied) return jsonRejectionAsHtml(denied);
 
@@ -119,11 +127,12 @@ export async function POST(req: Request) {
   } catch (err) {
     return jsonRejectionAsHtml(upstreamErrorResponse("program", err));
   }
-  const parentOrigin = new URL(req.url).origin;
+  // No parent origin is injected any more: req.url inside the standalone
+  // container is https://0.0.0.0:3000, which made api.js address every
+  // postMessage to an origin that never matches (see iframe/api.ts).
   return new Response(
     streamAnthropicHtml(programStream, {
-      injectIntoHead: `<script>window.__PARENT_ORIGIN__=${JSON.stringify(parentOrigin)}</script>
-<script src="/api.js"></script>
+      injectIntoHead: `<script src="/api.js"></script>
 <link
   rel="stylesheet"
 href="/vendor/98.css"
