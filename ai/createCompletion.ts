@@ -3,6 +3,7 @@ import {
   createClientFromSettings,
   getBestModel,
   getCheapestModel,
+  requestTuning,
 } from "./client";
 import { User } from "@supabase/supabase-js";
 import Anthropic from "@anthropic-ai/sdk";
@@ -13,7 +14,6 @@ interface CompletionParams {
   messages: Message[];
   max_tokens?: number;
   stream?: boolean;
-  temperature?: number;
   model?: string;
 }
 
@@ -73,7 +73,7 @@ function prepareMessages(messages: Message[], trustedSystemOnly = false) {
 export function createStreamingCompletion(params: {
   settings: Settings;
   forceModel?: Settings["model"];
-  body: { messages: Message[]; max_tokens?: number; temperature?: number };
+  body: { messages: Message[]; max_tokens?: number };
 }) {
   const { settings, forceModel, body } = params;
   const { client, model } = resolveModel(settings, forceModel);
@@ -84,7 +84,8 @@ export function createStreamingCompletion(params: {
     max_tokens: body.max_tokens || 4096,
     system,
     messages: anthropicMessages,
-    temperature: body.temperature,
+    // The only streaming caller is app generation.
+    ...requestTuning(model, "generate"),
   });
 }
 
@@ -104,11 +105,17 @@ export async function createCompletion(params: {
     max_tokens: body.max_tokens || 4096,
     system,
     messages: anthropicMessages,
-    temperature: body.temperature,
+    ...requestTuning(model, "converse"),
   });
 
-  const content =
-    response.content[0]?.type === "text" ? response.content[0].text : null;
+  // Join the TEXT blocks; do not read content[0]. With thinking on (the
+  // default on Sonnet 5) block 0 is a thinking block, and the old
+  // `content[0].text` came back null: Help and chat answered with nothing.
+  const text = response.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("");
+  const content = text.length > 0 ? text : null;
 
   const result: CompletionResult = {
     choices: [{ message: { content } }],

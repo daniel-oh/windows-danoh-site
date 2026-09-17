@@ -262,7 +262,6 @@ async function createProgramStream({
           content: `<app_name>${sanitizedDesc}</app_name>`,
         },
       ],
-      temperature: 1,
       max_tokens: getMaxTokens(settings),
     },
   });

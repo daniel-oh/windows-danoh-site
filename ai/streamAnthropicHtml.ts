@@ -4,6 +4,22 @@ type MessageStream = ReturnType<Anthropic["messages"]["stream"]>;
 
 const MAX_STREAM_SIZE = 5 * 1024 * 1024; // 5MB
 
+// Shown in the app window when the model produced no HTML at all. Static
+// strings only: nothing from the model or the visitor is interpolated.
+function emptyResultHtml(stopReason: string): string {
+  const message =
+    stopReason === "refusal"
+      ? "The model declined to build that one. Try describing it differently."
+      : stopReason === "max_tokens"
+      ? "That one ran out of room before any of it could be drawn. Try a simpler description."
+      : "Nothing came back this time. Close this window and try again.";
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta name="danoh-error" content="generation-empty">
+<link rel="stylesheet" href="/vendor/98.css">
+<style>html,body{height:100%;margin:0}body{display:flex;align-items:center;justify-content:center;padding:16px;background:#c0c0c0;font-family:"Pixelated MS Sans Serif",Arial,sans-serif}p{font-size:13px;line-height:1.5;margin:0;max-width:340px}</style>
+</head><body><p>${message}</p></body></html>`;
+}
+
 export function streamAnthropicHtml(
   stream: MessageStream,
   options?: { injectIntoHead?: string }
@@ -90,7 +106,19 @@ export function streamAnthropicHtml(
         }
 
         if (!startedSending) {
-          controller.enqueue("<!DOCTYPE html><html>");
+          // Not one byte of HTML arrived. That used to render as a blank
+          // window. It is likelier now: Sonnet 5 can decline a request
+          // (stop_reason "refusal") and its thinking shares max_tokens with
+          // the output. Say what happened instead.
+          let stopReason = "";
+          try {
+            stopReason = (await stream.finalMessage()).stop_reason ?? "";
+          } catch {
+            /* aborted or errored stream: fall through to the generic note */
+          }
+          controller.enqueue(emptyResultHtml(stopReason));
+          safeClose();
+          return;
         }
         if (!programResult.includes("</html>")) {
           controller.enqueue("</html>");

@@ -410,7 +410,7 @@ const contentByKey = {
           <p style={{ margin: "0 0 12px" }}>
             Launched this site. A static portfolio felt too predictable, so I built a retro
             desktop that generates real apps with AI. The whole thing runs on Next.js 16,
-            Claude Sonnet 4.6, and a single Docker container.
+            Claude Sonnet 5, and a single Docker container.
           </p>
 
           <h4 style={{ margin: "0 0 4px" }}>Apr 11, 2026</h4>
