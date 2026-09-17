@@ -7,15 +7,22 @@ import { ChunkReloadGuard } from "@/components/ChunkReloadGuard";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
+// One copy each. These were written out three times (metadata, openGraph,
+// twitter) and had to be edited in lockstep. Not lib/buildMetadata.ts:
+// that helper sets a canonical URL, and anything on the ROOT layout is
+// inherited by every page that does not override it, which would mark
+// them all as duplicates of the home page.
+const TITLE = "Daniel Oh · Curator + creative technologist";
+const DESCRIPTION =
+  "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.";
+
 export const metadata: Metadata = {
-  title: "Daniel Oh · Curator + creative technologist",
-  description:
-    "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
+  title: TITLE,
+  description: DESCRIPTION,
   metadataBase: new URL("https://danoh.com"),
   openGraph: {
-    title: "Daniel Oh · Curator + creative technologist",
-    description:
-      "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
+    title: TITLE,
+    description: DESCRIPTION,
     url: "https://danoh.com",
     siteName: "danoh.com",
     images: [
@@ -33,9 +40,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@danohstudio",
     creator: "@danohstudio",
-    title: "Daniel Oh · Curator + creative technologist",
-    description:
-      "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
+    title: TITLE,
+    description: DESCRIPTION,
     images: ["/og-image.png"],
   },
   robots: {

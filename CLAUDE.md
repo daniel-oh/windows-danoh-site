@@ -14,8 +14,8 @@ The desktop at `/` is a real SPA: `components/OS.tsx` owns the shell
 desktop launch "programs" — each is a React component under
 `components/programs/*` rendered into a draggable/resizable `Window`.
 
-Static pages sit alongside: `/blog`, `/blog/[slug]`, `/privacy`,
-`/logout`, `/error`. They share the retro shell CSS under
+Static pages sit alongside: `/blog`, `/blog/[slug]`, `/resume`,
+`/privacy`, `/terms`, `/login`, `/logout`, `/error`. They share the retro shell CSS under
 `app/blog/blog.module.css` but are plain SSR Next.js routes — not
 part of the OS.
 
@@ -43,7 +43,7 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | Add a server-side analytics event     | `captureServerEvent(name, props, req)` from `lib/capture.ts` |
 | Gate a feature on a user flag         | `flags/flags.ts` + `flags/context.tsx`    |
 | Append "Read more" attribution on copy| Wrap content in `<CopyAttribution url={...}>` (see `components/CopyAttribution.tsx`) |
-| Add OG/Twitter to a new page          | Hoist `TITLE`/`DESCRIPTION`/`URL` consts; mirror across `metadata` + `openGraph` + `twitter`. Pattern lives in `app/blog/page.tsx`, `/privacy`, `/logout`, `/error` |
+| Add OG/Twitter to a new page          | `buildMetadata({ title, description, url })` from `lib/buildMetadata.ts` (keeps `metadata` / `openGraph` / `twitter` in sync by construction). Not in the root layout: it sets a canonical, and layout metadata is inherited |
 | Toggle analytics for a visitor        | `lib/analyticsOptOut.ts` flag — checked by `lib/CSPosthogProvider.tsx`; UI in `components/programs/Settings.tsx` |
 | Catch chunk-load errors after deploy  | `components/ChunkReloadGuard.tsx` (mounted in `app/layout.tsx`) |
 
@@ -75,6 +75,7 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | -------------------------- | ---------------------------------------------- |
 | CSP                        | Enforced via `next.config.mjs` (see `CSP` const) |
 | AI cost ceiling (always on)| `lib/api/costGuard.ts` (per-IP, per-visitor, global daily in Postgres) |
+| Client IP for every per-IP limit | `lib/api/clientIP.ts`: trusts `CF-Connecting-IP` only when the TCP peer (right-most `X-Forwarded-For`, written by Traefik) is inside Cloudflare's ranges. The origin is reachable directly, so never read that header, left-most XFF, or `X-Real-Ip` on their own |
 | AI access gate (local)     | `lib/apiGuard.ts` (invite codes, session cookie) |
 | Guestbook spam             | honeypot + min-elapsed + rate limits + AI moderation |
 | Contact form spam          | honeypot + URL count cap + rate limits         |
@@ -91,6 +92,24 @@ opportunistic sweep so they don't leak in a long-running container.
 
 ---
 
+## Production runs in "local mode"
+
+The single most load-bearing fact about this deployment, and easy to
+miss: `docker-compose.yml` sets `NEXT_PUBLIC_LOCAL_MODE=true` in
+PRODUCTION. "Local" names the auth layer, not the environment.
+
+- Live: access codes + invite codes (`lib/apiGuard.ts`), `costGuard`,
+  visitors bringing their own Anthropic key, guestbook, contact, blog.
+- Dormant by design, kept for a future sign-in / paid-tokens launch:
+  Supabase auth (`lib/supabase/*`, `lib/auth/*`, `/login`, `/auth/*`),
+  Stripe (`/api/checkout`, `/api/stripe/webhook`), token accounting
+  (`server/usage/*`), `flags/*`. `getUser()` returns null, checkout
+  answers 503. Do not delete it as "dead code", and do not assume a
+  change there is exercised by production.
+- Turning local mode off is NOT a config flip: `lib/supabase/middleware.ts`
+  redirects anonymous requests, which would include `/blog`, the feeds
+  and the sitemap. Review that first.
+
 ## Deploy flow
 
 ```
@@ -102,6 +121,17 @@ git push origin main
         sudo docker compose pull web && \
         sudo docker compose up -d --force-recreate web"
 ```
+
+CI gates the image (`.github/workflows/deploy.yml`): posts check, `tsc`,
+eslint, jest, a `public/api.js` drift check, then the built image is
+booted next to a real Postgres and must answer before anything is
+pushed. A red check means nothing ships.
+
+Rollback: Watchtower re-pulls `:latest`, so retagging does not stick.
+Pin the image instead, in `/opt/stacks/danoh-portfolio/compose.yaml`:
+`image: dddd4444/danoh-site:<previous git sha>`, then
+`sudo docker compose up -d web`. Revert the commit, push, and unpin once
+the fixed `:latest` is out.
 
 Common chore: after a deploy, any open browser tab will see stale
 chunks on next navigation. `ChunkReloadGuard` handles this

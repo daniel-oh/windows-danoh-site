@@ -23,7 +23,7 @@ ANTHROPIC_API_KEY=<your-anthropic-api-key>
 NEXT_PUBLIC_LOCAL_MODE=true
 ```
 
-1. Install [Node.js](https://nodejs.org/en) v22 or greater
+1. Install [Node.js](https://nodejs.org/en) v24 or greater (what the Docker image builds on)
 2. Run `npm install`
 3. Run `npm run dev`
 4. Navigate to `http://localhost:3000`

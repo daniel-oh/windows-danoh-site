@@ -26,8 +26,11 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.danoh.rule=Host(`danoh.com`) || Host(`www.danoh.com`)"
       - "traefik.http.routers.danoh.entrypoints=websecure"
-      # DNS-01 through Cloudflare (the origin sits behind the orange cloud, so
-      # HTTP-01 can't reach it). Resolver name must match the Traefik stack.
+      # Names the Traefik stack's DNS-01 resolver, but note what actually
+      # happens on the host (checked 2026-09-17): the danoh.com certificate
+      # lives in the HTTP-01 `letsencrypt` resolver's store and renews fine
+      # through the orange cloud. Traefik reuses any valid cert it already
+      # holds, so this resolver is only the fallback if that one lapses.
       - "traefik.http.routers.danoh.tls.certresolver=cloudflare"
       - "traefik.http.services.danoh.loadbalancer.server.port=3000"
       - "com.centurylinklabs.watchtower.enable=true"
