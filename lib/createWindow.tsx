@@ -35,6 +35,15 @@ export function createWindow({
     };
   }
 
+  // No window opens taller than the space above the taskbar, on any
+  // device. Only phones were clamped before, so on a short or zoomed
+  // desktop viewport a fixed-height window opened with its bottom (where
+  // forms keep their buttons) under the taskbar.
+  if (typeof window !== "undefined" && size.height !== "auto") {
+    const roomAboveTaskbar = window.innerHeight - 40 - 8;
+    size = { ...size, height: Math.min(size.height, roomAboveTaskbar) };
+  }
+
   // CSS enforces MIN_WINDOW_SIZE anyway; clamping the state too keeps
   // the first resize drag from traversing a dead zone where the stored
   // width crawls up to what's already rendered.
@@ -51,7 +60,10 @@ export function createWindow({
     // Cascade new windows so two Start-menu opens of the same program
     // don't land at identical coordinates and disappear on top of each other.
     const openCount = getDefaultStore().get(windowsListAtom).length;
-    const cascadeOffset = (openCount % 10) * 24;
+    // No cascade on a phone: a dialog there is nearly as wide as the
+    // screen, so the offset just shoved it against the right edge (16px
+    // gutter on the left, none on the right) instead of centering it.
+    const cascadeOffset = mobile ? 0 : (openCount % 10) * 24;
     // Center within the area above the taskbar — centering against the
     // full viewport let restored windows underlap it.
     const taskbarH = 40;

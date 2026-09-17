@@ -343,6 +343,14 @@ export function Help({ id }: { id: string }) {
             display: "flex",
             flexDirection: "column",
             gap: 8,
+            // The forms are the point of this state, so they keep their
+            // height and the chat log above (flex: 1, basis 0) gives way.
+            // This block used to be squeezed instead, and the window clips
+            // overflow, so its last field vanished. If the window is ever
+            // shorter than the forms, scroll them rather than lose one.
+            flex: "0 1 auto",
+            minHeight: 0,
+            overflowY: "auto",
           }}
         >
           <p style={{ fontSize: 12, color: "#444", margin: 0 }}>

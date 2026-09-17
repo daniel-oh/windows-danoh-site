@@ -1,5 +1,5 @@
 import { createWindow } from "./createWindow";
-import { openProgram } from "./programs";
+import { openProgram, RUN_SIZE } from "./programs";
 import { isMobile } from "./isMobile";
 import { waitForElement } from "./waitForElement";
 import { seedDemoProgram } from "./demoPrograms";
@@ -42,7 +42,7 @@ export function initState() {
     createWindow({
       title: "Run",
       program: { type: "run", initialPrompt: sharedPrompt },
-      size: { width: 360, height: "auto" },
+      size: RUN_SIZE,
     });
     return;
   }
@@ -52,14 +52,13 @@ export function initState() {
     waitForElement(id).then((el) => {
       if (el) {
         const welcomeRect = el.getBoundingClientRect();
-        const runWidth = 200;
         const runLeft = welcomeRect.left - 100; // Overlap by 50 pixels
         const runTop = welcomeRect.top + 200; // Offset slightly from the top of Welcome
 
         createWindow({
           title: "Run",
           program: { type: "run" },
-          size: { width: runWidth, height: "auto" },
+          size: RUN_SIZE,
           pos: { x: runLeft, y: runTop },
         });
       }

@@ -18,6 +18,13 @@ export const WELCOME_WIDTH = 700;
 export const SETTINGS_WIDTH = 420;
 export const SETTINGS_HEIGHT = 520;
 
+// One size for the Run dialog however it is opened. It used to fall back to
+// the 300px minimum window width (and the first-visit path asked for 200),
+// where the two sign-in forms wrap into a tall, cramped column. 360 is what
+// the shared-link path already used. Height stays "auto": the dialog has
+// three different states and should always fit its content exactly.
+export const RUN_SIZE: WindowState["size"] = { width: 360, height: "auto" };
+
 export type ProgramKey =
   | "welcome"
   | "blog"
@@ -56,8 +63,7 @@ export const PROGRAMS: Record<ProgramKey, ProgramDef> = {
     program: { type: "resume" },
     size: { width: 700, height: 550 },
   },
-  // No size → createWindow's MIN_WINDOW_SIZE default (a small dialog).
-  run: { title: "Run", program: { type: "run" } },
+  run: { title: "Run", program: { type: "run" }, size: RUN_SIZE },
   mail: {
     title: "New Message",
     program: { type: "mail" },

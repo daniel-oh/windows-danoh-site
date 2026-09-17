@@ -268,9 +268,14 @@ function WindowInner({ id }: { id: string }) {
                 createWindow({
                   title: "Fix & Iterate",
                   program: { type: "help", targetWindowID: id },
+                  // Was 340x400, which is exactly the height of the locked
+                  // state (intro + own-key form + access-code form) with
+                  // not one pixel to spare. One extra wrapped line on a
+                  // visitor's machine and the access-code box, the last
+                  // thing in the stack, was cut off by the window edge.
                   size: {
-                    width: 340,
-                    height: 400,
+                    width: 380,
+                    height: 560,
                   },
                 })
               }
@@ -618,7 +623,22 @@ function createResizeEvent<T>(
 
     getDefaultStore().set(isResizingAtom, true);
 
+    // A drag that starts on a resize handle is still a mouse drag to the
+    // browser, so it text-selected everything the pointer swept over: the
+    // whole desktop lit up blue mid-resize (icon labels, other windows'
+    // copy) and stayed that way. Turn selection off for the life of the
+    // gesture and drop anything already picked up. Not preventDefault() on
+    // the mousedown: that would also swallow the focus change.
+    const body = document.body;
+    const prevUserSelect = body.style.userSelect;
+    const prevWebkitUserSelect = body.style.webkitUserSelect;
+    body.style.userSelect = "none";
+    body.style.webkitUserSelect = "none";
+    window.getSelection()?.removeAllRanges();
+
     const handleEnd = () => {
+      body.style.userSelect = prevUserSelect;
+      body.style.webkitUserSelect = prevWebkitUserSelect;
       if (rafId != null) cancelAnimationFrame(rafId);
       rafId = null;
       pending = null;
