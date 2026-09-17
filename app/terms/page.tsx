@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
+import { BreadcrumbLd } from "@/components/BreadcrumbLd";
 import { TERMS_LAST_UPDATED } from "@/lib/legal";
 import { CaptionIcon } from "../blog/CaptionIcon";
 import styles from "../blog/blog.module.css";
@@ -22,6 +23,7 @@ export default function Terms() {
   return (
     <div className={styles.page}>
       <SkipLink />
+      <BreadcrumbLd trail={[{ name: "Terms" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>
         <div className={styles.titleBar}>
           <CaptionIcon />

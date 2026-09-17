@@ -2,6 +2,7 @@ import Link from "next/link";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
+import { BreadcrumbLd } from "@/components/BreadcrumbLd";
 import { Resume } from "@/components/programs/Resume";
 import { CaptionIcon } from "../blog/CaptionIcon";
 import styles from "../blog/blog.module.css";
@@ -60,6 +61,7 @@ export default function ResumePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
       />
+      <BreadcrumbLd trail={[{ name: "Resume" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>
         <div className={styles.titleBar}>
           <CaptionIcon />

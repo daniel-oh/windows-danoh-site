@@ -13,6 +13,7 @@ import { CopyAttribution } from "@/components/CopyAttribution";
 import { ReactionBar } from "@/components/ReactionBar";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
+import { BreadcrumbLd } from "@/components/BreadcrumbLd";
 import styles from "../blog.module.css";
 import { CaptionIcon } from "../CaptionIcon";
 import { ReadingProgress } from "./ReadingProgress";
@@ -41,7 +42,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // resolution, so they reference the same route explicitly.
   const cardImage = `https://danoh.com/blog/${post.slug}/opengraph-image`;
   return {
-    title: `${post.title} · Daniel Oh`,
+    // Google cuts titles off around 60 characters. The byline suffix is
+    // nice to have, so it is dropped rather than letting it push the
+    // actual headline into an ellipsis.
+    title:
+      `${post.title} · Daniel Oh`.length <= 60
+        ? `${post.title} · Daniel Oh`
+        : post.title,
     description: post.summary,
     keywords: post.tags,
     alternates: { canonical: url },
@@ -125,15 +132,6 @@ export default async function Post({ params }: Props) {
     creditText: `${post.author} · danoh.com/blog/${post.slug}`,
   };
 
-  const breadcrumbs = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: "https://danoh.com" },
-      { "@type": "ListItem", position: 2, name: "Blog", item: "https://danoh.com/blog" },
-      { "@type": "ListItem", position: 3, name: post.title },
-    ],
-  };
 
   return (
     <div className={styles.page}>
@@ -142,9 +140,8 @@ export default async function Post({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
+      <BreadcrumbLd
+        trail={[{ name: "Blog", path: "/blog" }, { name: post.title }]}
       />
       <div className={`${styles.shell} ${styles.shellWide}`}>
         <div className={`${styles.titleBar} ${styles.titleBarSticky}`}>

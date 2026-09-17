@@ -4,6 +4,7 @@ import { sortedPosts } from "@/content/blog/posts";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
+import { BreadcrumbLd } from "@/components/BreadcrumbLd";
 import { BlogIndexContent } from "./BlogIndexContent";
 import { StatusBarCount, StatusBarHint } from "./StatusBarCount";
 import styles from "./blog.module.css";
@@ -17,10 +18,14 @@ const copyrightYear = sortedPosts.reduce(
   0
 );
 
+// Shared by the meta description and the Blog structured data below, which
+// had no description at all.
+const BLOG_DESCRIPTION =
+  "Posts on AI infrastructure, brand decisions, and the depth layer below the model layer. Writing by Daniel Oh.";
+
 export const metadata = buildMetadata({
   title: "Blog · Daniel Oh",
-  description:
-    "Posts on AI infrastructure, brand decisions, and the depth layer below the model layer. Writing by Daniel Oh.",
+  description: BLOG_DESCRIPTION,
   url: "https://danoh.com/blog",
 });
 
@@ -35,9 +40,14 @@ export default function BlogIndex() {
     "@type": "Blog",
     "@id": "https://danoh.com/blog#blog",
     name: "Daniel Oh · Blog",
+    description: BLOG_DESCRIPTION,
     url: "https://danoh.com/blog",
+    inLanguage: "en-US",
+    // @id ties the author to the Person entity declared on the home page
+    // instead of describing a second, unrelated "Daniel Oh".
     author: {
       "@type": "Person",
+      "@id": "https://danoh.com/#person",
       name: "Daniel Oh",
       url: "https://danoh.com",
     },
@@ -55,6 +65,7 @@ export default function BlogIndex() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
       />
+      <BreadcrumbLd trail={[{ name: "Blog" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>
         <div className={styles.titleBar}>
           <FolderIcon />

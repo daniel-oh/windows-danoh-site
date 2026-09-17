@@ -23,9 +23,13 @@ const personLd = {
       "@type": "Person",
       "@id": "https://danoh.com/#person",
       name: "Daniel Oh",
-      jobTitle: "Platform Engineer",
+      // The employment fact, and the same value /resume declares for this
+      // @id (they disagreed: "Platform Engineer" here, "Sr." there).
+      jobTitle: "Sr. Platform Engineer",
+      // Leads with the positioning used everywhere else on the site; this
+      // still described only the day job.
       description:
-        "Platform engineer at Nike. Michigan Engineering alum. Builds infrastructure that teams ship on, and side projects that keep him learning.",
+        "Curator + Creative Technologist focused on design, craft, and the work of building things that last. Sr. Platform Engineer at Nike and a Michigan Engineering alum.",
       url: "https://danoh.com",
       email: "mailto:hello@danoh.com",
       // image/worksFor/alumniOf are what disambiguate an extremely
@@ -46,7 +50,10 @@ const personLd = {
       "@type": "WebSite",
       "@id": "https://danoh.com/#website",
       name: "danoh.com",
+      description:
+        "The personal site of Daniel Oh, Curator + Creative Technologist: a retro Windows 98 desktop, a blog, and a few experiments.",
       url: "https://danoh.com",
+      inLanguage: "en-US",
       publisher: { "@id": "https://danoh.com/#person" },
       // Sitelinks search box: the blog index reads ?q= on mount
       // (BlogIndexContent.tsx) so this target actually filters.

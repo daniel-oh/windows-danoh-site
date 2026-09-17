@@ -24,6 +24,25 @@ async function loadFont(file: string) {
   }
 }
 
+// The card has room for about two lines. A hard cut at 140 characters left
+// cards ending mid-word ("What it ac…"), and cutting on a word still left
+// dangling fragments ("What it…"). So: end on the last COMPLETE sentence
+// that fits, with no ellipsis, and only fall back to a whole-word cut when
+// the first sentence alone is too long.
+const SUMMARY_MAX = 140;
+function fitSummary(summary: string): string {
+  if (summary.length <= SUMMARY_MAX) return summary;
+  const head = summary.slice(0, SUMMARY_MAX);
+  const sentenceEnd = Math.max(
+    head.lastIndexOf(". "),
+    head.lastIndexOf("? "),
+    head.lastIndexOf("! ")
+  );
+  // Don't accept a sentence so short the card looks empty.
+  if (sentenceEnd >= 60) return head.slice(0, sentenceEnd + 1);
+  return `${head.replace(/\s+\S*$/, "").replace(/[,;:.]$/, "")}…`;
+}
+
 export default async function OpengraphImage({
   params,
 }: {
@@ -32,11 +51,7 @@ export default async function OpengraphImage({
   const { slug } = await params;
   const post = sortedPosts.find((p) => p.slug === slug);
   const title = post?.title ?? "danoh.com";
-  const summary = post
-    ? post.summary.length > 140
-      ? `${post.summary.slice(0, 140).trimEnd()}…`
-      : post.summary
-    : "";
+  const summary = post ? fitSummary(post.summary) : "";
   const date = post
     ? new Date(`${post.date}T00:00:00Z`).toLocaleDateString("en-US", {
         year: "numeric",
