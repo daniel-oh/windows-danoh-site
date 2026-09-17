@@ -3,6 +3,24 @@
 import type { BlogPost } from "./types";
 
 export const posts = [
+  // background-remover.mdx
+  {
+    slug: "background-remover",
+    title: "4 GB to 76 MB: open-sourcing Kayrage's background remover",
+    date: "2026-09-17",
+    author: "Daniel Oh",
+    summary:
+      "Kayrage's Darkroom removes a background in one tap. I rewrote its 4 GB Python service as a 76 MB Rust binary and open-sourced it.",
+    tags: ["engineering", "infrastructure", "launch"],
+    readingTime: "6 min",
+    image: "/blog/background-remover/before-after.jpg",
+    imageWidth: 1600,
+    imageHeight: 912,
+    imageAlt:
+      "The Kayrage Darkroom editor. Left: a portrait with its background, the cursor on the Cutout chip. Right: the same portrait on transparency, with a toast reading 'Background removed.'",
+    imageCaption:
+      "One chip in the Darkroom. Left, the photo as cropped. Right, about two seconds later.",
+  },
   // three-pivots-and-a-lowercase-k.mdx
   {
     slug: "three-pivots-and-a-lowercase-k",

@@ -2,6 +2,7 @@ import { createElement } from "react";
 import type { MDXComponents } from "mdx/types";
 import { sortedPosts, getPostComponent } from "@/content/blog/registry";
 import { shotSlug, type SitePreviewProps } from "@/components/mdx/SitePreview";
+import type { ReelProps } from "@/components/mdx/Reel";
 
 const SITE = "https://danoh.com";
 const TITLE = "Daniel Oh · Blog";
@@ -59,6 +60,19 @@ const feedComponents: MDXComponents = {
         })
       ),
       createElement("figcaption", null, caption ?? `${name} (${domain})`)
+    ),
+  // RSS readers strip or mishandle <video>. They get the poster, linked to
+  // the file, and the description.
+  Reel: ({ src, poster, alt, caption }: ReelProps) =>
+    createElement(
+      "figure",
+      null,
+      createElement(
+        "a",
+        { href: `${SITE}${src}` },
+        createElement("img", { src: `${SITE}${poster}`, alt, width: 720, height: 1280 })
+      ),
+      createElement("figcaption", null, `${caption ? caption + " " : ""}(video plays on the site)`)
     ),
   Rive: ({ alt, caption }: { alt?: string; caption?: string }) =>
     createElement(

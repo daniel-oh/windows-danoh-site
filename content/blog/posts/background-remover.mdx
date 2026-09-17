@@ -1,0 +1,103 @@
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "background-remover",
+  title: "4 GB to 76 MB: open-sourcing Kayrage's background remover",
+  date: "2026-09-17",
+  author: "Daniel Oh",
+  summary:
+    "Kayrage's Darkroom removes a background in one tap. I rewrote its 4 GB Python service as a 76 MB Rust binary and open-sourced it.",
+  tags: ["engineering", "infrastructure", "launch"],
+  readingTime: "6 min",
+  image: "/blog/background-remover/before-after.jpg",
+  imageWidth: 1600,
+  imageHeight: 912,
+  imageAlt:
+    "The Kayrage Darkroom editor. Left: a portrait with its background, the cursor on the Cutout chip. Right: the same portrait on transparency, with a toast reading 'Background removed.'",
+  imageCaption:
+    "One chip in the Darkroom. Left, the photo as cropped. Right, about two seconds later.",
+};
+
+
+Two Fridays ago the [Kayrage](https://kayrage.com) Darkroom learned a new trick. You crop a photo, tap **Cutout**, and the background goes. Type a line on what's left, export it transparent, done. It is the kind of feature that reads as one button and is actually a machine learning model on a server somewhere.
+
+<Reel
+  src="/blog/background-remover/darkroom-cutout.mp4"
+  poster="/blog/background-remover/darkroom-cutout-poster.jpg"
+  title="darkroom-cutout.mp4"
+  alt="A 25 second screen recording of the Kayrage Darkroom: a portrait is cropped to 4:5, the Cutout chip is tapped and the background disappears, a caption is typed onto the image, and it exports with a transparent background."
+  caption="The whole feature, in 25 seconds."
+/>
+
+I shipped it on a Friday with the standard tool for the job. By Saturday night the standard tool was gone, replaced by one I wrote, and the replacement was public: [daniel-oh/background-remover](https://github.com/daniel-oh/background-remover). This is why, and what I learned doing it, including the part where the rewrite did not make anything faster.
+
+## The standard tool weighs four gigabytes
+
+If you want background removal you reach for [rembg](https://github.com/danielgatis/rembg), and you should. It is a great project. It wraps a family of segmentation models, the one I use is `isnet-general-use`, and it gives you a clean cutout from one function call.
+
+The problem is not rembg. The problem is where I run things. Kayrage shares an 8 GB box with nearly sixty other containers, [everything else I run](/blog/eleven-sites-one-operator), and the Python image for this one feature was **4.2 GB**. It took about twenty seconds to start, it ran as root, and it carried an entire Python package tree to do one thing. For a button most members will press occasionally, that is a lot of machine to keep standing by.
+
+So the constraint wrote the spec. Same model, same results, a fraction of the footprint, and gone from memory when nobody is using it.
+
+## Same numbers, or it doesn't ship
+
+Here is the part I care about most. I was swapping the engine under a feature that was already live. Members had already made cutouts. If the new service produced edges that were a little softer, or a little harder, or shifted by a pixel, that is a regression nobody filed a ticket for and everybody can see.
+
+"Looks about the same" was not the bar. The bar was: for the same input bytes, the same output, provably.
+
+That turned out to be where the real work was, because the model is only the middle of the pipeline. Before it runs, the photo is decoded and shrunk to 1024 by 1024. After it runs, the mask is stretched back to the photo's size. Every one of those steps has a dozen "correct" implementations that disagree in the last bit:
+
+- **Resizing.** rembg resizes with Pillow's Lanczos filter, and Pillow's resampler is not textbook Lanczos. It uses 22-bit fixed-point coefficients, rounds a particular way, goes horizontal then vertical, and keeps an 8-bit intermediate. I ported it to Rust line for line. The result is bit-identical to `Image.resize(..., Image.LANCZOS)`.
+- **Decoding.** Two JPEG decoders will hand you slightly different pixels from the same file. Pillow ships libjpeg-turbo, so the service decodes through libjpeg-turbo too, with its defaults.
+- **Rounding.** The mask becomes 8-bit by truncation, not rounding, because that is what numpy's `astype("uint8")` does. One character of difference in the code, a visible fringe in the output.
+
+Then a golden test holds it all in place. It runs a real photo through the service, with the real model, in CI, and compares it against what the Python implementation produced for the same bytes. It demands identical color channels and alpha within 2 levels on every pixel. What it actually measures: a maximum alpha difference of **1**, a mean of **0.0001**, on both a JPEG and a PNG, on x86 and on Apple silicon.
+
+The old Python server is still in Kayrage's repo as the rollback, behind the same contract. I have not needed it.
+
+## The rewrite did not make it faster
+
+I'd love to tell you Rust made it fly. It didn't, and the README says so:
+
+| | Python (rembg image) | background-remover |
+|---|---|---|
+| Image | 4.2 GB | 76 MB |
+| Start to ready | ~20 s | 2 s |
+| Warm request, 1600 px photo | 2.4 s | 2.4 s |
+| Cold request (load + run) | 2.8 s | 3.1 s |
+| Working memory | ~500 MB | 415 MB |
+| Runs as | root | unprivileged, read-only, no capabilities |
+
+Warm requests are identical to the tenth of a second. Of course they are. The time is the model's, a fixed pile of matrix multiplication inside ONNX Runtime, and the language wrapped around it does not move it. Anyone who tells you their rewrite sped up inference by changing the glue code is measuring something else.
+
+What the port buys is everything around the inference. An image 55 times smaller. A two-second start, most of which is checksumming the model file. No root, no shell, no package manager in the container. And the one I wanted most: **the model leaves when it's idle.** After five minutes without a request the service drops the weights and goes back to almost nothing. The next request reloads them in about a second. As I write this, the production container is sitting at under 9 MB.
+
+That is the whole trade. A feature that is used in bursts should cost like it.
+
+## The bug my tests could not see
+
+The best bug of the day was a crash that every test passed.
+
+A corrupt JPEG, a valid header followed by junk, killed the entire process. Not a 500. The server just died. And the test suite was green, because it could not have been anything else.
+
+The cause is a chain of three reasonable things. libjpeg reports errors by unwinding the stack, and the Rust wrapper catches that unwind and turns it into an error. My release build was compiled with `panic = "abort"`, a common setting that makes binaries smaller by removing unwinding. So in production the catch could never run: the unwind became an abort. And cargo always builds *tests* with unwinding enabled, no matter what your release profile says. The tests were exercising a different program than the one I shipped.
+
+The fix was small: stop aborting, catch the unwind explicitly. The lesson was bigger. There is now a smoke test in CI that starts the actual release binary as a process, feeds it a good JPEG and a corrupt one, and checks that it is still alive afterwards. Unit tests tell you the code is right. Only running the artifact tells you the artifact is right.
+
+## Now it's yours
+
+It started as a service. By 0.3.0, later that same night, it had grown a command line, because I kept wanting it on my own laptop:
+
+```sh
+brew install daniel-oh/tap/background-remover
+
+background-remover photo.jpg               # writes photo-cutout.png beside it
+background-remover -d out/ *.jpg           # a batch through one loaded model
+background-remover --mask photo.jpg        # just the mask
+```
+
+The first run downloads the model (178 MB), verifies its checksum, and caches it. After that a 1600 pixel photo takes about 1.3 seconds on an M1 Pro. There is a container image for x86 and Arm, release binaries for Linux, macOS and Windows, and `cargo install background-remover-server` if you'd rather build it. The plain crate name was taken, which is its own small lesson about shipping early.
+
+It is about 2,400 lines of Rust including the tests, MIT or Apache-2.0, your choice. All the intelligence in it belongs to other people: the DIS researchers who trained the model and the rembg project that packaged it and defined the behavior I matched. I wrote the quiet part, the part that makes it small enough to leave running and honest enough to swap in without anyone noticing.
+
+Which is the outcome I wanted. Nobody using the [Darkroom](https://kayrage.com/darkroom) knows any of this happened. They tap a chip and the background goes.

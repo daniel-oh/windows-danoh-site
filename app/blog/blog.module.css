@@ -335,6 +335,47 @@
   margin: 22px 0;
 }
 
+/* Tables: the Win98 details list-view. A sunken white field, a raised grey
+ * header row, hairline row rules. `display: block` + overflow lets a wide
+ * table scroll sideways inside the post on a phone instead of stretching
+ * the page (markdown gives us a bare <table>, no wrapper to put this on). */
+.markdown table {
+  display: block;
+  /* Hug the columns: as a block it would otherwise span the post and leave
+   * an empty white strip after the last column. */
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 16px 0;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 14px;
+  line-height: 1.45;
+  box-shadow: inset -1px -1px #fff, inset 1px 1px #808080,
+    inset -2px -2px #dfdfdf, inset 2px 2px #0a0a0a;
+  padding: 2px;
+}
+
+.markdown th {
+  background: #c0c0c0;
+  font-weight: bold;
+  text-align: left;
+  white-space: nowrap;
+  padding: 4px 12px 4px 8px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+    inset -2px -2px #808080;
+}
+
+.markdown td {
+  padding: 5px 12px 5px 8px;
+  border-bottom: 1px solid #e4e4e4;
+  vertical-align: top;
+}
+
+.markdown tr:last-child td {
+  border-bottom: none;
+}
+
 .markdown code {
   background: #fff;
   padding: 0 4px;

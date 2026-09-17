@@ -1,0 +1,72 @@
+/* A vertical video in the SitePreview window frame. Same bevel, title bar
+ * and caption, so the two read as one family inside a post. */
+
+.figure {
+  margin: 22px auto;
+  /* A 9:16 reel at full column width would be taller than the screen.
+   * 340px keeps the whole frame in view on a laptop and is full width on
+   * a phone. */
+  max-width: 340px;
+}
+
+.window {
+  background: #c0c0c0;
+  padding: 2px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf,
+    inset -2px -2px #808080, inset 2px 2px #fff;
+}
+
+.titleBar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(to right, #000080 0%, #0d76bd 100%);
+  color: #fff;
+  padding: 3px 5px 3px 7px;
+  font-family: "Pixelated MS Sans Serif", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.title {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.controls {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.ctl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 14px;
+  background: #c0c0c0;
+  color: #000;
+  font-size: 9px;
+  line-height: 1;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  background: #14120e;
+  border-top: 1px solid #808080;
+}
+
+.figcaption {
+  font-size: 12px;
+  color: #444;
+  text-align: center;
+  margin-top: 7px;
+  font-style: italic;
+}

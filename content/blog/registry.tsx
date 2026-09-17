@@ -31,7 +31,9 @@ import "highlight.js/styles/github-dark.css";
 import type { BlogPost } from "./types";
 import { SitePreview } from "@/components/mdx/SitePreview";
 import { Rive } from "@/components/mdx/Rive";
+import { Reel } from "@/components/mdx/Reel";
 
+import Cutout, { meta as cutout } from "./posts/background-remover.mdx";
 import Pivots, { meta as pivots } from "./posts/three-pivots-and-a-lowercase-k.mdx";
 import Feels, { meta as feels } from "./posts/one-day-128-feelings.mdx";
 import Eleven, { meta as eleven } from "./posts/eleven-sites-one-operator.mdx";
@@ -48,6 +50,7 @@ type MDXContent = ComponentType<{ components?: MDXComponents }>;
 // `satisfies` typo-proofs every meta against the BlogPost shape at
 // compile time — a missing field in an MDX meta fails tsc, not prod.
 const entries = [
+  [cutout, Cutout],
   [pivots, Pivots],
   [feels, Feels],
   [eleven, Eleven],
@@ -69,12 +72,12 @@ export function getPostComponent(slug: string): MDXContent | null {
 }
 
 /** Rich embeds available to every post as bare JSX tags (`<SitePreview>`,
- * `<Rive>`) with NO import line in the .mdx. Posts must not import these
+ * `<Rive>`, `<Reel>`) with NO import line in the .mdx. Posts must not import these
  * directly: an explicit import can't be overridden by the `components`
  * prop, and both are client-only (next/image, next/dynamic), which
  * throws under the feed's renderToStaticMarkup. feed.xml passes its own
  * server-safe stand-ins for the same names. */
-export const postComponents: MDXComponents = { SitePreview, Rive };
+export const postComponents: MDXComponents = { SitePreview, Rive, Reel };
 
 /** The one shared post-body renderer (was duplicated verbatim in the
  * route page and the in-OS Blog program). */
