@@ -97,10 +97,10 @@ export default function BlogIndex() {
           />
           <div>
             <div className={styles.taglineLine1}>
-              Engineer who designs. Operator who writes.
+              Curator + creative technologist
             </div>
             <div className={styles.taglineLine2}>
-              AI, craft, and the work of building things that last.
+              Focused on design, craft, and the work of building things that last.
             </div>
           </div>
         </header>

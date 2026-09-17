@@ -14,14 +14,14 @@ import { ChunkReloadGuard } from "@/components/ChunkReloadGuard";
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Daniel Oh · Engineer who designs. Operator who writes.",
+  title: "Daniel Oh · Curator + creative technologist",
   description:
-    "AI, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
+    "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
   metadataBase: new URL("https://danoh.com"),
   openGraph: {
-    title: "Daniel Oh · Engineer who designs. Operator who writes.",
+    title: "Daniel Oh · Curator + creative technologist",
     description:
-      "AI, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
+      "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
     url: "https://danoh.com",
     siteName: "danoh.com",
     images: [
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@danohstudio",
     creator: "@danohstudio",
-    title: "Daniel Oh · Engineer who designs. Operator who writes.",
+    title: "Daniel Oh · Curator + creative technologist",
     description:
-      "AI, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
+      "Focused on design, craft, and the work of building things that last. The site is a retro Windows 98 desktop, a blog, and a few experiments. Look around.",
     images: ["/og-image.png"],
   },
   robots: {

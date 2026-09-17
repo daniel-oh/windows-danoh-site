@@ -207,7 +207,7 @@ const contentByKey = {
               lineHeight: 1.35,
             }}
           >
-            AI, craft, and the work of building things that last.
+            Design, craft, and the work of building things that last.
           </p>
         </header>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "8px 0 10px", maxHeight: 300, overflowY: "auto" }}>
