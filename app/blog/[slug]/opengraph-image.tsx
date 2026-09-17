@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { sortedPosts } from "@/content/blog/registry";
+import { sortedPosts } from "@/content/blog/posts";
 
 // Per-post OG card, generated instead of hand-drawn: a Win98 window
 // with the post title in the real 98.css pixel font, so every post —

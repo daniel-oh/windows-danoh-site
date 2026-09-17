@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { sortedPosts } from "@/content/blog/registry";
+import { sortedPosts } from "@/content/blog/posts";
 import { buildMetadata } from "@/lib/buildMetadata";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";

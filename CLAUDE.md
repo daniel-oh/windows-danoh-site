@@ -30,7 +30,8 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 
 | Task                                  | Path                                      |
 | ------------------------------------- | ----------------------------------------- |
-| Add a blog post                       | `content/blog/posts/<slug>.mdx` with an `export const meta` + one import pair in `content/blog/registry.tsx` (prebuild check enforces consistency) |
+| Add a blog post                       | `content/blog/posts/<slug>.mdx` with an `export const meta` + one import pair in `content/blog/registry.tsx`, then `node scripts/check-posts.mjs` to regenerate `content/blog/posts.generated.ts` (runs automatically on `npm run dev` / `build`; CI fails if it is stale) |
+| List posts without shipping their bodies | import from `content/blog/posts.ts` (metadata only). `registry.tsx` pulls in every compiled post: only for code that renders a body |
 | Add a desktop program                 | `components/programs/<Name>.tsx`, wire into `components/WindowBody.tsx`, add a `type` to `state/window.tsx` |
 | Add a Start-menu entry                | `components/OS.tsx` → `entries` array     |
 | Add an AI endpoint                    | `app/api/<name>/route.ts` → call `checkAccess` + `costGuard` + `capture` |

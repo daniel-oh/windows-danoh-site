@@ -29,7 +29,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: node scripts/check-posts.mjs
+      # --check: fail on a stale posts.generated.ts instead of rewriting it.
+      - run: node scripts/check-posts.mjs --check
       # next-env.d.ts (image-import and route types) is gitignored and only
       # exists after Next has run once; a clean checkout can't typecheck
       # without it.

@@ -1,8 +1,12 @@
 // The single source of truth for blog content. Each post's metadata
 // lives INSIDE its MDX file (`export const meta`) where it cannot
 // drift from the body; this registry pairs each meta with its compiled
-// component so every consumer — /blog pages, the in-OS Blog program,
-// feed.xml, sitemap, Welcome, StaticIntro — imports from one place.
+// component for the consumers that render post bodies: /blog/[slug], the
+// in-OS Blog program, feed.xml.
+//
+// HEAVY: importing this file pulls in every compiled post. Code that only
+// lists posts (Welcome, StaticIntro, sitemap, the index) imports
+// ./posts instead, which this file re-exports for convenience.
 //
 // Adding a post:
 //   1. Create content/blog/posts/<slug>.mdx with an `export const meta`.
@@ -12,6 +16,19 @@
 
 import type { ComponentType } from "react";
 import type { MDXComponents } from "mdx/types";
+// Syntax colors travel with the post bodies: this module is the only thing
+// that renders them (the /blog/[slug] page and the in-OS Blog program both
+// go through PostBody), so the stylesheet loads exactly where code blocks
+// can appear. It used to be imported by the root layout, which made it
+// render-blocking CSS on the home page, /resume and /privacy for nothing.
+//
+// github-dark, not github — our blog code blocks use a near-black
+// background (#1a1a1a) in both the in-OS Blog window and the standalone
+// /blog/[slug] page. The light github theme ships dark token colors,
+// so on our dark background everything reads as black-on-black. The
+// dark theme's tokens are engineered for this exact contrast.
+import "highlight.js/styles/github-dark.css";
+import type { BlogPost } from "./types";
 import { SitePreview } from "@/components/mdx/SitePreview";
 import { Rive } from "@/components/mdx/Rive";
 
@@ -25,30 +42,6 @@ import RiveDemo, { meta as riveDemo } from "./posts/mdx-rive-demo.mdx";
 import Welcome, { meta as welcome } from "./posts/welcome-to-danoh.mdx";
 import AiAppGen, { meta as aiAppGen } from "./posts/ai-app-generation.mdx";
 
-export type BlogPost = {
-  slug: string;
-  title: string;
-  date: string;
-  author: string;
-  summary: string;
-  tags: string[];
-  readingTime: string;
-  /** Set after a substantive edit; surfaces as JSON-LD dateModified so
-   * search engines see updates. Falls back to `date`. */
-  updated?: string;
-  pinned?: boolean;
-  /** Optional hero image shown at the top of the post. Share/OG cards
-   * are generated per post by app/blog/[slug]/opengraph-image.tsx and
-   * ignore this field. */
-  image?: string;
-  /** Intrinsic width + height of the hero image. Required when `image` is
-   * set so next/image can reserve space (no layout shift) and pick the
-   * right srcSet. Both must be provided together. */
-  imageWidth?: number;
-  imageHeight?: number;
-  imageAlt?: string;
-  imageCaption?: string;
-};
 
 type MDXContent = ComponentType<{ components?: MDXComponents }>;
 
@@ -66,14 +59,6 @@ const entries = [
   [aiAppGen, AiAppGen],
 ] as const satisfies readonly (readonly [BlogPost, MDXContent])[];
 
-export const posts: BlogPost[] = entries.map(([m]) => m);
-
-// Pinned posts float to the top. Within each group (pinned / unpinned)
-// posts are ordered newest-first by date.
-export const sortedPosts = [...posts].sort((a, b) => {
-  if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
-  return new Date(b.date).getTime() - new Date(a.date).getTime();
-});
 
 const bySlug = new Map<string, MDXContent>(
   entries.map(([m, C]) => [m.slug, C])
@@ -103,37 +88,6 @@ export function PostBody({ slug }: { slug: string }) {
   return <Component components={postComponents} />;
 }
 
-// --- Related / adjacent helpers -------------------------------------
-export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
-  const current = sortedPosts.find((p) => p.slug === slug);
-  if (!current) return [];
-  return sortedPosts
-    .filter((p) => p.slug !== slug)
-    .map((p) => ({
-      post: p,
-      score: p.tags.filter((t) => current.tags.includes(t)).length,
-    }))
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      return new Date(b.post.date).getTime() - new Date(a.post.date).getTime();
-    })
-    .slice(0, limit)
-    .map((r) => r.post);
-}
-
-export function getAdjacentPosts(
-  slug: string
-): { previous: BlogPost | null; next: BlogPost | null } {
-  // Pure chronology, ignoring the pin: pinning is an index-page
-  // presentation choice, but excluding pinned posts here left them with
-  // no prev/next at all and punched a hole in every neighbor's chain.
-  const byDate = [...sortedPosts].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  const idx = byDate.findIndex((p) => p.slug === slug);
-  if (idx === -1) return { previous: null, next: null };
-  return {
-    next: idx > 0 ? byDate[idx - 1] : null,
-    previous: idx < byDate.length - 1 ? byDate[idx + 1] : null,
-  };
-}
+// Metadata + list helpers live in the light module; re-exported so
+// existing `from "@/content/blog/registry"` imports keep working.
+export * from "./posts";

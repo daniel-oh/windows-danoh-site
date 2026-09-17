@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { type BlogPost } from "@/content/blog/registry";
+import { type BlogPost } from "@/content/blog/types";
 import { publishSearchStatus } from "./searchStatus";
 import { CaptionIcon } from "./CaptionIcon";
 import styles from "./blog.module.css";

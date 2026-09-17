@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { sortedPosts } from "@/content/blog/registry";
+import { sortedPosts } from "@/content/blog/posts";
 import {
   PRIVACY_LAST_UPDATED,
   RESUME_LAST_UPDATED,

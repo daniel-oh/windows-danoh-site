@@ -10,7 +10,8 @@
     "build-iframe": "npx -y bun@1.4.2 build ./iframe/api.ts --outdir ./public",
     "test": "jest",
     "test:watch": "jest --watch",
-    "prebuild": "node scripts/check-posts.mjs"
+    "prebuild": "node scripts/check-posts.mjs",
+    "predev": "node scripts/check-posts.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

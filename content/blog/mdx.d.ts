@@ -1,7 +1,7 @@
 declare module "*.mdx" {
   import type { ComponentType } from "react";
   import type { MDXComponents } from "mdx/types";
-  import type { BlogPost } from "@/content/blog/registry";
+  import type { BlogPost } from "@/content/blog/types";
   const MDXComponent: ComponentType<{ components?: MDXComponents }>;
   export default MDXComponent;
   // Typed as BlogPost so the registry's `satisfies` check is real —
