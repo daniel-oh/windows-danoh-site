@@ -51,7 +51,7 @@ async function ensureTables() {
   `);
   await p.query(`
     CREATE TABLE IF NOT EXISTS invite_codes (
-      code TEXT PRIMARY KEY,
+      code TEXT,
       label TEXT,
       total_uses INT NOT NULL DEFAULT 50,
       used INT NOT NULL DEFAULT 0,
@@ -110,6 +110,40 @@ async function ensureTables() {
     ON invite_codes(code_hash)
     WHERE code_hash IS NOT NULL;
   `);
+  // The plaintext `code` column used to be the primary key, hence NOT NULL.
+  // Since the hash refactor, minting inserts code_hash only, so on every
+  // database created by the old DDL (production included) POST /api/invite
+  // failed with 23502 and no invite could be minted. Retire the key; the
+  // unique index above is what enforces uniqueness now.
+  //
+  // Idempotent and narrow: it drops a primary key only if one exists ON
+  // THE `code` COLUMN (so a future key on something else is left alone),
+  // and both statements are no-ops on a fresh or already-migrated table.
+  // It runs AFTER the backfill above, which still keys on `code`.
+  //
+  // Own try/catch: if this fails, invites stay broken (where they already
+  // were) but the rest of the site keeps its database.
+  try {
+    await p.query(`
+      DO $$
+      DECLARE pk name;
+      BEGIN
+        SELECT c.conname INTO pk
+          FROM pg_constraint c
+          JOIN pg_attribute a
+            ON a.attrelid = c.conrelid AND a.attnum = ANY (c.conkey)
+         WHERE c.conrelid = 'invite_codes'::regclass
+           AND c.contype = 'p'
+           AND a.attname = 'code';
+        IF pk IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE invite_codes DROP CONSTRAINT %I', pk);
+        END IF;
+      END $$;
+    `);
+    await p.query(`ALTER TABLE invite_codes ALTER COLUMN code DROP NOT NULL;`);
+  } catch (err) {
+    console.error("[db] invite_codes key migration failed:", err);
+  }
   await p.query(`
     CREATE TABLE IF NOT EXISTS programs (
       id TEXT NOT NULL,
@@ -236,7 +270,16 @@ function ensureInit() {
   initPromise = (async () => {
     await ensureTables();
     await scheduleCleanup();
-  })();
+  })().catch((err) => {
+    // Do not cache a failure. A rejected promise stored here made every
+    // later query() reject for the life of the process, e.g. after one
+    // 5-second connect timeout while Postgres was still starting. The
+    // healthcheck hits "/", which never touches the database, so the
+    // container stayed "healthy" with every DB route returning 500.
+    // Clearing it lets the next query retry the (idempotent) init.
+    initPromise = null;
+    throw err;
+  });
   return initPromise;
 }
 

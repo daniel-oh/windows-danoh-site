@@ -109,11 +109,20 @@ export async function POST(req: Request) {
 
   const code_hash = hashInviteCode(code);
 
-  await query(
-    `INSERT INTO invite_codes (code_hash, label, total_uses, expires_at)
-     VALUES ($1, $2, $3, $4)`,
-    [code_hash, label, total_uses, expires_at]
-  );
+  try {
+    await query(
+      `INSERT INTO invite_codes (code_hash, label, total_uses, expires_at)
+       VALUES ($1, $2, $3, $4)`,
+      [code_hash, label, total_uses, expires_at]
+    );
+  } catch (err) {
+    // 23505 = unique_violation on idx_invite_codes_hash: that code exists.
+    if ((err as { code?: string })?.code === "23505") {
+      return Response.json({ error: "That code already exists" }, { status: 409 });
+    }
+    console.error("[invite] mint failed:", err);
+    return Response.json({ error: "Could not create the invite" }, { status: 500 });
+  }
 
   return new Response(
     JSON.stringify({
