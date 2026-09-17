@@ -85,12 +85,38 @@
 
   & li {
     display: flex;
-    justify-content: space-between;
-    font-size: 12px;
-    border-left: 4px solid transparent;
-    padding: 4px;
-    border: 1px solid grey;
-    cursor: pointer;
+  }
+}
+
+/* Same look the <li> rows had, on a real button. 98.css gives every
+   button a bevel, a 75px min-width and a 23px min-height; this row is a
+   flat list entry, so those are switched off (same approach as
+   .programIcon in Desktop.module.css). */
+.sidebarItem {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  min-height: 24px;
+  font-size: 12px;
+  padding: 4px;
+  border: 1px solid grey;
+  background: none;
+  box-shadow: none !important;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebarItem:active {
+  padding: 4px; /* 98.css nudges padding on :active; keep the row still */
+}
+
+/* Thumb-sized on phones and touch laptops; the desktop row stays compact. */
+@media (max-width: 768px), (pointer: coarse) {
+  .sidebarItem {
+    min-height: 36px;
   }
 }
 

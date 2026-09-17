@@ -32,19 +32,22 @@ const TableOfContents: React.FC<TableOfContentsProps> = ({
       <ul className={styles.sidebarList}>
         {entries.map((entry) => {
           return (
-            <li
-              key={entry.key}
-              onClick={() => onSelect(entry.key)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(entry.key); } }}
-              className={entry.key === selectedEntry ? styles.selected : ""}
-              aria-current={entry.key === selectedEntry ? "true" : undefined}
-            >
-              <span>{entry.title}</span>
-              {entry.key === selectedEntry && (
-                <Image src={check} alt="Selected" width={16} height={16} />
-              )}
+            // A real <button> inside the <li>: role="button" on the <li>
+            // itself is invalid inside a list, and the native element gives
+            // Enter/Space, focus and the accessible name for free.
+            <li key={entry.key}>
+              <button
+                type="button"
+                onClick={() => onSelect(entry.key)}
+                className={`${styles.sidebarItem} ${entry.key === selectedEntry ? styles.selected : ""}`}
+                aria-current={entry.key === selectedEntry ? "true" : undefined}
+              >
+                <span>{entry.title}</span>
+                {entry.key === selectedEntry && (
+                  // Decorative: aria-current already says which row is selected.
+                  <Image src={check} alt="" width={16} height={16} />
+                )}
+              </button>
             </li>
           );
         })}
@@ -344,7 +347,7 @@ const contentByKey = {
             passes (accessibility, SEO, mobile, security) closed out.
             Most of this batch was built with Claude&apos;s new Fable
             5 model. Field notes:{" "}
-            <Link href="/blog/letting-fable-5-loose" style={{ color: "#000080" }}>
+            <Link href="/blog/letting-fable-5-loose" style={{ color: "#000080", textDecoration: "underline" }}>
               Letting Fable 5 loose on this site
             </Link>.
           </p>
@@ -362,7 +365,7 @@ const contentByKey = {
           </p>
           <p style={{ margin: "0 0 12px" }}>
             Also shipped: a plain-language{" "}
-            <a href="/privacy" style={{ color: "#000080" }}>/privacy</a>{" "}
+            <a href="/privacy" style={{ color: "#000080", textDecoration: "underline" }}>/privacy</a>{" "}
             page, contact form that actually sends email from a branded
             sender with a visitor receipt, a keyboard skip-link on the
             blog pages, a retro Matrix-green logout screen, copy-paste
@@ -462,7 +465,7 @@ const contentByKey = {
           local storage. Nothing is sent to the server. You can optionally mount
           a local directory in Settings, but that stays on your machine too.
           This site uses cookie-free, privacy-friendly{" "}
-          <a href="https://plausible.io" target="_blank" rel="noopener noreferrer" style={{ color: "#000080" }}>analytics</a>.
+          <a href="https://plausible.io" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>analytics</a>.
           No personal data is collected.
         </p>
       </>

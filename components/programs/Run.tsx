@@ -214,7 +214,7 @@ export function Run({ id }: { id: string }) {
             Just browsing?{" "}
             <a
               href="#"
-              style={{ color: "#000080" }}
+              style={{ color: "#000080", textDecoration: "underline" }}
               onClick={(e) => {
                 e.preventDefault();
                 void openDemoProgram();
@@ -327,7 +327,7 @@ export function Run({ id }: { id: string }) {
               Using your Anthropic key (…{settings.apiKey.slice(-4)}) ·{" "}
               <a
                 href="#"
-                style={{ color: "#000080" }}
+                style={{ color: "#000080", textDecoration: "underline" }}
                 onClick={(e) => {
                   e.preventDefault();
                   openProgram("settings");

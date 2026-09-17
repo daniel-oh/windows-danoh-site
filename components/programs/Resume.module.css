@@ -55,6 +55,17 @@
   text-decoration: underline;
 }
 
+/* Same treatment as .footerLink on the blog: inline links this small are
+   a 12px-tall tap target on a phone. */
+@media (max-width: 768px), (pointer: coarse) {
+  .contact a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 0 2px;
+  }
+}
+
 .section {
   margin-bottom: 14px;
 }

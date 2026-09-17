@@ -93,7 +93,7 @@ export function ByokPrompt({ onSuccess }: { onSuccess: () => void }) {
           href="https://console.anthropic.com/settings/keys"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "#000080" }}
+          style={{ color: "#000080", textDecoration: "underline" }}
         >
           Get a key
         </a>{" "}
@@ -102,7 +102,7 @@ export function ByokPrompt({ onSuccess }: { onSuccess: () => void }) {
           href="/privacy"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "#000080" }}
+          style={{ color: "#000080", textDecoration: "underline" }}
         >
           Privacy
         </a>

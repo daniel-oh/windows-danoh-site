@@ -83,7 +83,7 @@ export function AccessCodePrompt({
           href="https://www.linkedin.com/in/daniel-oh/"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: "#000080" }}
+          style={{ color: "#000080", textDecoration: "underline" }}
         >
           message on LinkedIn
         </a>{" "}

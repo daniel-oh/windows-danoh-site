@@ -260,7 +260,9 @@ export default async function Post({ params }: Props) {
 
 // Per-tag / per-card accent colors, cycled deterministically. The
 // Win98 16-color palette's three "document text" hues from the design.
-const TAG_COLORS = ["#008080", "#000080", "#800000"];
+// Teal is a shade darker than the palette's #008080, which only reaches
+// 3.6:1 on the #dfdfdf tag chip; #006666 clears 4.5:1.
+const TAG_COLORS = ["#006666", "#000080", "#800000"];
 
 // The post's closing card: reactions, sign-off, and the read-next
 // actions that replaced the old prev/next grid. "Read next" prefers
