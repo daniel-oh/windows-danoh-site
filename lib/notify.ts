@@ -31,6 +31,10 @@ export type EmailPayload = {
   to: string;
   subject: string;
   text: string;
+  /** Optional HTML part (lib/email/templates.ts). Always sent ALONGSIDE
+   * text, never instead of it: a multipart message with a real text part
+   * scores better with spam filters and still reads in text-only clients. */
+  html?: string;
   /** Sets Resend's reply_to header so a Reply on the recipient's
    * mail client lands at the visitor's address instead of the
    * noreply alias. Only set when a valid email was captured. */
@@ -71,6 +75,7 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
       subject: stripHeaderNewlines(payload.subject),
       text: payload.text, // text body may contain newlines — legitimate
     };
+    if (payload.html) body.html = payload.html;
     if (payload.replyTo) {
       body.reply_to = stripHeaderNewlines(payload.replyTo);
     }
@@ -97,6 +102,11 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
   }
 }
 
+/** The inbox a human reads. Also the Reply-To on visitor-facing mail. */
+export function adminEmail(): string {
+  return process.env.ADMIN_EMAIL || ADMIN_EMAIL_DEFAULT;
+}
+
 /**
  * Thin wrapper that targets the admin inbox. Use for guestbook
  * moderation alerts, contact-form notifications, etc.
@@ -104,6 +114,5 @@ export async function sendEmail(payload: EmailPayload): Promise<boolean> {
 export async function notifyAdmin(
   payload: Omit<EmailPayload, "to">
 ): Promise<boolean> {
-  const to = process.env.ADMIN_EMAIL || ADMIN_EMAIL_DEFAULT;
-  return sendEmail({ ...payload, to });
+  return sendEmail({ ...payload, to: adminEmail() });
 }

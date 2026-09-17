@@ -39,6 +39,7 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | Change per-program limits in dev      | `lib/apiGuard.ts` (`MAX_GENERATIONS_PER_HOUR`) |
 | Adjust window-title-bar mobile sizes  | `app/globals.css` `@media (max-width: 768px)` |
 | Send an admin email (e.g. guestbook) | `lib/notify.ts` (Resend wrapper)          |
+| Change or add an email               | `lib/email/templates.ts`: each renderer returns `{ subject, text, html }` on a shared Win98 shell. Tables + inline styles only, no images, escape every visitor field. Always send `text` alongside `html` |
 | Add a front-end analytics event       | `posthog.capture(...)` in any client file |
 | Add a server-side analytics event     | `captureServerEvent(name, props, req)` from `lib/capture.ts` |
 | Gate a feature on a user flag         | `flags/flags.ts` + `flags/context.tsx`    |

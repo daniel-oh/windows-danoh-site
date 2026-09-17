@@ -1,4 +1,5 @@
-import { canSendEmail, notifyAdmin, sendEmail } from "@/lib/notify";
+import { adminEmail, canSendEmail, notifyAdmin, sendEmail } from "@/lib/notify";
+import { renderContactNotice, renderVisitorReceipt } from "@/lib/email/templates";
 import { getClientIP } from "@/lib/api/clientIP";
 import { parseJson, requireJson } from "@/lib/api/json";
 import {
@@ -68,15 +69,10 @@ function countUrls(s: string): number {
 // limits how much: enough to recognise your own note, not enough to carry
 // a payload (it used to echo the full 4000 characters).
 const QUOTE_BACK_MAX = 300;
-function quoteBack(message: string): string {
-  const clipped =
-    message.length > QUOTE_BACK_MAX
-      ? `${message.slice(0, QUOTE_BACK_MAX).trimEnd()}…`
-      : message;
-  return clipped
-    .split("\n")
-    .map((l) => `> ${l}`)
-    .join("\n");
+function clipForQuote(message: string): string {
+  return message.length > QUOTE_BACK_MAX
+    ? `${message.slice(0, QUOTE_BACK_MAX).trimEnd()}…`
+    : message;
 }
 
 export async function POST(req: Request) {
@@ -168,16 +164,14 @@ export async function POST(req: Request) {
   }
 
   const ok = await notifyAdmin({
-    subject: `[danoh.com contact] ${cleanSubject ?? "Hello"} · ${
-      cleanName ?? "Anonymous"
-    }`,
-    text:
-      `From: ${cleanName ?? "(no name)"}\n` +
-      `Reply-To: ${cleanReplyTo ?? "(none provided)"}\n` +
-      `Visitor: ${visitorId}\n` +
-      `IP: ${ip}\n` +
-      `\n` +
-      `${cleanMessage}\n`,
+    ...renderContactNotice({
+      name: cleanName,
+      replyTo: cleanReplyTo,
+      subject: cleanSubject,
+      message: cleanMessage,
+      visitorId,
+      ip,
+    }),
     replyTo: cleanReplyTo ?? undefined,
   });
 
@@ -203,16 +197,14 @@ export async function POST(req: Request) {
   ) {
     void sendEmail({
       to: cleanReplyTo,
-      subject: "Got your note · danoh.com",
-      text:
-        `Hey ${cleanName ?? "there"},\n\n` +
-        `Thanks for writing in. Your note arrived and I'll read it soon.\n` +
-        `Replies come from me directly, usually within a few days.\n\n` +
-        `For reference, you wrote:\n\n` +
-        quoteBack(cleanMessage) +
-        `\n\n` +
-        `Daniel\n` +
-        `danoh.com\n`,
+      ...renderVisitorReceipt({
+        name: cleanName,
+        quote: clipForQuote(cleanMessage),
+      }),
+      // The receipt is sent from noreply@, and it invites a reply. Without
+      // this, a visitor who answered it was writing to a mailbox nobody
+      // reads.
+      replyTo: adminEmail(),
     });
   }
 

@@ -2,6 +2,7 @@ import { query, hasDatabase } from "@/lib/db";
 import Anthropic from "@anthropic-ai/sdk";
 import { getCheapestModel } from "@/ai/client";
 import { notifyAdmin } from "@/lib/notify";
+import { renderGuestbookNotice } from "@/lib/email/templates";
 import { getClientIP } from "@/lib/api/clientIP";
 import { createLastSeenBucket, createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson, requireJson } from "@/lib/api/json";
@@ -215,19 +216,17 @@ export async function POST(req: Request) {
 
   // Fire-and-forget admin email. Resend is only called if RESEND_API_KEY
   // is set — otherwise this is a no-op.
-  void notifyAdmin({
-    subject: `[danoh.com guestbook] ${mod.status}: ${
-      cleanName ? cleanName.slice(0, 30) : "Anonymous"
-    }`,
-    text:
-      `Status: ${mod.status}\n` +
-      `Reason: ${mod.reason ?? "-"}\n` +
-      `Name: ${cleanName ?? "(none)"}\n` +
-      `Message: ${cleanMessage}\n` +
-      `Visitor: ${visitorId}\n` +
-      `IP: ${ip}\n` +
-      `User-Agent: ${ua ?? "(none)"}\n`,
-  });
+  void notifyAdmin(
+    renderGuestbookNotice({
+      status: mod.status,
+      reason: mod.reason ?? null,
+      name: cleanName,
+      message: cleanMessage,
+      visitorId,
+      ip,
+      userAgent: ua ?? null,
+    })
+  );
 
   // Don't reveal rejection vs pending to the visitor — shows as "received"
   // either way. Approved users see their message on the wall immediately.
