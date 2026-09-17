@@ -9,7 +9,11 @@
 
   @media (max-width: 768px) {
     padding: 14px 16px;
-    font-size: 11px;
+    /* Larger on a phone, not smaller. This used to DROP to 11px, which
+       left 99% of the page below the 12px legibility floor: a resume
+       nobody could read without pinch-zooming. The compact 12px
+       print-sheet look stays on desktop. */
+    font-size: 14px;
   }
 }
 
@@ -57,6 +61,21 @@
 
 /* Same treatment as .footerLink on the blog: inline links this small are
    a 12px-tall tap target on a phone. */
+/* The fixed-px details scale with the body text on phones. */
+@media (max-width: 768px) {
+  .contact,
+  .jobDates {
+    font-size: 13px;
+  }
+  .sectionTitle,
+  .downloadButton {
+    font-size: 14px;
+  }
+  .footer {
+    font-size: 12px;
+  }
+}
+
 @media (max-width: 768px), (pointer: coarse) {
   .contact a {
     display: inline-flex;
