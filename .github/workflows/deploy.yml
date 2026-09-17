@@ -8,7 +8,7 @@ on:
 env:
   IMAGE_NAME: dddd4444/danoh-site
 
-# The job only reads the repo; the registry push uses Docker Hub secrets,
+# The jobs only read the repo; the registry push uses Docker Hub secrets,
 # not GITHUB_TOKEN. Default token permissions are broader than that.
 permissions:
   contents: read
@@ -17,7 +17,30 @@ permissions:
 # hijacked tag can't change what runs with the Docker Hub secrets. Refresh:
 #   gh api repos/<owner>/<repo>/commits/<tag> --jq .sha
 jobs:
+  # Every push to main is rolled into production by Watchtower within
+  # minutes and nothing rolls back, so this job is the only thing standing
+  # between a red test and the live site. `build` needs it.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node scripts/check-posts.mjs
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm test
+      # public/api.js is a committed build of iframe/api.ts that the image
+      # serves as-is. Rebuild and diff so the two can't drift. The bun
+      # version is pinned in the npm script: a floating one changes output.
+      - run: npm run build-iframe
+      - run: git diff --exit-code -- public/api.js
+
   build:
+    needs: verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
@@ -26,13 +49,14 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
+      # Build into the local daemon first and boot it. tsc and jest can't
+      # see "the server crashes on start" or "a route 500s with a real
+      # database"; this can. The push step below reuses these layers.
       - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: .
-          push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:latest
-            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          load: true
+          tags: danoh-site:smoke
           # NEXT_PUBLIC_* values are baked into the client bundle at build
           # time; the compose file's runtime env can't provide them. Unset
           # secrets pass through as empty and the client code no-ops.
@@ -41,3 +65,45 @@ jobs:
             NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Smoke test the image against a real Postgres
+        run: |
+          set -euo pipefail
+          docker network create smoke
+          docker run -d --name smoke-db --network smoke \
+            -e POSTGRES_USER=danoh -e POSTGRES_PASSWORD=smoke -e POSTGRES_DB=danoh \
+            postgres:17-alpine
+          for i in $(seq 1 30); do
+            docker exec smoke-db pg_isready -U danoh >/dev/null 2>&1 && break; sleep 1
+          done
+          # Same runtime env shape as docker-compose.yml, with throwaway values.
+          docker run -d --name smoke-web --network smoke -p 3000:3000 \
+            -e DATABASE_URL=postgresql://danoh:smoke@smoke-db:5432/danoh \
+            -e NEXT_PUBLIC_LOCAL_MODE=true -e ACCESS_CODE=smoke \
+            -e ANTHROPIC_API_KEY=sk-ant-smoke-not-a-real-key \
+            danoh-site:smoke
+          for i in $(seq 1 30); do
+            curl -fs -o /dev/null http://127.0.0.1:3000/robots.txt && break; sleep 1
+          done
+          fail=0
+          for path in / /blog /blog/welcome-to-danoh /feed.xml /sitemap.xml /api/visits /api/guestbook; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:3000$path")
+            echo "$code $path"
+            [ "$code" = "200" ] || fail=1
+          done
+          # The AI gate must hold with no session and no key.
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:3000/api/chat \
+            -H 'content-type: application/json' -d '{"messages":[]}')
+          echo "$code POST /api/chat (want 401)"
+          [ "$code" = "401" ] || fail=1
+          if [ "$fail" != "0" ]; then docker logs smoke-web | tail -50; exit 1; fi
+      - uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:latest
+            ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: |
+            NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
+          cache-from: type=gha
