@@ -48,6 +48,7 @@ const RESUME_ICON_ID = "__resume__";
 const MINESWEEPER_ICON_ID = "__minesweeper__";
 const RECYCLE_ICON_ID = "__recycle__";
 const GLASS_ICON_ID = "__glass__";
+const CAMERA_ICON_ID = "__camera__";
 
 function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions): IconPositions {
   const positions = { ...existing };
@@ -86,7 +87,7 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   // up above Snake.exe. Placed before the program loop so the slot is
   // reserved in the occupied set.
   if (!positions[RECYCLE_ICON_ID]) {
-    const bottomRow = Math.max(4, maxRows - 1);
+    const bottomRow = Math.max(5, maxRows - 1);
     positions[RECYCLE_ICON_ID] = { col: 0, row: bottomRow };
     occupied.add(`0,${bottomRow}`);
   }
@@ -95,6 +96,7 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   // first free slot instead of a fixed row: a stored layout may already
   // have a program at (0,3).
   if (!positions[GLASS_ICON_ID]) placeInFirstFree(GLASS_ICON_ID);
+  if (!positions[CAMERA_ICON_ID]) placeInFirstFree(CAMERA_ICON_ID);
 
   // Programs (Snake.exe, anything generated) stack under the built-ins.
   for (const program of programs) {
@@ -166,6 +168,7 @@ export const Desktop = () => {
   const openMinesweeper = useCallback(() => openProgram("minesweeper"), []);
   const openRecycle = useCallback(() => openProgram("recycle"), []);
   const openGlass = useCallback(() => openProgram("glass"), []);
+  const openCamera = useCallback(() => openProgram("camera"), []);
 
   // Right-click / long-press the empty desktop → the classic Win98
   // background menu. createContextMenu wires both the mouse and the
@@ -181,7 +184,7 @@ export const Desktop = () => {
   const arrangeIcons = useCallback(() => {
     const gridSize = getGridSize();
     const maxRows = Math.max(
-      4,
+      5,
       Math.floor((window.innerHeight - 80) / gridSize)
     );
     const positions: IconPositions = {
@@ -189,7 +192,8 @@ export const Desktop = () => {
       [RESUME_ICON_ID]: { col: 0, row: 1 },
       [MINESWEEPER_ICON_ID]: { col: 0, row: 2 },
       [GLASS_ICON_ID]: { col: 0, row: 3 },
-      [RECYCLE_ICON_ID]: { col: 0, row: Math.max(4, maxRows - 1) },
+      [CAMERA_ICON_ID]: { col: 0, row: 4 },
+      [RECYCLE_ICON_ID]: { col: 0, row: Math.max(5, maxRows - 1) },
     };
     const occupied = new Set(
       Object.values(positions).map((p) => `${p.col},${p.row}`)
@@ -334,6 +338,17 @@ export const Desktop = () => {
         onSelect={() => setSelectedIcon(GLASS_ICON_ID)}
         position={iconPositions[GLASS_ICON_ID] || { col: 0, row: 3 }}
         onMove={(col, row) => moveIcon(GLASS_ICON_ID, col, row)}
+        mobile={mobile}
+      />
+      <BuiltInIcon
+        id={CAMERA_ICON_ID}
+        name="Camera"
+        icon="/icons/camera.png"
+        onOpen={openCamera}
+        isSelected={selectedIcon === CAMERA_ICON_ID}
+        onSelect={() => setSelectedIcon(CAMERA_ICON_ID)}
+        position={iconPositions[CAMERA_ICON_ID] || { col: 0, row: 4 }}
+        onMove={(col, row) => moveIcon(CAMERA_ICON_ID, col, row)}
         mobile={mobile}
       />
       <BuiltInIcon

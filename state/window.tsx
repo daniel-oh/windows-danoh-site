@@ -33,7 +33,8 @@ export type Program =
   | { type: "minesweeper" }
   | { type: "guestbook" }
   | { type: "recycle" }
-  | { type: "glass" };
+  | { type: "glass" }
+  | { type: "camera" };
 
 export type AlertAction = {
   label: string;

@@ -32,7 +32,7 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | ------------------------------------- | ----------------------------------------- |
 | Add a blog post                       | `content/blog/posts/<slug>.mdx` with an `export const meta` + one import pair in `content/blog/registry.tsx`, then `node scripts/check-posts.mjs` to regenerate `content/blog/posts.generated.ts` (runs automatically on `npm run dev` / `build`; CI fails if it is stale) |
 | List posts without shipping their bodies | import from `content/blog/posts.ts` (metadata only). `registry.tsx` pulls in every compiled post: only for code that renders a body |
-| Add a desktop program                 | `components/programs/<Name>.tsx`, wire into `components/WindowBody.tsx`, add a `type` to `state/window.tsx` |
+| Add a desktop program                 | `components/programs/<Name>.tsx`, wire into `components/WindowBody.tsx`, add a `type` to `state/window.tsx`, an entry in `lib/programs.ts` (title/size/icon), the Start menu in `components/OS.tsx`, and optionally a `BuiltInIcon` in `components/Desktop.tsx` (Glass and Camera are the template) |
 | Add a Start-menu entry                | `components/OS.tsx` → `entries` array     |
 | Add an AI endpoint                    | `app/api/<name>/route.ts` → call `checkAccess` + `costGuard` + `capture` |
 | Change AI rate limits                 | `lib/api/costGuard.ts` (consts) + `.env` (`GLOBAL_AI_DAILY_CAP`) |
@@ -92,6 +92,7 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
 | Visitor opt-out of analytics | `lib/analyticsOptOut.ts` (localStorage flag; respected at PostHog init + can be toggled live from Settings) |
 | Plain-language disclosure  | `app/privacy/page.tsx` (linked from Start menu → Help → Privacy) |
 | Copy-paste attribution     | `components/CopyAttribution.tsx` — appends "Read more at danoh.com/…" to clipboard on selections ≥ 40 chars; opt-out via `<pre>` or `data-no-copy-attribution` |
+| Camera                     | `Permissions-Policy: camera=(self)` in `next.config.mjs` for `components/programs/Camera.tsx` (asked on click, local only, tracks stop on close/minimise/hide). Generated apps are sandboxed srcDoc iframes with no `allow="camera"`, so they get nothing |
 
 All in-memory rate limit buckets live in `lib/api/rateLimit.ts` with an
 opportunistic sweep so they don't leak in a long-running container.

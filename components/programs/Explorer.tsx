@@ -395,6 +395,7 @@ export function Explorer({ id }: { id: string }) {
             {isRenaming && selectedItem === itemPath ? (
               <input
                 type="text"
+                aria-label="Name"
                 value={newFileName}
                 onChange={handleFileNameChange}
                 onBlur={handleRenameSubmit}
@@ -446,6 +447,7 @@ export function Explorer({ id }: { id: string }) {
         <label>Address:</label>
         <input
           type="text"
+          aria-label="Path"
           value={inputPath}
           onChange={handlePathChange}
           onBlur={handlePathSubmit}
@@ -479,6 +481,7 @@ export function Explorer({ id }: { id: string }) {
                 <td>
                   <input
                     type="text"
+                    aria-label="Name"
                     value={newFileName}
                     onChange={handleFileNameChange}
                     onBlur={handleNewFolderSubmit}
@@ -500,6 +503,7 @@ export function Explorer({ id }: { id: string }) {
           <label>File Name:</label>
           <input
             type="text"
+            aria-label="Name"
             value={newFileName}
             onChange={handleFileNameChange}
           />

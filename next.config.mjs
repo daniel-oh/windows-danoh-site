@@ -67,7 +67,10 @@ const nextConfig = {
           },
           {
             key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=()",
+            // camera=(self): the Camera program asks for it on a click, in the
+            // browser only. Generated apps run in sandboxed srcDoc iframes with
+            // an opaque origin and no allow="camera", so they get nothing.
+            value: "camera=(self), microphone=(), geolocation=(), payment=()",
           },
           // Enforced CSP. Constraints are the third-party origins we
           // actually use (PostHog / Plausible / Stripe) plus

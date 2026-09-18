@@ -119,6 +119,16 @@ export default function Privacy() {
                 AI moderation check. You can see the whole rule set in{" "}
                 <code>app/api/guestbook/route.ts</code>.
               </li>
+              <li>
+                No camera without a click, and never off your device. The
+                Camera program asks the browser for your camera only when
+                you press &ldquo;Turn on camera&rdquo;, draws the feed
+                locally, and stops it when the window closes, is minimised,
+                or the tab is hidden. Nothing is uploaded. A picture is kept
+                only when you press Save, and then only as a download and a
+                copy in this site&rsquo;s in-browser filesystem. Apps
+                generated with Run cannot use the camera at all.
+              </li>
             </ul>
           </Section>
 
