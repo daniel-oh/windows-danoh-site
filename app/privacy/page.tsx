@@ -25,13 +25,13 @@ export default function Privacy() {
       <SkipLink />
       <BreadcrumbLd trail={[{ name: "Privacy" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>
-        <div className={styles.titleBar}>
+        <nav aria-label="Window" className={styles.titleBar}>
           <CaptionIcon />
           <div className={styles.titleBarText}>privacy.txt · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
-        </div>
+        </nav>
         <main id="main" className={`${styles.body} ${styles.bodyProse}`}>
           <h1 className={styles.postHeading} style={{ fontSize: 22 }}>
             Privacy
@@ -170,12 +170,12 @@ export default function Privacy() {
             </span>
           </div>
         </main>
-        <div className={styles.statusBar}>
+        <footer className={styles.statusBar}>
           <span className={`${styles.statusCell} ${styles.grow}`}>
             Last updated {PRIVACY_LAST_UPDATED}
           </span>
           <span className={styles.statusCell}>danoh.com</span>
-        </div>
+        </footer>
       </div>
     </div>
   );

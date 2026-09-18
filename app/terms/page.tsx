@@ -25,13 +25,13 @@ export default function Terms() {
       <SkipLink />
       <BreadcrumbLd trail={[{ name: "Terms" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>
-        <div className={styles.titleBar}>
+        <nav aria-label="Window" className={styles.titleBar}>
           <CaptionIcon />
           <div className={styles.titleBarText}>terms.txt · danoh.com</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
-        </div>
+        </nav>
         <main id="main" className={`${styles.body} ${styles.bodyProse}`}>
           <h1 className={styles.postHeading} style={{ fontSize: 22 }}>
             Terms of use
@@ -40,7 +40,7 @@ export default function Terms() {
             danoh.com is a personal project, not a product with a support
             desk. Here&apos;s the short version of how it works, in the same
             plain language as the{" "}
-            <Link href="/privacy" style={{ color: "#000080" }}>
+            <Link href="/privacy" style={{ color: "#000080", textDecoration: "underline" }}>
               privacy page
             </Link>
             .
@@ -135,12 +135,12 @@ export default function Terms() {
             </span>
           </div>
         </main>
-        <div className={styles.statusBar}>
+        <footer className={styles.statusBar}>
           <span className={`${styles.statusCell} ${styles.grow}`}>
             Last updated {TERMS_LAST_UPDATED}
           </span>
           <span className={styles.statusCell}>danoh.com</span>
-        </div>
+        </footer>
       </div>
     </div>
   );

@@ -63,7 +63,7 @@ export default function ResumePage() {
       />
       <BreadcrumbLd trail={[{ name: "Resume" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>
-        <div className={styles.titleBar}>
+        <nav aria-label="Window" className={styles.titleBar}>
           <CaptionIcon />
           <div className={styles.titleBarText}>
             Daniel_Oh_Resume.doc · danoh.com
@@ -78,16 +78,16 @@ export default function ResumePage() {
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
-        </div>
+        </nav>
         <main id="main">
           <Resume />
         </main>
-        <div className={styles.statusBar}>
+        <footer className={styles.statusBar}>
           <span className={`${styles.statusCell} ${styles.grow}`}>
             Daniel Oh · Sr. Platform Engineer · Nike
           </span>
           <span className={styles.statusCell}>danoh.com</span>
-        </div>
+        </footer>
       </div>
     </div>
   );

@@ -67,13 +67,13 @@ export default function BlogIndex() {
       />
       <BreadcrumbLd trail={[{ name: "Blog" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>
-        <div className={styles.titleBar}>
+        <nav aria-label="Window" className={styles.titleBar}>
           <FolderIcon />
           <div className={styles.titleBarText}>C:\danoh\blog</div>
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
-        </div>
+        </nav>
         {/* Decorative Explorer dressing — like the real Explorer's menu
          * bar, it mostly just sits there. Hidden from AT so screen
          * readers don't announce menus that do nothing. */}
@@ -139,7 +139,7 @@ export default function BlogIndex() {
             </span>
           </div>
         </main>
-        <div className={styles.statusBar}>
+        <footer className={styles.statusBar}>
           <span className={`${styles.statusCell} ${styles.grow}`}>
             <StatusBarCount total={sortedPosts.length} />
           </span>
@@ -147,7 +147,7 @@ export default function BlogIndex() {
             <StatusBarHint />
           </span>
           <span className={styles.statusCell}>danoh.com</span>
-        </div>
+        </footer>
       </div>
     </div>
   );

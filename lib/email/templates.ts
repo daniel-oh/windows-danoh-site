@@ -19,6 +19,8 @@
 //     accounts. One column, 16px body text, 44px tap targets.
 //   - color-scheme: light. A grey Win98 dialog auto-inverted into dark
 //     mode turns into mud; this asks clients to leave it alone.
+//   - the title bar fades navy -> #0d76bd, the site's own gradient end.
+//     98.css ends at #1084d0, where white text is 4.0:1; #0d76bd is 4.8:1.
 //
 // EVERYTHING a visitor typed goes through escapeHtml before it touches
 // markup, and through encodeURIComponent before it touches a mailto:.
@@ -104,7 +106,7 @@ function shell(opts: {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#c0c0c0" style="max-width:560px;background:#c0c0c0;${RAISED}">
 <tr><td style="padding:3px;">
 
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#000080" style="background:#000080;background:linear-gradient(90deg,#000080,#1084d0);">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#000080" style="background:#000080;background:linear-gradient(90deg,#000080,#0d76bd);">
 <tr>
 <td style="padding:5px 8px;font-family:${FONT};font-size:14px;line-height:18px;font-weight:bold;color:#ffffff;">${escapeHtml(
     opts.title

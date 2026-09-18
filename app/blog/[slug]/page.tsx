@@ -144,7 +144,7 @@ export default async function Post({ params }: Props) {
         trail={[{ name: "Blog", path: "/blog" }, { name: post.title }]}
       />
       <div className={`${styles.shell} ${styles.shellWide}`}>
-        <div className={`${styles.titleBar} ${styles.titleBarSticky}`}>
+        <nav aria-label="Window" className={`${styles.titleBar} ${styles.titleBarSticky}`}>
           <CaptionIcon />
           <div className={styles.titleBarText}>{post.slug}.txt · danoh.com</div>
           <Link href="/blog" className={styles.titleBarLink}>
@@ -153,8 +153,9 @@ export default async function Post({ params }: Props) {
           <Link href="/" className={styles.titleBarLink}>
             Open the desktop<ExternalArrow />
           </Link>
-        </div>
-        <article id="main" className={`${styles.body} ${styles.bodyProse}`}>
+        </nav>
+        <main id="main" className={`${styles.body} ${styles.bodyProse}`}>
+        <article>
           <div className={styles.byline}>
             <Image
               src="/headshot.jpg"
@@ -237,11 +238,12 @@ export default async function Post({ params }: Props) {
             </span>
           </div>
         </article>
-        <div className={`${styles.statusBar} ${styles.statusBarSticky}`}>
+        </main>
+        <footer className={`${styles.statusBar} ${styles.statusBarSticky}`}>
           <ReadingProgress />
           <span className={styles.statusCell}>{post.readingTime} read</span>
           <span className={styles.statusCell}>danoh.com</span>
-        </div>
+        </footer>
       </div>
       {/* Outside the shell: the wide-desktop Contents rail and the
         * floating back-to-top square. Route-page only, deliberately —

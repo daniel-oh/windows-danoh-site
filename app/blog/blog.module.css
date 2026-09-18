@@ -339,14 +339,27 @@
  * header row, hairline row rules. `display: block` + overflow lets a wide
  * table scroll sideways inside the post on a phone instead of stretching
  * the page (markdown gives us a bare <table>, no wrapper to put this on). */
-.markdown table {
-  display: block;
-  /* Hug the columns: as a block it would otherwise span the post and leave
-   * an empty white strip after the last column. */
-  width: fit-content;
+/* The scroll region is a wrapper (components/mdx/ScrollTable.tsx) rather
+ * than the table itself: a region that scrolls sideways must be reachable
+ * from the keyboard, and a bare <table> cannot carry tabindex from
+ * markdown. */
+.tableScroll {
   max-width: 100%;
   overflow-x: auto;
   margin: 16px 0;
+}
+
+.tableScroll:focus-visible {
+  outline: 1px dotted #000;
+  outline-offset: 2px;
+}
+
+.markdown table {
+  /* Hug the columns: it would otherwise span the post and leave an empty
+   * white strip after the last column. */
+  width: fit-content;
+  max-width: none;
+  margin: 0;
   border-collapse: collapse;
   background: #fff;
   font-size: 14px;
@@ -441,6 +454,13 @@
   margin: 0 0 6px 0;
   color: #000080;
   letter-spacing: 0.3px;
+}
+
+/* Links inside the privacy / terms prose: underlined, so they differ from
+   the surrounding text by more than colour (WCAG 1.4.1). */
+.privacySectionBody a {
+  color: #000080;
+  text-decoration: underline;
 }
 
 .privacySectionBody {
@@ -1313,7 +1333,10 @@ input[type="search"].searchInput:focus-visible {
 
 .tocList a {
   display: block;
-  padding: 4px 6px;
+  /* 24px tall: the pointer-target minimum. 4px of padding made a 19px row. */
+  min-height: 24px;
+  box-sizing: border-box;
+  padding: 5px 6px;
   font-size: 11px;
   line-height: 1.45;
   color: #000;

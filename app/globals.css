@@ -104,11 +104,41 @@ select:focus-visible,
   outline-offset: 2px;
 }
 
-/* The active title-bar gradient starts at #000080, so the navy ring
-   above is invisible on the Minimize/Maximize/Close buttons. White
-   reads against both the active and inactive title-bar gradients. */
+/* 98.css switches the outline OFF for title-bar buttons and for text
+   inputs (`.title-bar-controls button:focus`, `input[type=text]:focus`,
+   both more specific than the generic rule above), so keyboard focus was
+   invisible on exactly the controls people tab to most. These win on
+   specificity and cascade order. The title-bar ring is white: the active
+   gradient starts at #000080, where a navy ring vanishes. */
 .title-bar-controls button:focus-visible {
-  outline-color: #fff;
+  outline: 2px solid #fff;
+  outline-offset: 1px;
+}
+
+input[type]:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #000080;
+  outline-offset: 2px;
+}
+
+/* Desktop title-bar controls. 98.css draws them 16x14, well under the
+   24px pointer-target minimum (WCAG 2.5.8), and three of them sit flush,
+   so the spacing exception does not apply either. 24x20 here; the phone
+   block below goes to 26x26. 98.css anchors each glyph to a corner with
+   3-4px offsets, which looks centred at 16x14 and lopsided at 24x20, so
+   the glyphs are re-centred the same way the phone rules do. */
+.window .title-bar-controls button {
+  min-width: 24px;
+  min-height: 20px;
+}
+.window .title-bar-controls button[aria-label="Minimize"] {
+  background-position: center calc(100% - 4px);
+}
+.window .title-bar-controls button[aria-label="Maximize"],
+.window .title-bar-controls button[aria-label="Restore"],
+.window .title-bar-controls button[aria-label="Close"] {
+  background-position: center center;
 }
 
 /* Figures / captions — used by RichMarkdown's <img> override. */
