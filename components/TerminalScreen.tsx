@@ -1,7 +1,41 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { useMotionAllowed } from "@/lib/useMotionAllowed";
 import styles from "./TerminalScreen.module.css";
+
+// The "broken display" layer: character noise behind the text, the
+// headline bending like a CRT under magnetic pull, the other lines
+// decoding in. All three load on demand (never on "/"), and none of them
+// mount under prefers-reduced-motion, where the page is exactly the plain
+// version. The real text stays in the DOM in every case.
+const TerminalGlitch = dynamic(
+  () => import("@/components/fx/TerminalGlitch").then((m) => m.TerminalGlitch),
+  { ssr: false }
+);
+const WarpText = dynamic(
+  () => import("@/components/fx/WarpText").then((m) => m.WarpText),
+  { ssr: false }
+);
+const DecodeText = dynamic(
+  () => import("@/components/fx/DecodeText").then((m) => m.DecodeText),
+  { ssr: false }
+);
+
+// Same values as the .green / .amber tokens in the stylesheet. Canvas and
+// WebGL cannot read CSS variables, so they are repeated here on purpose.
+const PALETTE = {
+  green: { fg: "#33ff66", prompt: "#5eff8e", glow: "rgba(51,255,102,0.75)", noise: ["#0b2214", "#156b31", "#1fa347"] },
+  amber: { fg: "#ff6b4a", prompt: "#ffb3a0", glow: "rgba(255,107,74,0.75)", noise: ["#2a1510", "#7a3322", "#b04a32"] },
+} as const;
+
+// Matches .l1 .. .l6 in the stylesheet, in seconds, so a line's decode
+// starts when its fade-in does.
+const LINE_DELAYS = [0.12, 0.64, 1.1, 1.5, 1.9, 2.2];
+
+const TERMINAL_FONT =
+  '"Fira Code", "JetBrains Mono", "Menlo", "Consolas", "Lucida Console", monospace';
 
 // Shared retro-terminal screen powering /logout (green phosphor),
 // /error (amber fault), and the segment-level app/error.tsx (amber).
@@ -67,10 +101,40 @@ export function TerminalScreen({
   const actionsDelayClass = lineDelayClass(lines.length);
   const signatureDelayClass = lineDelayClass(lines.length + 1);
 
+  // Effects are a client-only decision: reduced motion is only knowable in
+  // the browser, and the server-rendered page must be the plain one.
+  const fx = useMotionAllowed();
+  const palette = PALETTE[variant];
+  const headline = lines[0];
+
   return (
     <div className={`${styles.root} ${styles[variant]}`}>
+      {fx && <TerminalGlitch colors={[...palette.noise]} />}
       <div className={styles.scanlines} aria-hidden="true" />
       <main className={styles.terminal}>
+        {fx && headline && (
+          <div className={`${styles.headline} ${styles.line} ${lineDelayClass(0)}`}>
+            <WarpText
+              segments={[
+                ...(headline.prefix ? [{ text: `${headline.prefix} `, color: palette.prompt }] : []),
+                { text: headline.text, color: palette.fg },
+              ]}
+              fontFamily={TERMINAL_FONT}
+              fontSize={30}
+              fontWeight={700}
+              letterSpacing={0.5}
+              glow={palette.glow}
+              warpStrength={0.05}
+              warpScale={1.4}
+              speed={0.4}
+              pointerInfluence={0.5}
+              pointerStrength={0.3}
+              refraction={0.014}
+              ripple
+              style={{ height: 46 }}
+            />
+          </div>
+        )}
         {lines.map((line, i) => {
           const className = `${styles.line} ${lineDelayClass(i)}`;
           const prefix = line.prefix ? (
@@ -92,10 +156,12 @@ export function TerminalScreen({
           // First line is the headline — rendered as <h1> for the
           // document outline. Subsequent lines are plain <div>s.
           if (i === 0) {
+            // With effects on, the warped headline above is the visible
+            // one; the h1 stays for the document outline and readers.
             return (
               <h1
                 key={i}
-                className={className}
+                className={fx ? styles.srOnly : className}
                 style={{ font: "inherit", margin: 0 }}
               >
                 {prefix}
@@ -107,7 +173,16 @@ export function TerminalScreen({
           return (
             <div key={i} className={className}>
               {prefix}
-              <span>{line.text}</span>
+              {fx ? (
+                <DecodeText
+                  text={line.text}
+                  mode="reveal"
+                  delay={LINE_DELAYS[Math.min(i, LINE_DELAYS.length - 1)]}
+                  duration={0.7}
+                />
+              ) : (
+                <span>{line.text}</span>
+              )}
               {cursor}
             </div>
           );

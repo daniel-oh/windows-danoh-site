@@ -139,6 +139,25 @@
   }
 }
 
+/* The warped headline's host: one line tall, full width, above the lines.
+ * Its canvas bleeds a little past the text so the ripple has room. */
+.headline {
+  position: relative;
+  margin: 0 0 6px -8px;
+  width: calc(100% + 16px);
+}
+
+/* Visually hidden, still read: the h1 while the headline is drawn on
+ * canvas. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
 /* Staggered reveal — each line fires slightly later than the last so
  * the sequence reads like a terminal response rather than the page
  * painting all at once. */

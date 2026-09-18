@@ -65,8 +65,13 @@ in-browser virtual filesystem over IndexedDB / FileSystemAccess).
   - `app/error.tsx` — segment-level, shown when a page crashes.
   - `app/global-error.tsx` — root-level, shown when the layout crashes.
   - `app/error/page.tsx` — the real `/error` route (OAuth failure target).
-  All three share the retro-terminal aesthetic via `error.module.css`
-  and `logout.module.css`.
+  All three, plus `/logout` and `/not-found`, render through
+  `components/TerminalScreen.tsx` (green or amber phosphor, scanlines,
+  staggered reveal). With motion allowed it also mounts the "broken
+  display" layer from `components/fx/`: character noise at the edges
+  (`TerminalGlitch`), the headline warped through a WebGL shader
+  (`WarpText`), lines decoding in (`DecodeText`). All load on demand and
+  never on "/"; under reduced motion the page is the plain version.
 
 ---
 
