@@ -1,6 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+
+// The name bends. For the 1.5s the splash holds, "danoh.com" is drawn
+// through a WebGL shader that ripples and refracts it under the pointer:
+// three seconds of "this is not what it looks like" before the pixel
+// desktop assembles. Loaded only once the gate has decided this session
+// gets the show (repeat visits and reduced-motion visitors never fetch
+// it), in parallel with the BIOS lines so it is ready when the splash
+// fades in. Without WebGL2 the component draws the same text plainly.
+const WarpText = dynamic(
+  () => import("@/components/fx/WarpText").then((m) => m.WarpText),
+  { ssr: false }
+);
 
 // The boot sequence: BIOS POST text, a branded splash with the classic
 // sliding loading bar, then the desktop assembles (icons stagger in,
@@ -39,6 +52,9 @@ const BIOS_LINES = [
 
 export function BootScreen() {
   const [done, setDone] = useState(false);
+  // Set once the show is confirmed, from inside the gsap import callback
+  // (async, so it is not a setState-in-effect).
+  const [warp, setWarp] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -56,6 +72,7 @@ export function BootScreen() {
 
     void import("gsap").then(({ gsap }) => {
       if (killed) return;
+      setWarp(true);
 
       const lines = root.querySelectorAll("[data-bios-line]");
       const splash = root.querySelector("[data-splash]");
@@ -202,16 +219,35 @@ export function BootScreen() {
             alt=""
             style={{ width: 200, filter: "invert(1) brightness(1.4)" }}
           />
-          <div
-            style={{
-              fontFamily: "'Pixelated MS Sans Serif', Arial, sans-serif",
-              fontSize: 14,
-              color: "#fff",
-              letterSpacing: 1,
-            }}
-          >
-            danoh.com
-          </div>
+          {warp ? (
+            <WarpText
+              segments={[{ text: "danoh.com", color: "#ffffff" }]}
+              fontFamily="'Pixelated MS Sans Serif', Arial, sans-serif"
+              fontSize={40}
+              fontWeight={700}
+              letterSpacing={2}
+              align="center"
+              warpStrength={0.07}
+              warpScale={1.6}
+              speed={0.5}
+              pointerInfluence={0.55}
+              pointerStrength={0.4}
+              refraction={0.022}
+              ripple
+              style={{ width: "min(420px, 90vw)", height: 72 }}
+            />
+          ) : (
+            <div
+              style={{
+                fontFamily: "'Pixelated MS Sans Serif', Arial, sans-serif",
+                fontSize: 14,
+                color: "#fff",
+                letterSpacing: 1,
+              }}
+            >
+              danoh.com
+            </div>
+          )}
           <div
             style={{
               width: 220,
