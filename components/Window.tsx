@@ -20,8 +20,46 @@ import Image from "next/image";
 import { createWindow } from "@/lib/createWindow";
 import { isCoarsePointer } from "@/lib/isCoarsePointer";
 import { WindowMenuBar } from "./WindowMenuBar";
+import dynamic from "next/dynamic";
+import { useMotionAllowed } from "@/lib/useMotionAllowed";
 
 const isResizingAtom = atom(false);
+
+// The glass shown while the AI writes a program. On demand: the desktop
+// bundle never carries the glass or the loader, and the few visitors who
+// generate a program pay for it at the moment it matters. The fallback is
+// the plain dialog for the instant the chunk takes to arrive.
+const GeneratingOverlay = dynamic(
+  () => import("./fx/GeneratingOverlay").then((m) => m.GeneratingOverlay),
+  {
+    ssr: false,
+    loading: () => (
+      <div className={styles.loadingOverlay} role="status">
+        <progress />
+        <div className={styles.loadingText}>Generating program...</div>
+      </div>
+    ),
+  }
+);
+
+// True while `on` is true and for `ms` after it turns false, so the glass
+// can dissolve over the streaming app instead of vanishing on the first
+// byte. The re-arm happens during render (the "adjust state on prop
+// change" pattern), the release in a timer.
+function useLinger(on: boolean, ms: number) {
+  const [linger, setLinger] = useState(on);
+  const [prev, setPrev] = useState(on);
+  if (on !== prev) {
+    setPrev(on);
+    if (on) setLinger(true);
+  }
+  useEffect(() => {
+    if (on) return;
+    const t = setTimeout(() => setLinger(false), ms);
+    return () => clearTimeout(t);
+  }, [on, ms]);
+  return on || linger;
+}
 
 export const Window = memo(WindowInner);
 
@@ -34,6 +72,9 @@ function WindowInner({ id }: { id: string }) {
   const mobile = useIsMobile();
   const [isMinimizing, setIsMinimizing] = useState(false);
   const prevStatusRef = useRef(state.status);
+  const motion = useMotionAllowed();
+  // Glass stays up through the 400ms dissolve after the first byte.
+  const glass = useLinger(state.loading, motion ? 400 : 0);
 
   useEffect(() => {
     const wasMinimized = prevStatusRef.current === "minimized";
@@ -166,7 +207,12 @@ function WindowInner({ id }: { id: string }) {
         overflow: "hidden",
         opacity: isResizing && focusedWindow === id ? 0.85 : 1,
         zIndex: zOrder[id] ?? 0,
-        isolation: "isolate",
+        // While the AI is writing, the window is a pane of glass with a
+        // title bar: no grey, so the desktop shows through the overlay's
+        // backdrop-filter. Isolation would also cap the backdrop at this
+        // element, so it lifts for the same stretch.
+        background: glass ? "transparent" : undefined,
+        isolation: glass ? undefined : "isolate",
         minWidth: MIN_WINDOW_SIZE.width,
         minHeight: MIN_WINDOW_SIZE.height,
       }}
@@ -388,16 +434,11 @@ function WindowInner({ id }: { id: string }) {
         }}
       >
         <WindowMenuBar id={id} />
-        {state.loading && (
-          <div className={styles.loadingOverlay} role="status">
-            <progress />
-            <div className={styles.loadingText}>Generating program...</div>
-            <div className={styles.loadingActions}>
-              <button onClick={() => windowsDispatch({ type: "REMOVE", payload: id })}>
-                Stop
-              </button>
-            </div>
-          </div>
+        {glass && (
+          <GeneratingOverlay
+            streaming={!state.loading}
+            onStop={() => windowsDispatch({ type: "REMOVE", payload: id })}
+          />
         )}
         <div style={{ flex: 1, display: state.loading ? "none" : "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
           <WindowBody id={id} program={state.program} error={state.error} />

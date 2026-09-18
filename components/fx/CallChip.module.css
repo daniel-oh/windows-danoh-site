@@ -1,0 +1,192 @@
+.chip {
+  --cc-expected: 6000ms;
+  --cc-surface: #000080;
+  --cc-color: #fff;
+  --cc-done: #00ff00;
+  --cc-error: #ff5555;
+  --cc-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  box-sizing: border-box;
+  height: 26px;
+  padding: 0 10px;
+  overflow: hidden;
+  align-self: flex-start;
+  background: var(--cc-surface);
+  color: var(--cc-color);
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-user-select: none;
+  /* The same bevel as a 98.css button, so it reads as a control in the
+   * log rather than a pill from another decade. */
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset 1px 1px #fff,
+    inset -2px -2px grey,
+    inset 2px 2px #dfdfdf;
+  transition: transform 160ms var(--cc-ease-out);
+}
+
+.chip[data-status="error"] {
+  cursor: pointer;
+}
+
+.chip[data-pressed] {
+  transform: scale(0.97);
+}
+
+.fill {
+  position: absolute;
+  inset: 2px;
+  background: rgba(255, 255, 255, 0.18);
+  transform: scaleX(0);
+  transform-origin: left center;
+  clip-path: inset(0 0 0 0);
+  pointer-events: none;
+}
+
+.chip[data-status="running"] .fill {
+  transition: transform var(--cc-expected) linear;
+}
+
+.chip[data-status="done"] .fill {
+  background: color-mix(in srgb, var(--cc-done) 28%, transparent);
+  clip-path: inset(100% 0 0 0);
+  transition:
+    transform 200ms var(--cc-ease-out),
+    background-color 120ms ease,
+    clip-path 400ms var(--cc-ease-out) 200ms;
+}
+
+.chip[data-status="error"] .fill {
+  background: color-mix(in srgb, var(--cc-error) 28%, transparent);
+  transition: background-color 200ms ease;
+}
+
+.chip:not([data-mounted]) .fill,
+.chip:not([data-mounted]) .glyph {
+  transition: none !important;
+}
+
+.slot {
+  position: relative;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.glyph {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  opacity: 0;
+  transform: translateY(70%);
+}
+
+.glyph[data-state="in"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 240ms var(--cc-ease-out),
+    transform 240ms var(--cc-ease-out);
+}
+
+.glyph[data-state="out"] {
+  transform: translateY(-70%);
+  transition:
+    opacity 160ms var(--cc-ease-out),
+    transform 160ms var(--cc-ease-out);
+}
+
+.chip[data-status="done"] .glyph[data-state="in"] {
+  color: var(--cc-done);
+}
+
+.chip[data-status="error"] .glyph[data-state="in"] {
+  color: var(--cc-error);
+}
+
+.name,
+.arg,
+.timer {
+  position: relative;
+}
+
+.name {
+  font-weight: bold;
+}
+
+.arg {
+  opacity: 0.85;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timer {
+  min-width: 4ch;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  opacity: 0.75;
+}
+
+.retry {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+  cursor: pointer;
+  min-width: 0;
+  min-height: 0;
+  box-shadow: none;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.retry:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip[data-status="running"] .fill {
+    transition: none;
+  }
+  .chip[data-status="done"] .fill {
+    clip-path: inset(0 0 0 0);
+    transition: background-color 120ms ease;
+  }
+  .glyph {
+    transform: none !important;
+    transition: opacity 120ms ease !important;
+  }
+  .chip[data-pressed] {
+    transform: none;
+  }
+}
+
+/* 98.css re-applies its pressed bevel on button:active; the hit area
+ * stays invisible. */
+.chip .retry:active {
+  box-shadow: none;
+}

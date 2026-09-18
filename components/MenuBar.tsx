@@ -94,6 +94,7 @@ function MenuBarButton({
         className={cx(styles.menuBarButton, {
           [styles.isOpen]: openMenuLabel === optionGroup.label,
         })}
+        role="menuitem"
         aria-haspopup="true"
         aria-expanded={openMenuLabel === optionGroup.label}
         onClick={(e) => {

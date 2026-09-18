@@ -1,0 +1,150 @@
+.root {
+  --ll-cell: 6px;
+  --ll-gap: 3px;
+  --ll-color: #000;
+  --ll-mark: #000080;
+  --ll-idle: 0.18;
+  --ll-peak: 1;
+  --ll-cycle: 864ms;
+  --ll-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ll-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  line-height: 1;
+}
+
+.grid {
+  display: grid;
+  flex: none;
+}
+
+.layer {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template-columns: repeat(3, var(--ll-cell));
+  gap: var(--ll-gap);
+}
+
+/* Square cells: this is a Win98 dialog, not a phone. */
+.cell {
+  width: var(--ll-cell);
+  height: var(--ll-cell);
+  background: var(--ll-color);
+  opacity: var(--ll-idle);
+}
+
+.run {
+  transition: opacity 200ms ease;
+}
+
+.run .cell {
+  animation: lattice-on var(--ll-cycle) var(--ll-ease-in-out) infinite;
+}
+
+.run .cell[data-hole] {
+  animation: none;
+  opacity: calc(var(--ll-idle) * 0.47);
+}
+
+.mark {
+  opacity: 0;
+  transform: scale(0.9);
+  transform-origin: center;
+  transition:
+    opacity 160ms var(--ll-ease-out),
+    transform 160ms var(--ll-ease-out);
+}
+
+.mark .cell {
+  transition:
+    opacity 200ms ease,
+    background-color 200ms ease;
+}
+
+.mark .cell[data-on] {
+  background: var(--ll-mark);
+  opacity: var(--ll-peak);
+}
+
+.root:not([data-status="working"]) .run {
+  opacity: 0;
+}
+
+.root:not([data-status="working"]) .run .cell {
+  animation-play-state: paused;
+}
+
+.root:not([data-status="working"]) .mark {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 200ms ease,
+    transform 200ms var(--ll-ease-out);
+}
+
+.label {
+  position: relative;
+  display: inline-block;
+}
+
+.text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.text[data-active] {
+  position: static;
+  opacity: 1;
+}
+
+.timer {
+  font-variant-numeric: tabular-nums;
+  min-width: 4ch;
+  color: #000080;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@keyframes lattice-on {
+  0%,
+  100% {
+    opacity: var(--ll-idle);
+  }
+  18%,
+  42% {
+    opacity: var(--ll-peak);
+  }
+  62% {
+    opacity: var(--ll-idle);
+  }
+}
+
+/* Reduced motion: the ring does not orbit. The whole grid sits lit at a
+ * calm level and the timer keeps counting, which is the real signal. */
+@media (prefers-reduced-motion: reduce) {
+  .run .cell {
+    animation: none;
+    opacity: 0.6;
+  }
+  .mark {
+    transform: none;
+  }
+}

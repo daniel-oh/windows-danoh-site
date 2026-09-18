@@ -408,7 +408,6 @@ export function WarpText(props: WarpTextProps) {
       canvas.remove();
     };
     // Mount once; prop changes re-upload the texture below.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const textKey = props.segments.map((s) => `${s.color}:${s.text}`).join("|");

@@ -1,0 +1,44 @@
+.pane {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+}
+
+.pane > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* A raised Win98 panel: the same bevel as a window, no title bar. */
+.panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: #c0c0c0;
+  color: #000;
+  font-size: 13px;
+  box-shadow:
+    inset -1px -1px #0a0a0a,
+    inset 1px 1px #fff,
+    inset -2px -2px grey,
+    inset 2px 2px #dfdfdf;
+}
+
+.loader {
+  padding: 2px 0;
+}
+
+.stop {
+  min-width: 64px;
+}
+
+@media (max-width: 480px) {
+  .panel {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

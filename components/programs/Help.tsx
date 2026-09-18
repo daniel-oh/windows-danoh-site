@@ -21,6 +21,7 @@ import imageIcon from "@/components/assets/image.png";
 import wrappedFetch from "@/lib/wrappedFetch";
 import { AccessCodePrompt } from "../AccessCodePrompt";
 import { ByokPrompt } from "../ByokPrompt";
+import { CallChip, type CallChipStatus } from "../fx/CallChip";
 
 // Fix & Iterate calls the AI (and would spend tokens / the shared
 // budget), so it's gated exactly like the Run dialog: a visitor needs
@@ -128,6 +129,10 @@ export function Help({ id }: { id: string }) {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  // The chip at the foot of the log: running while a request is out, done
+  // for a beat after the reply lands, error (with Retry) if it does not.
+  const [chip, setChip] = useState<CallChipStatus | null>(null);
+  const lastSentRef = useRef<Messages | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachment, setAttachment] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -144,7 +149,16 @@ export function Help({ id }: { id: string }) {
     if (settings.apiKey) setAuthed(true);
   }, [settings.apiKey]);
 
+  useEffect(() => {
+    if (chip !== "done") return;
+    const t = setTimeout(() => setChip(null), 1600);
+    return () => clearTimeout(t);
+  }, [chip]);
+
   const doSend = async (allMessages: Messages) => {
+    lastSentRef.current = allMessages;
+    setChip("running");
+    let outcome: CallChipStatus | null = "error";
     try {
       const response = await wrappedFetch("/api/help", {
         method: "POST",
@@ -158,6 +172,7 @@ export function Help({ id }: { id: string }) {
       if (!response.ok) {
         if (response.status === 401) {
           setNeedsAuth(true);
+          outcome = null;
         } else {
           setMessages(trimMessages([
             ...allMessages,
@@ -192,6 +207,7 @@ export function Help({ id }: { id: string }) {
           }
         }
         setMessages(trimMessages([...allMessages, { role: "assistant", content: data }]));
+        outcome = "done";
       } else {
         setMessages(trimMessages([
           ...allMessages,
@@ -206,7 +222,18 @@ export function Help({ id }: { id: string }) {
       ]));
     } finally {
       setIsLoading(false);
+      setChip(outcome);
     }
+  };
+
+  const retry = () => {
+    const last = lastSentRef.current;
+    if (!last || isLoading) return;
+    // The failed exchange already appended an assistant apology; resend
+    // the same request from the messages as they were when it went out.
+    setMessages(last);
+    setIsLoading(true);
+    void doSend(last);
   };
 
   const sendMessageWithText = async (text: string) => {
@@ -289,8 +316,6 @@ export function Help({ id }: { id: string }) {
 
   return (
     <div className={styles.chatContainer}>
-      {/* aria-busy keeps the log's letter-by-letter LOADING indicator
-       * from being spelled out into a screen reader one span at a time. */}
       <div
         className={styles.chatBox}
         role="log"
@@ -321,19 +346,15 @@ export function Help({ id }: { id: string }) {
             />
           ));
         })()}
-        {isLoading && (
-          <div className={styles.loadingIndicator}>
-            <span>L</span>
-            <span>O</span>
-            <span>A</span>
-            <span>D</span>
-            <span>I</span>
-            <span>N</span>
-            <span>G</span>
-            <span>.</span>
-            <span>.</span>
-            <span>.</span>
-          </div>
+        {chip && (
+          <CallChip
+            name="edit"
+            argument={targetWindow.title}
+            status={chip}
+            expectedMs={12000}
+            onRetry={retry}
+            className={styles.chip}
+          />
         )}
       </div>
       {!authed || needsAuth ? (
