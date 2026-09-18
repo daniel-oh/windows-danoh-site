@@ -1,0 +1,39 @@
+.host {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.pane {
+  position: absolute;
+  inset: 0;
+}
+
+.pane > div {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px;
+}
+
+/* The Win98 tooltip: pale yellow, one pixel of black. */
+.hint {
+  margin: 0;
+  padding: 3px 6px;
+  background: #ffffe1;
+  color: #000;
+  border: 1px solid #000;
+  font-size: 11px;
+  transition: opacity 600ms ease;
+}
+
+.hint[data-hidden] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint {
+    transition: none;
+  }
+}

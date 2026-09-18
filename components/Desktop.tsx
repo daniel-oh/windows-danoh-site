@@ -47,6 +47,7 @@ const BLOG_ICON_ID = "__blog__";
 const RESUME_ICON_ID = "__resume__";
 const MINESWEEPER_ICON_ID = "__minesweeper__";
 const RECYCLE_ICON_ID = "__recycle__";
+const GLASS_ICON_ID = "__glass__";
 
 function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions): IconPositions {
   const positions = { ...existing };
@@ -89,6 +90,11 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
     positions[RECYCLE_ICON_ID] = { col: 0, row: bottomRow };
     occupied.add(`0,${bottomRow}`);
   }
+
+  // Glass arrived after layouts were already stored, so it takes the
+  // first free slot instead of a fixed row: a stored layout may already
+  // have a program at (0,3).
+  if (!positions[GLASS_ICON_ID]) placeInFirstFree(GLASS_ICON_ID);
 
   // Programs (Snake.exe, anything generated) stack under the built-ins.
   for (const program of programs) {
@@ -159,6 +165,7 @@ export const Desktop = () => {
   const openResume = useCallback(() => openProgram("resume"), []);
   const openMinesweeper = useCallback(() => openProgram("minesweeper"), []);
   const openRecycle = useCallback(() => openProgram("recycle"), []);
+  const openGlass = useCallback(() => openProgram("glass"), []);
 
   // Right-click / long-press the empty desktop → the classic Win98
   // background menu. createContextMenu wires both the mouse and the
@@ -181,6 +188,7 @@ export const Desktop = () => {
       [BLOG_ICON_ID]: { col: 0, row: 0 },
       [RESUME_ICON_ID]: { col: 0, row: 1 },
       [MINESWEEPER_ICON_ID]: { col: 0, row: 2 },
+      [GLASS_ICON_ID]: { col: 0, row: 3 },
       [RECYCLE_ICON_ID]: { col: 0, row: Math.max(4, maxRows - 1) },
     };
     const occupied = new Set(
@@ -315,6 +323,17 @@ export const Desktop = () => {
         onSelect={() => setSelectedIcon(MINESWEEPER_ICON_ID)}
         position={iconPositions[MINESWEEPER_ICON_ID] || { col: 0, row: 2 }}
         onMove={(col, row) => moveIcon(MINESWEEPER_ICON_ID, col, row)}
+        mobile={mobile}
+      />
+      <BuiltInIcon
+        id={GLASS_ICON_ID}
+        name="Glass"
+        icon="/icons/glass.png"
+        onOpen={openGlass}
+        isSelected={selectedIcon === GLASS_ICON_ID}
+        onSelect={() => setSelectedIcon(GLASS_ICON_ID)}
+        position={iconPositions[GLASS_ICON_ID] || { col: 0, row: 3 }}
+        onMove={(col, row) => moveIcon(GLASS_ICON_ID, col, row)}
         mobile={mobile}
       />
       <BuiltInIcon

@@ -65,6 +65,10 @@ const Recycle = dynamic(
   () => import("./programs/Recycle").then((m) => m.Recycle),
   { loading }
 );
+const Glass = dynamic(
+  () => import("./programs/Glass").then((m) => m.Glass),
+  { loading }
+);
 
 // Memoised so window-drag pos updates don't re-render the program
 // tree. Props are sliced primitives — React.memo's shallow compare
@@ -136,6 +140,8 @@ export const WindowBody = memo(function WindowBody({
       return <Guestbook />;
     case "recycle":
       return <Recycle />;
+    case "glass":
+      return <Glass />;
     default:
       assertNever(program);
   }

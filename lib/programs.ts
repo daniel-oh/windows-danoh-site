@@ -36,7 +36,8 @@ export type ProgramKey =
   | "explorer"
   | "settings"
   | "shortcuts"
-  | "recycle";
+  | "recycle"
+  | "glass";
 
 type ProgramDef = {
   title: string;
@@ -101,6 +102,12 @@ export const PROGRAMS: Record<ProgramKey, ProgramDef> = {
     program: { type: "recycle" },
     size: { width: 420, height: 420 },
     icon: "/icons/recycle-bin.png",
+  },
+  glass: {
+    title: "Glass",
+    program: { type: "glass" },
+    size: { width: 360, height: 240 },
+    icon: "/icons/glass.png",
   },
 };
 

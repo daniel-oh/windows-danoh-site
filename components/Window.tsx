@@ -73,8 +73,10 @@ function WindowInner({ id }: { id: string }) {
   const [isMinimizing, setIsMinimizing] = useState(false);
   const prevStatusRef = useRef(state.status);
   const motion = useMotionAllowed();
-  // Glass stays up through the 400ms dissolve after the first byte.
-  const glass = useLinger(state.loading, motion ? 400 : 0);
+  // Glass stays up through the 400ms dissolve after the first byte. The
+  // Glass program is a pane with a title bar for its whole life.
+  const glass =
+    useLinger(state.loading, motion ? 400 : 0) || state.program.type === "glass";
 
   useEffect(() => {
     const wasMinimized = prevStatusRef.current === "minimized";
@@ -434,7 +436,7 @@ function WindowInner({ id }: { id: string }) {
         }}
       >
         <WindowMenuBar id={id} />
-        {glass && (
+        {glass && state.program.type !== "glass" && (
           <GeneratingOverlay
             streaming={!state.loading}
             onStop={() => windowsDispatch({ type: "REMOVE", payload: id })}

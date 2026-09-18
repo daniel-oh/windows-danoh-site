@@ -1,5 +1,10 @@
+/* Fill backwards, not both: a finished animation that keeps filling
+ * forwards leaves an opacity effect on the window for its whole life,
+ * and Chromium then treats the window as its own backdrop root, so a
+ * backdrop-filter inside it (the glass) sees nothing behind the window.
+ * The end keyframe equals the base state, so nothing visible changes. */
 .windowOpen {
-  animation: windowOpenAnimation 150ms ease-out both;
+  animation: windowOpenAnimation 150ms ease-out backwards;
 }
 
 @keyframes windowOpenAnimation {

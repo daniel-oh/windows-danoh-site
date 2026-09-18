@@ -586,6 +586,7 @@ function StartMenu() {
     { label: "Guestbook", programType: "guestbook", cb: () => openProgram("guestbook") },
     // Play
     { label: "Minesweeper", programType: "minesweeper", cb: () => openProgram("minesweeper") },
+    { label: "Glass", programType: "glass", cb: () => openProgram("glass") },
     // Utility
     { label: "Explorer", programType: "explorer", separatorBefore: true, cb: () => openProgram("explorer") },
     { label: "Settings", programType: "settings", cb: () => openProgram("settings") },
