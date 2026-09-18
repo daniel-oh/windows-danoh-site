@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Welcome.module.css";
+import { Odometer } from "../Odometer";
 import check from "@/components/assets/check.png";
 import { sortedPosts } from "@/content/blog/posts";
 import { createWindow } from "@/lib/createWindow";
@@ -493,7 +494,7 @@ function VisitorBadge() {
       aria-label={`You are visitor number ${total}`}
       title="Unique visitors since this site went live"
     >
-      you are visitor #{total.toLocaleString()}
+      you are visitor #<Odometer value={total} />
     </div>
   );
 }

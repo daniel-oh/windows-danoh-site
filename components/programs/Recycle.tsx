@@ -1,5 +1,7 @@
 "use client";
 
+import { alert } from "@/lib/alert";
+
 import { useAtom } from "jotai";
 import { recycleBinAtom, type RecycleBinEntry } from "@/state/recycleBin";
 import { createWindow } from "@/lib/createWindow";
@@ -33,8 +35,26 @@ export function Recycle() {
     setEntries((prev) => prev.filter((e) => e.binId !== binId));
   };
 
+  // Same shape as deleting a program from the desktop: a titled Win98
+  // dialog with Cancel first. Emptying is the one thing here that
+  // cannot be undone.
   const empty = () => {
-    setEntries([]);
+    const n = entries.length;
+    alert({
+      alertId: "EMPTY_RECYCLE_BIN",
+      title: "Confirm Empty Recycle Bin",
+      message: `Are you sure you want to permanently delete ${n === 1 ? "this 1 item" : `these ${n} items`}?`,
+      actions: [
+        { label: "Cancel", callback: (close) => close() },
+        {
+          label: "Delete",
+          callback: (close) => {
+            close();
+            setEntries([]);
+          },
+        },
+      ],
+    });
   };
 
   return (

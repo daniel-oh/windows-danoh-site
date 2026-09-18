@@ -58,7 +58,33 @@ export function DecodeText({
     let cancelled = false;
     let cleanup: (() => void) | undefined;
 
+    // Pointer mode waits for a mouse to come near before it loads GSAP:
+    // on a page like the blog index that keeps the library off the wire
+    // for everyone who never hovers the line, and for touch entirely.
+    const armed =
+      mode === "pointer"
+        ? new Promise<void>((resolve) => {
+            const near = (e: PointerEvent) => {
+              if (e.pointerType === "touch") return;
+              const r = root.getBoundingClientRect();
+              if (
+                e.clientX > r.left - radius &&
+                e.clientX < r.right + radius &&
+                e.clientY > r.top - radius &&
+                e.clientY < r.bottom + radius
+              ) {
+                document.removeEventListener("pointermove", near);
+                resolve();
+              }
+            };
+            document.addEventListener("pointermove", near, { passive: true });
+            cleanup = () => document.removeEventListener("pointermove", near);
+          })
+        : Promise.resolve();
+
     (async () => {
+      await armed;
+      if (cancelled) return;
       const [{ gsap }, { ScrambleTextPlugin }] = await Promise.all([
         import("gsap"),
         import("gsap/ScrambleTextPlugin"),

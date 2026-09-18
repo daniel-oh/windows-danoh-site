@@ -9,6 +9,7 @@ import { BlogIndexContent } from "./BlogIndexContent";
 import { StatusBarCount, StatusBarHint } from "./StatusBarCount";
 import styles from "./blog.module.css";
 import { FolderIcon } from "./FolderIcon";
+import { DecodeText } from "@/components/fx/DecodeText";
 
 // This route is fully static, so `new Date()` here would freeze at build
 // time and go stale every January until the next deploy. The newest
@@ -110,9 +111,17 @@ export default function BlogIndex() {
             <div className={styles.taglineLine1}>
               Curator + Creative Technologist
             </div>
-            <div className={styles.taglineLine2}>
-              Focused on design, craft, and the work of building things that last.
-            </div>
+            {/* Letters near the mouse scramble and settle back: the one
+                accent on this page. Touch and reduced motion get the plain
+                line; the sentence itself is never changed for readers. */}
+            <DecodeText
+              as="div"
+              mode="pointer"
+              radius={80}
+              duration={0.5}
+              className={styles.taglineLine2}
+              text="Focused on design, craft, and the work of building things that last."
+            />
           </div>
         </header>
         <main id="main" className={`${styles.body} ${styles.bodyProse}`}>
