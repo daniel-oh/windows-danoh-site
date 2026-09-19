@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
-  keywords: ["Daniel Oh", "platform engineer", "Nike", "cybersecurity", "DevOps", "Kubernetes", "cloud infrastructure", "Michigan Engineering"],
+  keywords: ["Daniel Oh", "creative technologist", "curator", "design", "craft", "engineer", "maker", "platform engineer", "Windows 98 desktop"],
   authors: [{ name: "Daniel Oh", url: "https://danoh.com" }],
   icons: {
     // Setting `icons` at all replaces the app/icon.png file-convention

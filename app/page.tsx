@@ -26,10 +26,10 @@ const personLd = {
       // The employment fact, and the same value /resume declares for this
       // @id (they disagreed: "Platform Engineer" here, "Sr." there).
       jobTitle: "Sr. Platform Engineer",
-      // Leads with the positioning used everywhere else on the site; this
-      // still described only the day job.
+      // The same words as the Welcome window: the positioning, then the
+      // bio. Employer and school live in worksFor/alumniOf below, not here.
       description:
-        "Curator + Creative Technologist focused on design, craft, and the work of building things that last. Sr. Platform Engineer at Nike and a Michigan Engineering alum.",
+        "Curator + Creative Technologist focused on design, craft, and the work of building things that last. Engineer, maker, and curious person who cares about how things work, how they feel, and the people who use them.",
       url: "https://danoh.com",
       email: "mailto:hello@danoh.com",
       // image/worksFor/alumniOf are what disambiguate an extremely
