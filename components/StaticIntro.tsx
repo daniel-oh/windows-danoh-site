@@ -36,9 +36,8 @@ export function StaticIntro() {
             Curator + Creative Technologist, focused on design, craft, and the work of building things that last.
           </p>
           <p style={{ margin: "0 0 8px" }}>
-            Platform engineer at Nike. Michigan Engineering alum. I build
-            infrastructure that teams ship on, and side projects that keep me
-            learning.
+            Engineer, maker, and curious person. I care about how things
+            work, how they feel, and the people who use them.
           </p>
           <p style={{ margin: "0 0 8px" }}>
             This site is a Windows 98 desktop where you describe an app and

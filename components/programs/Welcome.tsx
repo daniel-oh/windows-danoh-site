@@ -138,9 +138,9 @@ const contentByKey = {
               Hey, I&apos;m Daniel Oh
             </h1>
             <p style={{ margin: "0 0 8px 0" }}>
-              Platform engineer at Nike. Michigan Engineering alum. I build
-              infrastructure that teams ship on, and side projects that keep
-              me learning. Thanks for stopping by.
+              Engineer, maker, and curious person. I care about how things
+              work, how they feel, and the people who use them. Thanks for
+              stopping by.
             </p>
           </div>
         </div>
