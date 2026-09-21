@@ -6,9 +6,12 @@
 }
 
 .column {
+  /* Rows are 1.2em, not 1em: most fonts draw digits taller than their
+   * em box, and a 1em window cut the top off one digit and showed a
+   * sliver of the next. */
   display: inline-block;
-  height: 1em;
-  line-height: 1;
+  height: 1.2em;
+  line-height: 1.2;
   overflow: hidden;
   vertical-align: bottom;
 }
@@ -22,13 +25,13 @@
 
 .digit {
   display: block;
-  height: 1em;
-  line-height: 1;
+  height: 1.2em;
+  line-height: 1.2;
 }
 
 .sep {
   display: inline-block;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 @media (prefers-reduced-motion: reduce) {

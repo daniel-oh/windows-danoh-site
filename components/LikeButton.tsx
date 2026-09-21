@@ -46,8 +46,10 @@ function PixelHeart({ liked }: { liked: boolean }) {
   return (
     <svg
       viewBox="0 0 11 10"
-      width="22"
-      height="20"
+      // 1:1 pixels: native size, crisp at any DPR, and about the height
+      // of the label beside it, like a Win98 toolbar glyph.
+      width="11"
+      height="10"
       shapeRendering="crispEdges"
       aria-hidden="true"
       className={styles.heart}

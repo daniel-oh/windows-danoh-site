@@ -1,12 +1,22 @@
 .button {
+  /* Sized like the controls it sits with (the end card's buttons: 30px,
+   * 12px type, 14px sides) so it reads as one of them, not the headline.
+   * min-width reset: 98.css gives every button 75px. */
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  min-width: 96px;
-  padding: 6px 16px 6px 12px;
-  font-size: 14px;
+  gap: 6px;
+  min-height: 30px;
+  min-width: 0;
+  padding: 4px 12px 4px 10px;
+  font-size: 12px;
   color: #000;
+}
+
+/* Touch: the height the card's other buttons use on a phone. */
+@media (pointer: coarse), (max-width: 768px) {
+  .button {
+    min-height: 34px;
+  }
 }
 
 /* Liked: the button stays pressed in, like a Win98 toolbar toggle. */
@@ -30,8 +40,8 @@
   position: relative;
   display: inline-grid;
   place-items: center;
-  width: 22px;
-  height: 20px;
+  width: 11px;
+  height: 10px;
 }
 
 /* Idle outline #404040 is 5.7:1 on button grey; the liked red is
@@ -94,11 +104,11 @@
 @keyframes spark {
   0% {
     opacity: 1;
-    transform: rotate(var(--a)) translateX(6px);
+    transform: rotate(var(--a)) translateX(4px);
   }
   100% {
     opacity: 0;
-    transform: rotate(var(--a)) translateX(19px);
+    transform: rotate(var(--a)) translateX(12px);
   }
 }
 
@@ -109,10 +119,13 @@
 .count {
   display: inline-flex;
   align-items: center;
-  min-width: 2ch;
-  padding: 2px 6px;
-  font-size: 13px;
-  line-height: 1;
+  justify-content: center;
+  /* Room inside the sunken frame: its dark inner bevel is 2px on the
+   * top and left, and a digit pressed against it reads as a T. */
+  min-width: calc(1ch + 12px);
+  padding: 2px 5px 1px 6px;
+  font-size: 11px;
+  line-height: 1.2;
   font-variant-numeric: tabular-nums;
   background: #fff;
   box-shadow:
