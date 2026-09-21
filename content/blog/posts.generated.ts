@@ -3,6 +3,17 @@
 import type { BlogPost } from "./types";
 
 export const posts = [
+  // camera.mdx
+  {
+    slug: "camera",
+    title: "I put a 1998 webcam on my website",
+    date: "2026-09-21",
+    author: "Daniel Oh",
+    summary:
+      "A camera window for my desktop-style website. Sixteen colours, chunky pixels, and a photo you can save to My Pictures.",
+    tags: ["launch", "portfolio", "design"],
+    readingTime: "2 min",
+  },
   // background-remover.mdx
   {
     slug: "background-remover",
