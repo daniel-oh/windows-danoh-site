@@ -10,7 +10,7 @@ import {
 } from "@/content/blog/registry";
 import { getPostComponent, PostBody } from "@/content/blog/registry";
 import { CopyAttribution } from "@/components/CopyAttribution";
-import { ReactionBar } from "@/components/ReactionBar";
+import { LikeButton } from "@/components/LikeButton";
 import { ExternalArrow } from "@/components/ExternalArrow";
 import { SkipLink } from "@/components/SkipLink";
 import { BreadcrumbLd } from "@/components/BreadcrumbLd";
@@ -280,7 +280,7 @@ function EndOfFileCard({ post }: { post: BlogPost }) {
       </div>
       <div className={styles.eofBody}>
         <div className={styles.eofHeading}>How did this land?</div>
-        <ReactionBar slug={post.slug} bare />
+        <LikeButton slug={post.slug} />
         <div className={styles.eofNote}>
           Enjoyed this? I write a few times a month, and I read every reply.
         </div>

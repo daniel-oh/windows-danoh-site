@@ -9,7 +9,7 @@ import {
   getRelatedPosts,
   getAdjacentPosts,
 } from "@/content/blog/registry";
-import { ReactionBar } from "@/components/ReactionBar";
+import { LikeButton } from "@/components/LikeButton";
 import { PostBody } from "@/content/blog/registry";
 import styles from "./Blog.module.css";
 import { useIsMobile } from "@/lib/useIsMobile";
@@ -186,7 +186,7 @@ function PostView({
         {post.slug}
       </p>
       <PostActions slug={post.slug} />
-      <ReactionBar slug={post.slug} />
+      <LikeButton slug={post.slug} framed />
       <InOsRelated slug={post.slug} onNavigate={onNavigate} />
       <p
         style={{

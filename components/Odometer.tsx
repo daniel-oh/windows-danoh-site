@@ -12,7 +12,19 @@ import styles from "./Odometer.module.css";
 // The idea is React Bits' Counter; that one needs framer-motion, this
 // one does not.
 
-export function Odometer({ value, className }: { value: number; className?: string }) {
+export function Odometer({
+  value,
+  className,
+  duration = 700,
+  stagger = 90,
+}: {
+  value: number;
+  className?: string;
+  /** ms for one column to roll. */
+  duration?: number;
+  /** ms between columns, right to left. */
+  stagger?: number;
+}) {
   const text = value.toLocaleString();
   // First paint shows every digit at 0, then one frame later the real
   // digits, so the transition has somewhere to roll from.
@@ -45,7 +57,8 @@ export function Odometer({ value, className }: { value: number; className?: stri
               className={styles.strip}
               style={{
                 transform: `translateY(${-d * 10}%)`,
-                transitionDelay: `${fromRight * 90}ms`,
+                transitionDelay: `${fromRight * stagger}ms`,
+                transitionDuration: `${duration}ms`,
               }}
             >
               {Array.from({ length: 10 }, (_, n) => (

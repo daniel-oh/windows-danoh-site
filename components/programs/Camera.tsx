@@ -6,6 +6,7 @@ import { windowAtomFamily } from "@/state/window";
 import { getFsManager } from "@/state/fsManager";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
 import { applyEffect, EFFECTS, snapFilename, type Effect } from "@/lib/camera/effects";
+import { LatticeLoader } from "../fx/LatticeLoader";
 import styles from "./Camera.module.css";
 
 // A 1998 webcam. The feed is drawn small and scaled up with pixelated
@@ -189,10 +190,20 @@ export function Camera({ id }: { id: string }) {
           aria-label="Camera preview"
           role="img"
         />
-        {phase !== "on" && (
-          <div className={styles.notice}>
-            {error ?? (phase === "starting" ? "Starting the camera..." : "The camera is off.")}
-          </div>
+        {phase === "starting" && (
+          // Covers the browser's permission prompt too, which can sit
+          // for as long as the visitor likes, so no timer: a count
+          // running up while they read the prompt would feel like a
+          // countdown.
+          <LatticeLoader
+            label="Waiting for the camera"
+            color="#c0c0c0"
+            showTimer={false}
+            className={styles.loader}
+          />
+        )}
+        {phase === "off" && (
+          <div className={styles.notice}>{error ?? "The camera is off."}</div>
         )}
         {flash && <div className={styles.flash} aria-hidden="true" />}
         {glass && (

@@ -1,0 +1,148 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 96px;
+  padding: 6px 16px 6px 12px;
+  font-size: 14px;
+  color: #000;
+}
+
+/* Liked: the button stays pressed in, like a Win98 toolbar toggle. */
+.button[data-liked] {
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px grey;
+  background: #d4d0c8;
+}
+
+.button[data-liked] .icon,
+.button[data-liked] .label,
+.button[data-liked] .count {
+  /* The pressed-in nudge every Win98 button does. */
+  transform: translate(1px, 1px);
+}
+
+.icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 20px;
+}
+
+/* Idle outline #404040 is 5.7:1 on button grey; the liked red is
+ * 3.8:1 on the pressed face, above the 3:1 WCAG asks of a graphic that
+ * carries state, and the pressed bevel says it on its own too. */
+.heart {
+  fill: #404040;
+  display: block;
+}
+
+.button[data-liked] .heart {
+  fill: #c8102e;
+}
+
+.glint {
+  fill: #ff8fa3;
+}
+
+.icon[data-pop] .heart {
+  animation: pop 560ms cubic-bezier(0.34, 1.7, 0.64, 1);
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(1);
+  }
+  18% {
+    transform: scale(0.72);
+  }
+  55% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Eight 2px sparks thrown out at 45 degree steps. */
+.sparks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sparks span {
+  position: absolute;
+  left: calc(50% - 1px);
+  top: calc(50% - 1px);
+  width: 2px;
+  height: 2px;
+  background: #c8102e;
+  opacity: 0;
+  animation: spark 520ms ease-out 80ms;
+}
+
+.sparks span:nth-child(even) {
+  background: #000080;
+}
+
+@keyframes spark {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--a)) translateX(6px);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) translateX(19px);
+  }
+}
+
+.label {
+  line-height: 1;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  min-width: 2ch;
+  padding: 2px 6px;
+  font-size: 13px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  background: #fff;
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px grey,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px #0a0a0a;
+}
+
+.frame {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #808080;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.heading {
+  font-size: 11px;
+  color: #444;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon[data-pop] .heart,
+  .sparks span {
+    animation: none;
+  }
+  .sparks {
+    display: none;
+  }
+}

@@ -3,9 +3,9 @@ import { getClientIP } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson, requireJson } from "@/lib/api/json";
 
-// Emoji set. Change here to add/remove reaction types — the UI reads this list.
-export const REACTION_TYPES = ["like", "love", "fire"] as const;
-type Reaction = (typeof REACTION_TYPES)[number];
+// One reaction: a like. Older rows may carry "love" or "fire" from the
+// three-emoji bar this replaced; each visitor still counts once, as a like.
+const LIKE = "like";
 
 // Per-IP sliding-window rate limit for POST /api/reactions. Defends
 // against an attacker who forges visitor_ids client-side to inflate
@@ -25,12 +25,6 @@ function rateLimit(req: Request): Response | null {
   return null;
 }
 
-const EMPTY_COUNTS: Record<Reaction, number> = { like: 0, love: 0, fire: 0 };
-
-function isValidReaction(r: unknown): r is Reaction {
-  return typeof r === "string" && (REACTION_TYPES as readonly string[]).includes(r);
-}
-
 function isValidSlug(s: unknown): s is string {
   return typeof s === "string" && /^[a-z0-9-]{1,80}$/.test(s);
 }
@@ -39,104 +33,89 @@ function isValidVisitor(v: unknown): v is string {
   return typeof v === "string" && /^[A-Za-z0-9_-]{8,64}$/.test(v);
 }
 
-async function getState(slug: string, visitorId: string | null) {
-  if (!hasDatabase()) return { counts: EMPTY_COUNTS, mine: [] as Reaction[] };
+type LikeState = { count: number; liked: boolean };
 
-  const countsResult = await query(
-    `SELECT reaction, COUNT(*)::int AS count
+async function getState(slug: string, visitorId: string | null): Promise<LikeState> {
+  if (!hasDatabase()) return { count: 0, liked: false };
+  // Distinct visitors, not rows: someone who left two of the old emoji
+  // is one like.
+  const countResult = await query(
+    `SELECT COUNT(DISTINCT visitor_id)::int AS count
      FROM post_reactions
-     WHERE post_slug = $1
-     GROUP BY reaction`,
+     WHERE post_slug = $1`,
     [slug]
   );
-
-  const counts: Record<Reaction, number> = { ...EMPTY_COUNTS };
-  for (const row of countsResult?.rows ?? []) {
-    const r: unknown = row.reaction;
-    if (isValidReaction(r)) counts[r] = row.count;
-  }
-
-  let mine: Reaction[] = [];
+  let liked = false;
   if (visitorId) {
-    const mineResult = await query(
-      `SELECT reaction FROM post_reactions
-       WHERE post_slug = $1 AND visitor_id = $2`,
+    const mine = await query(
+      `SELECT 1 FROM post_reactions
+       WHERE post_slug = $1 AND visitor_id = $2
+       LIMIT 1`,
       [slug, visitorId]
     );
-    mine = (mineResult?.rows ?? [])
-      .map((r: { reaction: string }) => r.reaction)
-      .filter(isValidReaction);
+    liked = (mine?.rows.length ?? 0) > 0;
   }
-
-  return { counts, mine };
+  return { count: countResult?.rows[0]?.count ?? 0, liked };
 }
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const slug = url.searchParams.get("slug");
   const visitorId = url.searchParams.get("visitorId");
-
   if (!isValidSlug(slug)) {
     return Response.json({ error: "Invalid slug" }, { status: 400 });
   }
   const visitor = isValidVisitor(visitorId) ? visitorId : null;
-
-  const state = await getState(slug, visitor);
-  return Response.json(state);
+  return Response.json(await getState(slug, visitor));
 }
 
+// Sets the like to the state the client asks for instead of toggling.
+// A toggle made a fast double-tap race itself: two requests in flight
+// could land in either order and leave the opposite of what the visitor
+// saw. With an explicit `liked`, the last request wins and is idempotent.
 export async function POST(req: Request) {
   const limited = rateLimit(req);
   if (limited) return limited;
 
   if (!hasDatabase()) {
-    return Response.json({ counts: EMPTY_COUNTS, mine: [] });
+    return Response.json({ count: 0, liked: false });
   }
 
   const notJson = requireJson(req);
   if (notJson) return notJson;
   const parsed = await parseJson(req);
   if (!parsed.ok) return parsed.response;
-  const body = parsed.body;
-
-  const { slug, reaction, visitorId } = (body ?? {}) as {
+  const { slug, liked, visitorId } = (parsed.body ?? {}) as {
     slug?: unknown;
-    reaction?: unknown;
+    liked?: unknown;
     visitorId?: unknown;
   };
 
   if (!isValidSlug(slug)) {
     return Response.json({ error: "Invalid slug" }, { status: 400 });
   }
-  if (!isValidReaction(reaction)) {
-    return Response.json({ error: "Invalid reaction" }, { status: 400 });
+  if (typeof liked !== "boolean") {
+    return Response.json({ error: "liked must be a boolean" }, { status: 400 });
   }
   if (!isValidVisitor(visitorId)) {
     return Response.json({ error: "Invalid visitor id" }, { status: 400 });
   }
 
-  // Toggle: if the row exists, delete; otherwise insert.
-  const existing = await query(
-    `SELECT 1 FROM post_reactions
-     WHERE post_slug = $1 AND reaction = $2 AND visitor_id = $3`,
-    [slug, reaction, visitorId]
-  );
-
-  if (existing && existing.rows.length > 0) {
-    await query(
-      `DELETE FROM post_reactions
-       WHERE post_slug = $1 AND reaction = $2 AND visitor_id = $3`,
-      [slug, reaction, visitorId]
-    );
-  } else {
+  if (liked) {
     await query(
       `INSERT INTO post_reactions (post_slug, reaction, visitor_id)
        VALUES ($1, $2, $3)
        ON CONFLICT (post_slug, reaction, visitor_id) DO NOTHING`,
-      [slug, reaction, visitorId]
+      [slug, LIKE, visitorId]
+    );
+  } else {
+    // Every row this visitor has on the post, old emoji included, so an
+    // unlike always takes them out of the count.
+    await query(
+      `DELETE FROM post_reactions WHERE post_slug = $1 AND visitor_id = $2`,
+      [slug, visitorId]
     );
   }
 
-  const state = await getState(slug, visitorId);
-  return Response.json(state);
+  return Response.json(await getState(slug, visitorId));
 }
