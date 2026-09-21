@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import { atomFamily } from "jotai-family";
 import { PROGRAMS_PATH } from "@/lib/filesystem/defaultFileSystem";
 import { getFsManager } from "@/state/fsManager";
+import { staleAtom } from "@/lib/staleAtom";
 import { DeepFolder, DeepItem } from "@/lib/filesystem/Drive";
 
 export type ProgramEntry = {
@@ -273,9 +274,15 @@ async function addVersion(
   await fsManager.writeFile(`${versionsPath}/${versionFileName}`, code);
 }
 
+// What React reads. programsAtom re-resolves whenever /system/programs
+// changes (a generation, a fix, an icon); this view keeps the previous
+// list up until the new one is ready, so the desktop and open apps never
+// suspend on it after the first load. Writes still go to programsAtom.
+export const programsValueAtom = staleAtom(programsAtom);
+
 export const programAtomFamily = atomFamily((id: string) =>
   atom(async (get) => {
-    const p = await get(programsAtom);
+    const p = await get(programsValueAtom);
     return p.programs.find((p) => p.id === id);
   })
 );

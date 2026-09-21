@@ -11,7 +11,7 @@ import { windowAtomFamily, type WindowState } from "@/state/window";
 import { Window } from "./Window";
 import { startMenuOpenAtom } from "@/state/startMenu";
 import { Desktop } from "./Desktop";
-import { DESKTOP_URL_KEY, registryAtom } from "@/state/registry";
+import { DESKTOP_URL_KEY, registryValueAtom } from "@/state/registry";
 import { ContextMenu } from "./ContextMenu";
 import { useActions } from "@/lib/actions/ActionsProvider";
 import { initState } from "@/lib/initState";
@@ -54,7 +54,7 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   useAtom(fsManagerAtom);
   const [windows] = useAtom(windowsListAtom);
   const setFocusedWindow = useSetAtom(focusedWindowAtom);
-  const registry = useAtomValue(registryAtom);
+  const registry = useAtomValue(registryValueAtom);
 
   // public_desktop_url is a shared registry key any generated app can
   // write (Iframe.tsx allows public_ keys cross-program), and it lands

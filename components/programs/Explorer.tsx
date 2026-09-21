@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo, useDeferredValue } from "react";
+import { staleAtom } from "@/lib/staleAtom";
 import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { focusedWindowAtom } from "@/state/focusedWindow";
 
@@ -39,7 +40,17 @@ export function Explorer({ id }: { id: string }) {
   const { action, actionText } = state.program;
   const currentPath = state.program.currentPath || "/";
   const [inputPath, setInputPath] = useState(state.program.currentPath || "");
-  const currentFolder = useAtomValue(fs.getFolderAtom(currentPath, "shallow"));
+  // Never blank the list. A change inside the folder swaps rows in place
+  // (staleAtom keeps the last listing while the new one loads), and
+  // opening another folder keeps showing this one until that one is read:
+  // the deferred path renders in the background, so its first load
+  // suspends there instead of behind next/dynamic's null fallback.
+  const listedPath = useDeferredValue(currentPath);
+  const folderAtom = useMemo(
+    () => staleAtom(fs.getFolderAtom(listedPath, "shallow")),
+    [fs, listedPath]
+  );
+  const currentFolder = useAtomValue(folderAtom);
 
   // "Adjust state when props change" per the React docs: a render-phase
   // setState (not an effect) so the address bar resyncs to navigation
@@ -467,7 +478,9 @@ export function Explorer({ id }: { id: string }) {
             </tr>
           </thead>
           <tbody>
-            {renderItems(currentItems, currentPath)}
+            {/* listedPath, not currentPath: for a moment after a click these
+                rows are still the previous folder's. */}
+            {renderItems(currentItems, listedPath)}
             {Object.keys(currentItems).length === 0 && !isCreatingFolder && (
               <tr>
                 <td colSpan={2} style={{ color: "#666", padding: "10px 8px" }}>

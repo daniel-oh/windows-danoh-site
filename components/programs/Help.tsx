@@ -5,7 +5,7 @@ import {
   programAtomFamily,
   programsAtom,
 } from "@/state/programs";
-import { registryAtom } from "@/state/registry";
+import { registryValueAtom } from "@/state/registry";
 import { windowAtomFamily } from "@/state/window";
 import { windowsListAtom } from "@/state/windowsList";
 import { getApiText } from "@/lib/apiText";
@@ -96,7 +96,7 @@ const trimMessages = (msgs: Messages) => {
 export function Help({ id }: { id: string }) {
   const helpWindow = useAtomValue(windowAtomFamily(id));
   const windowsListDispatch = useSetAtom(windowsListAtom);
-  const registry = useAtomValue(registryAtom);
+  const registry = useAtomValue(registryValueAtom);
   assert(
     helpWindow.program.type === "help" && helpWindow.program.targetWindowID,
     "Help window must have a target window ID"

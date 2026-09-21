@@ -1,7 +1,7 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import styles from "./Desktop.module.css";
-import { ProgramEntry, programsAtom } from "@/state/programs";
+import { ProgramEntry, programsAtom, programsValueAtom } from "@/state/programs";
 import defaultIcon from "./assets/window.png";
 import blogIcon from "./assets/blog-icon.png";
 import resumeIcon from "./assets/resume-icon.png";
@@ -119,7 +119,7 @@ const iconPositionsAtom = atomWithStorage<IconPositions>(
 );
 
 export const Desktop = () => {
-  const { programs } = useAtomValue(programsAtom);
+  const { programs } = useAtomValue(programsValueAtom);
   const dispatch = useSetAtom(programsAtom);
   const { fetchPrograms } = useServerPrograms();
   const didSync = useRef(false);

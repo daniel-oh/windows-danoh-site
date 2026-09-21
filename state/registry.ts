@@ -1,4 +1,5 @@
-import { atom, getDefaultStore } from "jotai";
+import { atom } from "jotai";
+import { staleAtom } from "@/lib/staleAtom";
 import { REGISTRY_PATH } from "@/lib/filesystem/defaultFileSystem";
 import { getFsManager } from "@/state/fsManager";
 
@@ -23,10 +24,15 @@ export const registryAtom = atom(
   }
 );
 
+// What React reads: the last registry until a changed one has loaded,
+// so an app writing its keys does not suspend the desktop shell (OS reads
+// the wallpaper key from here) on every write.
+export const registryValueAtom = staleAtom(registryAtom);
+
 // --- Serialized access for generated apps ------------------------------
 //
 // registryAtom above is fine for React (it re-renders from a file atom
-// that polls every 2s), but it is the wrong tool for the iframe message
+// that FsManager keeps current), but it is the wrong tool for the iframe message
 // handler, which needs two things the atom cannot give:
 //
 //   read-your-writes: after `await registry.set(k, v)`, `registry.get(k)`
@@ -71,10 +77,9 @@ export function updateRegistry(
   return enqueue(async () => {
     const fs = await getFsManager();
     const next = mutate(await readFromDisk());
+    // FsManager re-checks its watchers after every write, so the React
+    // side (the wallpaper key, for one) sees this without a manual nudge.
     await fs.writeFile(REGISTRY_PATH, JSON.stringify(next));
-    // Nudge the React side now instead of at the next 2s poll (the
-    // wallpaper key, for one, is rendered from registryAtom).
-    getDefaultStore().set(fs.getFileAtom(REGISTRY_PATH));
   });
 }
 

@@ -4,7 +4,7 @@ import { getIframeID, windowAtomFamily } from "@/state/window";
 import { useEffect, useRef } from "react";
 import { programAtomFamily, programsAtom } from "@/state/programs";
 import assert from "assert";
-import { registryAtom, readRegistry, updateRegistry } from "@/state/registry";
+import { registryValueAtom, readRegistry, updateRegistry } from "@/state/registry";
 import { getProgramRequestBody } from "@/lib/programRequest";
 import { getSettings } from "@/lib/getSettings";
 import { settingsAtom } from "@/state/settings";
@@ -62,7 +62,7 @@ function IframeInner({ id }: { id: string }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const dispatchPrograms = useSetAtom(programsAtom);
   const startedRef = useRef(false);
-  const registry = useAtomValue(registryAtom);
+  const registry = useAtomValue(registryValueAtom);
   const { model } = useAtomValue(settingsAtom);
   const { saveProgram } = useServerPrograms();
 

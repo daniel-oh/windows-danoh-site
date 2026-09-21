@@ -16,78 +16,118 @@ import {
   REGISTRY_PATH,
 } from "@/lib/filesystem/defaultFileSystem";
 
-const POLL_INTERVAL = 2000; // 2s instead of 500ms
+// The atoms below watch the filesystem for changes made outside
+// FsManager: a mounted real folder edited in Finder, another tab. Writes
+// made through FsManager check at once (see notifyWrite), so this poll
+// is only the fallback and can be slow.
+const POLL_INTERVAL = 5000;
 
-function smartPoll(refresh: () => void, removeAtom: () => void) {
+function whileVisible(tick: () => void) {
   let interval: ReturnType<typeof setInterval> | null = null;
-
   const start = () => {
-    if (interval) return;
-    interval = setInterval(refresh, POLL_INTERVAL);
+    if (!interval) interval = setInterval(tick, POLL_INTERVAL);
   };
-
   const stop = () => {
-    if (interval) {
-      clearInterval(interval);
-      interval = null;
-    }
+    if (interval) clearInterval(interval);
+    interval = null;
   };
-
-  const onVisibility = () => {
-    document.hidden ? stop() : start();
-  };
-
-  // Only poll when tab is visible
-  if (typeof document !== "undefined" && !document.hidden) {
-    start();
-  }
+  const onVisibility = () => (document.hidden ? stop() : start());
   if (typeof document !== "undefined") {
+    if (!document.hidden) start();
     document.addEventListener("visibilitychange", onVisibility);
   }
-
-  // Return cleanup function — called when atom has no more subscribers
   return () => {
     stop();
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", onVisibility);
     }
-    // Remove atom from family cache so it can be GC'd
-    removeAtom();
   };
 }
 
 export class FsManager {
   private rootDrive: Drive;
   private mountedDrives: { [name: string]: Drive } = {};
+  /** One entry per mounted atom: re-read now, refresh only if changed. */
+  private checks = new Set<() => Promise<void>>();
 
-  // Note: shallowAtoms, deepAtoms, and fileAtoms follow the same pattern
-  // (atomFamily + atomWithRefresh + smartPoll). The self-referencing cleanup
-  // callback makes extracting a shared factory non-trivial, so they stay inline.
-  private shallowAtoms = atomFamily((path: string) => {
-    const baseAtom = atomWithRefresh(async () =>
-      this.getFolder(path, "shallow")
-    );
-    baseAtom.onMount = (setAtom: () => void) => {
-      return smartPoll(setAtom, () => this.shallowAtoms.remove(path));
+  // An async atom that re-reads in the background and refreshes only
+  // when the result differs. The old version refreshed on every tick,
+  // which handed React a new pending promise every 2s: every reader
+  // suspended, and the Explorer, whose nearest Suspense boundary is
+  // next/dynamic's null fallback, blanked its file list each time.
+  private watched<T>(read: () => Promise<T>, forget: () => void) {
+    let last: string | undefined;
+    // A read the background check already did, handed to the getter so
+    // a change costs one read, not two.
+    let stash: { value: T } | null = null;
+    const base = atomWithRefresh(async () => {
+      if (stash) {
+        const { value } = stash;
+        stash = null;
+        return value;
+      }
+      const value = await read();
+      last = JSON.stringify(value);
+      return value;
+    });
+    base.onMount = (refresh: () => void) => {
+      let busy = false;
+      const check = async () => {
+        if (busy) return;
+        busy = true;
+        try {
+          const value = await read();
+          const sig = JSON.stringify(value);
+          if (sig !== last) {
+            last = sig;
+            stash = { value };
+            refresh();
+          }
+        } catch {
+          // A read that fails (a folder mid-delete) is retried next tick.
+        } finally {
+          busy = false;
+        }
+      };
+      this.checks.add(check);
+      const stop = whileVisible(check);
+      return () => {
+        this.checks.delete(check);
+        stop();
+        // Out of the family cache so it can be GC'd.
+        forget();
+      };
     };
-    return baseAtom;
-  });
+    return base;
+  }
 
-  private deepAtoms = atomFamily((path: string) => {
-    const baseAtom = atomWithRefresh(async () => this.getFolder(path, "deep"));
-    baseAtom.onMount = (setAtom: () => void) => {
-      return smartPoll(setAtom, () => this.deepAtoms.remove(path));
-    };
-    return baseAtom;
-  });
+  /** After a write through FsManager, bring every watcher up to date now
+   * instead of at the next poll. Not awaited: writers do not wait on
+   * readers. */
+  private notifyWrite() {
+    for (const check of this.checks) void check();
+  }
 
-  private fileAtoms = atomFamily((path: string) => {
-    const baseAtom = atomWithRefresh(async () => this.getFile(path, "deep"));
-    baseAtom.onMount = (setAtom: () => void) => {
-      return smartPoll(setAtom, () => this.fileAtoms.remove(path));
-    };
-    return baseAtom;
-  });
+  private shallowAtoms = atomFamily((path: string) =>
+    this.watched(
+      () => this.getFolder(path, "shallow"),
+      () => this.shallowAtoms.remove(path)
+    )
+  );
+
+  private deepAtoms = atomFamily((path: string) =>
+    this.watched(
+      () => this.getFolder(path, "deep"),
+      () => this.deepAtoms.remove(path)
+    )
+  );
+
+  private fileAtoms = atomFamily((path: string) =>
+    this.watched(
+      () => this.getFile(path, "deep"),
+      () => this.fileAtoms.remove(path)
+    )
+  );
 
   constructor(
     rootHandle: FileSystemDirectoryHandle,
@@ -127,28 +167,31 @@ export class FsManager {
   async writeFile(path: string, content: string | ArrayBuffer): Promise<void> {
     const mountedDrive = this.getMountedDriveForPath(path);
     if (mountedDrive) {
-      const relativePath = this.getRelativePath(path);
-      return mountedDrive.writeFile(relativePath, content);
+      await mountedDrive.writeFile(this.getRelativePath(path), content);
+    } else {
+      await this.rootDrive.writeFile(path, content);
     }
-    return this.rootDrive.writeFile(path, content);
+    this.notifyWrite();
   }
 
   async createFolder(path: string): Promise<void> {
     const mountedDrive = this.getMountedDriveForPath(path);
     if (mountedDrive) {
-      const relativePath = this.getRelativePath(path);
-      return mountedDrive.createFolder(relativePath);
+      await mountedDrive.createFolder(this.getRelativePath(path));
+    } else {
+      await this.rootDrive.createFolder(path);
     }
-    return this.rootDrive.createFolder(path);
+    this.notifyWrite();
   }
 
   async delete(path: string): Promise<void> {
     const mountedDrive = this.getMountedDriveForPath(path);
     if (mountedDrive) {
-      const relativePath = this.getRelativePath(path);
-      return mountedDrive.delete(relativePath);
+      await mountedDrive.delete(this.getRelativePath(path));
+    } else {
+      await this.rootDrive.delete(path);
     }
-    return this.rootDrive.delete(path);
+    this.notifyWrite();
   }
 
   async getItem(
@@ -224,20 +267,24 @@ export class FsManager {
   async insert(path: string, item: DeepFolder | DeepFile): Promise<void> {
     const mountedDrive = this.getMountedDriveForPath(path);
     if (mountedDrive) {
-      const relativePath = this.getRelativePath(path);
-      return mountedDrive.insert(relativePath, item);
+      await mountedDrive.insert(this.getRelativePath(path), item);
+    } else {
+      await this.rootDrive.insert(path, item);
     }
-    return this.rootDrive.insert(path, item);
+    this.notifyWrite();
   }
 
   async move(oldPath: string, newPath: string): Promise<void> {
     const mountedDrive = this.getMountedDriveForPath(oldPath);
     if (mountedDrive) {
-      const relativeOldPath = this.getRelativePath(oldPath);
-      const relativeNewPath = this.getRelativePath(newPath);
-      return mountedDrive.move(relativeOldPath, relativeNewPath);
+      await mountedDrive.move(
+        this.getRelativePath(oldPath),
+        this.getRelativePath(newPath)
+      );
+    } else {
+      await this.rootDrive.move(oldPath, newPath);
     }
-    return this.rootDrive.move(oldPath, newPath);
+    this.notifyWrite();
   }
 
   getFolderAtom(
