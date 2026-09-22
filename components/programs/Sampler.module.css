@@ -72,6 +72,10 @@
   width: 84px;
 }
 
+.field select {
+  font-size: 11px;
+}
+
 /* The level meter: pixel-quantised so it reads as segments, not a smooth bar. */
 .meterWrap {
   flex: 1;
@@ -126,6 +130,12 @@
 .pad[data-selected] {
   outline: 2px solid #000080;
   outline-offset: -4px;
+}
+
+.pad[data-drop] {
+  outline: 2px dashed #000080;
+  outline-offset: -4px;
+  background: #d0ccc4;
 }
 
 .pad[data-hit] {

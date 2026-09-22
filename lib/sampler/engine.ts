@@ -34,7 +34,7 @@ export type Wave = { pad: number; len: number; peaks: Float32Array };
 type Handlers = {
   onTick?: (step: number, peak: number) => void;
   onWave?: (wave: Wave) => void;
-  onPadLen?: (pad: number, len: number) => void;
+  onPadLen?: (pad: number, len: number, loaded?: boolean) => void;
   onRecordFull?: (pad: number) => void;
 };
 
@@ -57,7 +57,7 @@ export class SamplerEngine {
       const m = e.data;
       if (m.type === "tick") this.handlers.onTick?.(m.step, m.peak);
       else if (m.type === "wave") this.handlers.onWave?.(m as Wave);
-      else if (m.type === "padLen") this.handlers.onPadLen?.(m.pad, m.len);
+      else if (m.type === "padLen") this.handlers.onPadLen?.(m.pad, m.len, m.loaded);
       else if (m.type === "recordFull") this.handlers.onRecordFull?.(m.pad);
     };
   }
@@ -163,6 +163,21 @@ export class SamplerEngine {
       this.micSource.connect(this.node);
     }
     this.node.port.postMessage({ type: "record", pad });
+  }
+
+  /** Decodes a file at the context's rate and puts it on a pad. Mono,
+   * because a pad is one voice; the file never leaves the browser. */
+  async loadFile(pad: number, file: File) {
+    const decoded = await this.ctx.decodeAudioData(await file.arrayBuffer());
+    const frames = decoded.length;
+    const mono = new Float32Array(frames);
+    const channels = decoded.numberOfChannels;
+    for (let c = 0; c < channels; c++) {
+      const data = decoded.getChannelData(c);
+      for (let i = 0; i < frames; i++) mono[i] += data[i] / channels;
+    }
+    this.node.port.postMessage({ type: "load", pad, samples: mono }, [mono.buffer]);
+    return { seconds: frames / decoded.sampleRate };
   }
 
   /** Stops recording and trims and normalises what was captured. */

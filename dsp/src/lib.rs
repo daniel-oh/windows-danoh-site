@@ -32,8 +32,9 @@ use maths::{abs, one_pole_coeff, powf};
 const PADS: usize = 16;
 const STEPS: usize = 16;
 const VOICES: usize = 16;
-/// 3 seconds at 48kHz, the longest a pad can hold.
-const PAD_CAP: usize = 144_000;
+/// 6 seconds at 48kHz, the longest a pad can hold. Long enough for two
+/// bars of a break at 90bpm, which is what people drop onto a pad.
+const PAD_CAP: usize = 288_000;
 /// Enough for one 16 step loop down to 40 BPM (about 9.6s).
 const BOUNCE_CAP: usize = 480_000;
 /// One block is 128 frames; the margin is for hosts that ask for more.

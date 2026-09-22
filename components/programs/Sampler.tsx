@@ -18,6 +18,7 @@ import {
   stepForHit,
   velocityFromPoint,
 } from "@/lib/sampler/pads";
+import { PRESETS, presetSteps } from "@/lib/sampler/presets";
 import { encodeWav, loopFilename } from "@/lib/sampler/wav";
 import styles from "./Sampler.module.css";
 
@@ -30,7 +31,7 @@ import styles from "./Sampler.module.css";
 // second, so holding a chord down never costs a React render.
 
 const SAMPLES_DIR = "/user/My Samples";
-const MAX_SECONDS = 3;
+const MAX_SECONDS = 6;
 
 export function Sampler({ id }: { id: string }) {
   const win = useAtomValue(windowAtomFamily(id));
@@ -57,6 +58,9 @@ export function Sampler({ id }: { id: string }) {
   const [recorded, setRecorded] = useState<boolean[]>(() => new Array(PADS).fill(false));
   const [wave, setWave] = useState<Wave | null>(null);
   const [say, setSay] = useState("");
+  const [preset, setPreset] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [dropPad, setDropPad] = useState(-1);
 
   const padRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const stepRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -93,7 +97,7 @@ export function Sampler({ id }: { id: string }) {
           }
         },
         onWave: (w) => setWave(w),
-        onPadLen: (pad, len) => {
+        onPadLen: (pad, len, loaded) => {
           setRecorded((prev) => {
             const next = [...prev];
             next[pad] = len > 0;
@@ -101,7 +105,7 @@ export function Sampler({ id }: { id: string }) {
           });
           // A take that trims to nothing was silence. Say so, rather than
           // leaving a pad that looks loaded and makes no sound.
-          if (len === 0) {
+          if (len === 0 && !loaded) {
             setSay(`Pad ${pad + 1} recorded silence. Check the microphone and try again.`);
           }
         },
@@ -302,6 +306,55 @@ export function Sampler({ id }: { id: string }) {
     setSay(`Pad ${selected + 1} captured`);
   };
 
+  // -------------------------------------------------------------- presets
+
+  const applyPreset = async (name: string) => {
+    setPreset(name);
+    const found = PRESETS.find((p) => p.name === name);
+    if (!found) return;
+    const engine = engineRef.current ?? (await ensure());
+    if (!engine) return;
+
+    engine.clearPattern();
+    const next = new Array(STEPS * PADS).fill(0);
+    for (const [step, pad, velocity] of presetSteps(found)) {
+      engine.setStep(step, pad, velocity);
+      next[step * PADS + pad] = velocity;
+    }
+    setPattern(next);
+    setBpm(found.bpm);
+    engine.setParam(PARAM.bpm, found.bpm);
+    setSwing(found.swing);
+    engine.setParam(PARAM.swing, found.swing);
+    setVintage(!!found.vintage);
+    engine.setParam(PARAM.vintage, found.vintage ? 1 : 0);
+
+    // Straight into playing: a preset that needs a second button press is
+    // not a preset.
+    startedAt.current = engine.ctx.currentTime;
+    engine.setParam(PARAM.playing, 1);
+    setPlaying(true);
+    setSay(`${found.name}, ${found.bpm} BPM`);
+  };
+
+  // ---------------------------------------------------------- your own audio
+
+  const loadInto = async (pad: number, file: File) => {
+    const engine = engineRef.current ?? (await ensure());
+    if (!engine) return;
+    try {
+      const { seconds } = await engine.loadFile(pad, file);
+      setSelected(pad);
+      const capped = seconds > MAX_SECONDS;
+      setSay(
+        `${file.name} on pad ${pad + 1}` +
+          (capped ? `, first ${MAX_SECONDS} seconds` : "")
+      );
+    } catch {
+      setSay(`${file.name} could not be decoded. Try a WAV, MP3 or M4A.`);
+    }
+  };
+
   // --------------------------------------------------------------- export
 
   const [exporting, setExporting] = useState(false);
@@ -434,6 +487,20 @@ export function Sampler({ id }: { id: string }) {
             }}
           />
         </label>
+        <label className={styles.field}>
+          Preset
+          <select
+            value={preset}
+            onChange={(e) => void applyPreset(e.target.value)}
+          >
+            <option value="">choose</option>
+            {PRESETS.map((p) => (
+              <option key={p.name} value={p.name}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className={styles.meterWrap} aria-hidden="true">
           <div ref={meterRef} className={styles.meter} />
         </div>
@@ -453,6 +520,18 @@ export function Sampler({ id }: { id: string }) {
                 className={styles.pad}
                 data-selected={selected === pad ? "" : undefined}
                 onPointerDown={onPadDown(pad)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDropPad(pad);
+                }}
+                onDragLeave={() => setDropPad((p) => (p === pad ? -1 : p))}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDropPad(-1);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) void loadInto(pad, file);
+                }}
+                data-drop={dropPad === pad ? "" : undefined}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -491,7 +570,6 @@ export function Sampler({ id }: { id: string }) {
           <button
             type="button"
             className={styles.sampleBtn}
-            data-wide=""
             data-on={sampling ? "" : undefined}
             onPointerDown={(e) => {
               e.preventDefault();
@@ -504,6 +582,24 @@ export function Sampler({ id }: { id: string }) {
           >
             {sampling ? "Recording" : "Sample"}
           </button>
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            aria-label={`Load an audio file into pad ${selected + 1}`}
+          >
+            Load
+          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="audio/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void loadInto(selected, file);
+              e.target.value = "";
+            }}
+          />
         </div>
         <div className={styles.sideRow}>
           <div className={`field-row ${styles.check}`}>
@@ -568,7 +664,7 @@ export function Sampler({ id }: { id: string }) {
             ? "Tap a pad to start. Nothing is recorded until you hold Sample."
             : sampling
               ? `Recording into pad ${selected + 1}. Let go to keep it.`
-              : "Converter chain after Patina. Sound stays in your browser."}
+              : "Pick a preset, or drop your own audio on a pad. Nothing leaves your browser."}
       </p>
       <span role="status" aria-live="polite" className={styles.sr}>
         {say}

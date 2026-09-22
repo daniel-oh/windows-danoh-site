@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { PADS, ReferenceEngine } from "../reference";
 import { encodeWav, loopFilename } from "../wav";
+import { PRESETS, presetSteps } from "../presets";
 import { keyForPad, loopFrames, padAtGrid, padForKey, stepForHit, velocityFromPoint } from "../pads";
 
 // Runs the committed public/dsp/sampler.wasm, which is what production loads.
@@ -67,7 +68,7 @@ describe("sampler wasm", () => {
     for (let i = 0; i < PADS; i++) {
       const p = e.name_ptr(i);
       names.push(Buffer.from(bytes.slice(p, p + e.name_len(i))).toString());
-      // Every pad holds audio, none of it longer than the three second cap.
+      // Every pad holds audio, none of it longer than the six second cap.
       expect(e.pad_len(i)).toBeGreaterThan(1000);
       expect(e.pad_len(i)).toBeLessThanOrEqual(e.pad_capacity());
     }
@@ -321,5 +322,85 @@ describe("pads", () => {
   test("a bar is sixteen sixteenths at the tempo", () => {
     expect(loopFrames(120, 48000)).toBe(96000);
     expect(loopFrames(90, 44100)).toBe(loopFrames(90, 44100));
+  });
+});
+
+describe("presets", () => {
+  test("every hit lands on a real step and a real pad", () => {
+    for (const preset of PRESETS) {
+      expect(preset.bpm).toBeGreaterThanOrEqual(40);
+      expect(preset.bpm).toBeLessThanOrEqual(220);
+      expect(preset.swing).toBeGreaterThanOrEqual(0);
+      expect(preset.swing).toBeLessThanOrEqual(0.75);
+      for (const [step, pad, velocity] of presetSteps(preset)) {
+        expect(step).toBeGreaterThanOrEqual(0);
+        expect(step).toBeLessThan(16);
+        expect(pad).toBeGreaterThanOrEqual(0);
+        expect(pad).toBeLessThan(16);
+        expect(velocity).toBeGreaterThan(0);
+        expect(velocity).toBeLessThanOrEqual(1);
+      }
+    }
+  });
+
+  test("each one has a downbeat, so it reads as a groove the moment it starts", () => {
+    for (const preset of PRESETS) {
+      const first = presetSteps(preset).filter(([step]) => step === 0);
+      expect(first.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("names are unique", () => {
+    expect(new Set(PRESETS.map((p) => p.name)).size).toBe(PRESETS.length);
+  });
+
+  test("a preset actually makes sound through the engine", async () => {
+    const e = await load();
+    const preset = PRESETS[0];
+    e.set_param(4, preset.bpm);
+    for (const [step, pad, velocity] of presetSteps(preset)) e.seq_set(step, pad, velocity);
+    const frames = e.loop_frames();
+    expect(e.bounce(frames)).toBe(frames);
+    const out = new Float32Array(e.memory.buffer, e.bounce_ptr(), frames);
+    expect(peak(out)).toBeGreaterThan(0.2);
+  });
+});
+
+describe("loading audio into a pad", () => {
+  test("takes a buffer through the same window the microphone uses", async () => {
+    const e = await load();
+    const pad = 7;
+    const secs = 1;
+    const src = new Float32Array(Math.round(RATE * secs));
+    for (let i = 0; i < src.length; i++) src[i] = 0.7 * Math.sin((2 * Math.PI * 220 * i) / RATE);
+
+    e.set_pad_len(pad, 0);
+    const io = block(e, 4096);
+    let len = 0;
+    for (let i = 0; i < src.length; i += 4096) {
+      const n = Math.min(4096, src.length - i);
+      io.set(src.subarray(i, i + n));
+      len = e.record_into(pad, n);
+    }
+    expect(len).toBe(src.length);
+
+    // It plays: the pad is the sine that went in.
+    e.note_on(pad, 1, 0);
+    const out = render(e, 40);
+    expect(peak(out)).toBeGreaterThan(0.4);
+  });
+
+  test("a pad holds six seconds and stops there", async () => {
+    const e = await load();
+    const cap = e.pad_capacity();
+    expect(cap / RATE).toBeCloseTo(6, 1);
+    const pad = 3;
+    e.set_pad_len(pad, 0);
+    const io = block(e, 4096);
+    io.fill(0.5);
+    let len = 0;
+    // Push eight seconds at it; it keeps the first six.
+    for (let i = 0; i < Math.ceil((RATE * 8) / 4096); i++) len = e.record_into(pad, 4096);
+    expect(len).toBe(cap);
   });
 });

@@ -69,6 +69,25 @@ class SamplerProcessor extends AudioWorkletProcessor {
           this.postWave(msg.trim);
         }
         break;
+      case "load": {
+        // Someone's own audio, decoded on the main thread and handed over.
+        // Written through the same io window the microphone uses, so there
+        // is one path into a pad and no second buffer.
+        if (!w) break;
+        const samples = msg.samples;
+        w.set_pad_len(msg.pad, 0);
+        const cap = w.pad_capacity();
+        const chunk = 4096;
+        let len = 0;
+        for (let i = 0; i < samples.length && len < cap; i += chunk) {
+          const n = Math.min(chunk, samples.length - i);
+          new Float32Array(w.memory.buffer, w.io_ptr(), n).set(samples.subarray(i, i + n));
+          len = w.record_into(msg.pad, n);
+        }
+        this.port.postMessage({ type: "padLen", pad: msg.pad, len, loaded: true });
+        this.postWave(msg.pad);
+        break;
+      }
       case "wave":
         if (w) this.postWave(msg.pad);
         break;
