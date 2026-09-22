@@ -11,7 +11,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "prebuild": "node scripts/check-posts.mjs",
-    "predev": "node scripts/check-posts.mjs"
+    "predev": "node scripts/check-posts.mjs",
+    "dsp:build": "bash scripts/build-dsp.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

@@ -129,6 +129,17 @@ export default function Privacy() {
                 copy in this site&rsquo;s in-browser filesystem. Apps
                 generated with Run cannot use the camera at all.
               </li>
+              <li>
+                No microphone without a press, either. The Sampler program
+                opens the microphone only while you hold &ldquo;Sample&rdquo;,
+                records into that pad inside your browser, and drops the
+                microphone the moment you let go, or when the window closes,
+                is minimised, or the tab is hidden. Recordings are never
+                uploaded; they exist in the page until you export a loop,
+                which downloads a WAV and saves a copy to My Samples in this
+                site&rsquo;s in-browser filesystem. Generated apps cannot use
+                the microphone.
+              </li>
             </ul>
           </Section>
 

@@ -1,0 +1,314 @@
+.root {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 156px;
+  grid-template-areas:
+    "transport transport"
+    "grid side"
+    "steps steps"
+    "footer footer";
+  gap: 8px;
+  padding: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.transport {
+  grid-area: transport;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.transportBtn,
+.recBtn {
+  min-width: 66px;
+  min-height: 30px;
+}
+
+.transportBtn[data-on],
+.recBtn[data-on],
+.sampleBtn[data-on] {
+  /* Pressed in, the way a transport button stays down while it runs. */
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px grey;
+  background: #d4d0c8;
+}
+
+.recBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #808080;
+  box-shadow: inset 1px 1px rgba(0, 0, 0, 0.35);
+}
+
+.recBtn[data-on] .recDot {
+  background: #c8102e;
+}
+
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+
+.field input[type="number"] {
+  width: 56px;
+}
+
+.field input[type="range"] {
+  width: 84px;
+}
+
+/* The level meter: pixel-quantised so it reads as segments, not a smooth bar. */
+.meterWrap {
+  flex: 1;
+  min-width: 60px;
+  height: 14px;
+  background: #000;
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px grey,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px #0a0a0a;
+  overflow: hidden;
+}
+
+.meter {
+  width: 0;
+  height: 100%;
+  background:
+    repeating-linear-gradient(90deg, #00ff66 0 4px, #000 4px 6px);
+  transition: width 90ms linear;
+}
+
+.grid {
+  grid-area: grid;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 6px;
+  /* A pad answers the finger that lands on it, and two fingers make two
+   * sounds; without this the browser would rather scroll. */
+  touch-action: none;
+}
+
+.pad {
+  position: relative;
+  aspect-ratio: 1;
+  min-height: 52px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: #b8b4ac;
+  font-size: 10px;
+  color: #222;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pad[data-selected] {
+  outline: 2px solid #000080;
+  outline-offset: -4px;
+}
+
+.pad[data-hit] {
+  background: #ffd24a;
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px grey;
+}
+
+.padKey {
+  font-weight: bold;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.padName {
+  opacity: 0.75;
+  line-height: 1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 2px;
+}
+
+/* A pad holding a recording gets a red dot, like a loaded slot. */
+.padDot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
+  background: #c8102e;
+}
+
+.side {
+  grid-area: side;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sideTitle {
+  font-size: 11px;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wave {
+  width: 100%;
+  height: 54px;
+  display: block;
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px grey,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px #0a0a0a;
+}
+
+.sideRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sampleBtn {
+  min-height: 30px;
+  min-width: 74px;
+  touch-action: none;
+}
+
+.sampleBtn[data-wide] {
+  flex: 1;
+}
+
+.sideRow > button {
+  flex: 1;
+  min-width: 0;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.steps {
+  grid-area: steps;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  gap: 3px;
+}
+
+.step {
+  min-width: 0;
+  min-height: 26px;
+  padding: 0;
+  font-size: 9px;
+  /* #222 not #555: nine pixel digits on the grey face need the contrast. */
+  color: #222;
+  background: #c0c0c0;
+}
+
+/* Every fourth step is the beat, so the bar can be read at a glance. */
+.step[data-beat] {
+  color: #000;
+  font-weight: bold;
+}
+
+.step[data-on] {
+  background: #ffd24a;
+  color: #000;
+}
+
+/* The playhead. Written straight to the element by the audio tick. */
+.step[data-play] {
+  box-shadow:
+    inset -1px -1px #fff,
+    inset 1px 1px #0a0a0a,
+    inset -2px -2px #dfdfdf,
+    inset 2px 2px grey;
+  background: #00a651;
+}
+
+.step[data-on][data-play] {
+  background: #7dff4a;
+}
+
+.footer {
+  grid-area: footer;
+  margin: 0;
+  font-size: 11px;
+  color: #444;
+}
+
+.blocked {
+  padding: 16px;
+  font-size: 12px;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Phones: one column, bigger pads, and the step row stays sixteen wide
+ * because a bar that wraps is not a bar. */
+@media (max-width: 768px), (pointer: coarse) {
+  .root {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "transport"
+      "grid"
+      "side"
+      "steps"
+      "footer";
+  }
+  .pad {
+    min-height: 64px;
+  }
+  .step {
+    min-height: 34px;
+  }
+  .transportBtn,
+  .recBtn,
+  .sampleBtn {
+    min-height: 40px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meter {
+    transition: none;
+  }
+}

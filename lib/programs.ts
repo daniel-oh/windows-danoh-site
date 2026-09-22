@@ -38,7 +38,8 @@ export type ProgramKey =
   | "shortcuts"
   | "recycle"
   | "glass"
-  | "camera";
+  | "camera"
+  | "sampler";
 
 type ProgramDef = {
   title: string;
@@ -115,6 +116,14 @@ export const PROGRAMS: Record<ProgramKey, ProgramDef> = {
     program: { type: "camera" },
     size: { width: 380, height: "auto" },
     icon: "/icons/camera.png",
+  },
+  sampler: {
+    title: "Sampler",
+    program: { type: "sampler" },
+    // Wide enough for the pad grid beside the waveform, tall enough that the
+    // sixteen step row is not the thing that gets scrolled to.
+    size: { width: 560, height: 470 },
+    icon: "/icons/sampler.png",
   },
 };
 

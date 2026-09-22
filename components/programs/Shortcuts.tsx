@@ -17,6 +17,15 @@ const SHORTCUTS: { section: string; items: Shortcut[] }[] = [
     ],
   },
   {
+    section: "Sampler",
+    items: [
+      { keys: ["Z", "X", "C", "V"], description: "Pads 1 to 4, the bottom row" },
+      { keys: ["A", "S", "D", "F"], description: "Pads 5 to 8" },
+      { keys: ["Q", "W", "E", "R"], description: "Pads 9 to 12" },
+      { keys: ["1", "2", "3", "4"], description: "Pads 13 to 16, the top row" },
+    ],
+  },
+  {
     section: "Run",
     items: [
       { keys: ["Ctrl", "Enter"], description: "Submit the program prompt" },

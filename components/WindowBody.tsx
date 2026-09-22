@@ -73,6 +73,10 @@ const Camera = dynamic(
   () => import("./programs/Camera").then((m) => m.Camera),
   { loading }
 );
+const Sampler = dynamic(
+  () => import("./programs/Sampler").then((m) => m.Sampler),
+  { loading }
+);
 
 // Memoised so window-drag pos updates don't re-render the program
 // tree. Props are sliced primitives — React.memo's shallow compare
@@ -148,6 +152,8 @@ export const WindowBody = memo(function WindowBody({
       return <Glass />;
     case "camera":
       return <Camera id={id} />;
+    case "sampler":
+      return <Sampler id={id} />;
     default:
       assertNever(program);
   }

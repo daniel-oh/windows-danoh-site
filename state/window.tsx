@@ -34,7 +34,8 @@ export type Program =
   | { type: "guestbook" }
   | { type: "recycle" }
   | { type: "glass" }
-  | { type: "camera" };
+  | { type: "camera" }
+  | { type: "sampler" };
 
 export type AlertAction = {
   label: string;

@@ -1,0 +1,21 @@
+[package]
+name = "sampler-dsp"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# No dependencies, on purpose: this builds to a freestanding wasm module with a
+# flat C ABI, so there is no bindgen, no glue file and nothing to keep in sync.
+# The few transcendental functions it needs are in src/maths.rs.
+[dependencies]
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[profile.release]
+opt-level = 3
+lto = true
+panic = "abort"
+codegen-units = 1
+strip = true
