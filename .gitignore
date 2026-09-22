@@ -40,3 +40,6 @@ next-env.d.ts
 .env.test
 /public/blob/
 bun.lockb
+
+# Rust build output for dsp/ (the built wasm is committed at public/dsp/)
+dsp/target/
