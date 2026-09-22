@@ -112,6 +112,10 @@ function WindowInner({ id }: { id: string }) {
   // immediately.
   useEffect(() => {
     if (isHidden) return;
+    // Only the window that actually has focus takes the keyboard. A window
+    // that opens behind another (the Run dialog at boot, which sits under
+    // Welcome) would otherwise pull the caret into itself on mount.
+    if (getDefaultStore().get(focusedWindowAtom) !== id) return;
     const el = windowRef.current;
     if (!el) return;
     const body = el.querySelector<HTMLElement>(".window-body") ?? el;

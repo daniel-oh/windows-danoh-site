@@ -7,9 +7,13 @@ export function AccessCodePrompt({
   onSuccess,
   message = "Enter access code:",
   byokHint = true,
+  autoFocus = true,
 }: {
   onSuccess: () => void;
   message?: string;
+  /** False when the gate opens in a window that is not the focused one, so
+   * it cannot take the keyboard from whatever the visitor is reading. */
+  autoFocus?: boolean;
   /** The Run gate shows its own inline key path right above this
    * prompt — suppress the redundant "bring your own key" clause there. */
   byokHint?: boolean;
@@ -56,7 +60,7 @@ export function AccessCodePrompt({
           onChange={(e) => setCode(e.target.value)}
           // Skip on touch: auto-focusing pops the soft keyboard and
           // shows a focus ring the moment the gate appears.
-          autoFocus={!isCoarsePointer()}
+          autoFocus={autoFocus && !isCoarsePointer()}
           disabled={loading}
           style={{ flex: 1 }}
           placeholder="Access code"

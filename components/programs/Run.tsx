@@ -16,6 +16,7 @@ import { settingsAtom } from "@/state/settings";
 import wrappedFetch from "@/lib/wrappedFetch";
 import { isCoarsePointer } from "@/lib/isCoarsePointer";
 
+import { focusedWindowAtom } from "@/state/focusedWindow";
 import { AccessCodePrompt } from "../AccessCodePrompt";
 import { ByokPrompt } from "../ByokPrompt";
 import { openProgram } from "@/lib/programs";
@@ -57,6 +58,11 @@ const PROMPT_EXAMPLES = [
 ];
 
 export function Run({ id }: { id: string }) {
+  // At boot the Run dialog opens behind Welcome, so it must not grab the
+  // keyboard: a visitor should be reading, not typing into a gate they did
+  // not ask for. Only the focused window claims focus on mount.
+  const focusedWindow = useAtomValue(focusedWindowAtom);
+  const startsFocused = useRef(focusedWindow === id).current;
   const windowsDispatch = useSetAtom(windowsListAtom);
   const programsDispatch = useSetAtom(programsAtom);
   const settings = useAtomValue(settingsAtom);
@@ -198,6 +204,7 @@ export function Run({ id }: { id: string }) {
         <fieldset>
           <legend>Or enter an access code</legend>
           <AccessCodePrompt
+            autoFocus={startsFocused}
             onSuccess={() => setAuthenticated(true)}
             byokHint={false}
           />
@@ -270,7 +277,7 @@ export function Run({ id }: { id: string }) {
           // Skip on touch: auto-focusing pops the soft keyboard the
           // instant Run opens. Desktop still focuses so you can type
           // your prompt immediately.
-          autoFocus={!isCoarsePointer()}
+          autoFocus={startsFocused && !isCoarsePointer()}
           defaultValue={initialPrompt}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {

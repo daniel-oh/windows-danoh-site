@@ -1,3 +1,5 @@
+import { getDefaultStore } from "jotai";
+import { focusedWindowAtom } from "../state/focusedWindow";
 import { createWindow } from "./createWindow";
 import { openProgram, RUN_SIZE } from "./programs";
 import { isMobile } from "./isMobile";
@@ -61,6 +63,13 @@ export function initState() {
           size: RUN_SIZE,
           pos: { x: runLeft, y: runTop },
         });
+        // Run is an offer, not a greeting. createWindow focuses whatever it
+        // makes, so hand focus back: a first-time visitor should be reading
+        // Welcome, with the access-code dialog waiting behind it. The DOM
+        // focus follows the atom, or the keyboard would still be inside a
+        // window nobody asked for.
+        getDefaultStore().set(focusedWindowAtom, id);
+        el.focus({ preventScroll: true });
       }
     });
   }

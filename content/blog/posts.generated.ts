@@ -6,20 +6,20 @@ export const posts = [
   // audio-thread.mdx
   {
     slug: "audio-thread",
-    title: "The audio thread gets 2.7 milliseconds",
+    title: "Building a sampler with 2.7 milliseconds to spare",
     date: "2026-09-22",
     author: "Daniel Oh",
     summary:
-      "A sixteen pad sampler in my Windows 98 desktop. The Rust engine beat the JavaScript one by 2.3 times, and that is not what made it work.",
+      "Sixteen pads inside my Windows 98 desktop. Rust made the engine 2.3 times faster, but keeping the audio running took more than that.",
     tags: ["engineering", "audio", "launch"],
     readingTime: "6 min",
     image: "/blog/sampler/sampler.jpg",
     imageWidth: 1600,
     imageHeight: 1244,
     imageAlt:
-      "The Sampler program open on the danoh.com desktop: a four by four grid of pads labelled with keyboard keys and drum names, a waveform of the kick, 12-bit and Quantize checkboxes, and a sixteen step row with the playhead on step six.",
+      "The Sampler program open on the danoh.com desktop: a four by four grid of pads labelled with keyboard keys and drum names, a waveform of the kick, a volume slider and level meter, 12-bit and Vinyl switches, and a sixteen step row with the playhead running.",
     imageCaption:
-      "Sixteen pads, a sixteen step bar, and a converter that can take the whole thing back to 1987.",
+      "Sixteen pads, a step sequencer, and a 12-bit switch for roughing things up.",
   },
   // camera.mdx
   {

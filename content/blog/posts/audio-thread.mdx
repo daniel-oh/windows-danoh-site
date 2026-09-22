@@ -2,109 +2,131 @@
 
 export const meta = {
   slug: "audio-thread",
-  title: "The audio thread gets 2.7 milliseconds",
+  title: "Building a sampler with 2.7 milliseconds to spare",
   date: "2026-09-22",
   author: "Daniel Oh",
   summary:
-    "A sixteen pad sampler in my Windows 98 desktop. The Rust engine beat the JavaScript one by 2.3 times, and that is not what made it work.",
+    "Sixteen pads inside my Windows 98 desktop. Rust made the engine 2.3 times faster, but keeping the audio running took more than that.",
   tags: ["engineering", "audio", "launch"],
   readingTime: "6 min",
   image: "/blog/sampler/sampler.jpg",
   imageWidth: 1600,
   imageHeight: 1244,
   imageAlt:
-    "The Sampler program open on the danoh.com desktop: a four by four grid of pads labelled with keyboard keys and drum names, a waveform of the kick, 12-bit and Quantize checkboxes, and a sixteen step row with the playhead on step six.",
+    "The Sampler program open on the danoh.com desktop: a four by four grid of pads labelled with keyboard keys and drum names, a waveform of the kick, a volume slider and level meter, 12-bit and Vinyl switches, and a sixteen step row with the playhead running.",
   imageCaption:
-    "Sixteen pads, a sixteen step bar, and a converter that can take the whole thing back to 1987.",
+    "Sixteen pads, a step sequencer, and a 12-bit switch for roughing things up.",
 };
 
-There is a Sampler on [the desktop](/) now. Tap a pad and it plays a drum. Hold Sample and it records whatever your microphone hears into that pad. Arm Rec and your hits land in a sixteen step bar. Press Export and the bar becomes a WAV in My Samples, where Explorer can find it.
+I built a sampler for [my desktop](/). You can play drums, record something through your microphone, and turn it into a loop without leaving the browser.
 
-The interesting part is not the pads. It is the deadline.
+Hold Sample to record into a pad. Arm Rec to put your hits into a sixteen-step pattern. Export the loop and it shows up as a WAV in My Samples, where you can open it through Explorer.
 
-## Two point seven milliseconds, over and over
+Getting those pieces to work together was satisfying. Getting them to keep playing while the rest of the page was busy was the more interesting problem.
 
-Web Audio does its work in an AudioWorklet: a separate thread, handed one block of 128 frames at a time. At 48kHz that is a block every 2.67 milliseconds, at 44.1kHz every 2.9. Your code fills the block and returns. Fill it late and the speakers get nothing to play, which sounds like a click.
+## A deadline every 2.7 milliseconds
 
-Nothing else on a web page has a deadline like that. A dropped animation frame is a stutter you might not notice. A dropped audio block is a defect you hear across the room.
+The sampler processes audio in an AudioWorklet, away from the main thread. It receives 128 frames at a time: roughly 2.67 milliseconds of audio at 48 kHz, or 2.9 milliseconds at 44.1 kHz.
 
-The other thing about that thread: it is not the main thread. The main thread is where React renders, where garbage collects, where a long task blocks everything for as long as it likes. Audio cannot be there.
+The engine has to fill each block in time for playback. Miss that deadline and you can hear a click or a dropout.
 
-## So the engine is Rust, compiled to 18KB
+That changes how you write the code. A slow render might make a window feel sluggish. With audio, even a brief interruption can be obvious. I wanted the sampler to keep time while you dragged windows around or the page had other work to do.
 
-The sampler's engine is a small Rust crate with no dependencies, built to `wasm32-unknown-unknown` and instantiated inside the worklet. It is 18,391 bytes. It compiles in about 2 milliseconds.
+## An 18 KB Rust engine
 
-Two decisions came out of the deadline.
+The engine is a Rust crate with no dependencies, compiled to WebAssembly and instantiated inside the worklet. The compiled module is 18,883 bytes, and compiling it takes under two milliseconds.
 
-**Nothing allocates after load.** The pads need about ten megabytes, which the module takes from WebAssembly memory once, at init, with a bump allocator. After that, `process()` does arithmetic into memory it already owns. There is no allocator to call, no collector to run, and no way for a pause to arrive from somewhere else.
+I made two decisions to keep the audio processing predictable.
 
-**The kit is a function, not a download.** All sixteen sounds are synthesised in Rust when the program opens: swept sines for the kicks and toms, filtered noise for the hats and the clap, a pair of detuned squares for the cowbell. That takes 7 milliseconds and means the program ships no audio files at all. The whole instrument, engine and kit, is a smaller download than one drum sample would have been.
+**Allocate the memory up front.** The module reserves about eighteen megabytes for the pads during initialization, using a bump allocator. Once playback starts, `process()` works with memory it already has. It does not allocate while rendering audio.
 
-## The crunch comes from a machine I have never owned
+**Generate the starting kit.** All sixteen sounds are synthesized in Rust when the sampler opens. The kicks and toms use swept sine waves, the hats and clap use filtered noise, and the cowbell uses two detuned square waves.
 
-The 12-bit switch is the part people reach for twice.
+Generating the kit takes about six milliseconds. It also meant I could ship the sampler without any audio files.
 
-I did not invent the behaviour behind it. It follows what [Patina](https://github.com/lockedown/patina) documents, an MIT licensed, clean-room study by Dave Locke of what classic hardware samplers actually do to a sound. Three of its findings are in the switch:
+## Getting the 12-bit sound
 
-- **Linear interpolation** when a sample is transposed, which is what an Akai S900 does, rather than the smoother resampling a modern engine would reach for.
-- **A one-pole lowpass whose cutoff tracks the transpose ratio**, so pitching a sample up opens the filter with it. This is why old samplers sound different up an octave, not just faster.
-- **Real decimation with zero-order hold**, dropping the mix to the machine's sample rate and holding each value, then quantising to a twelve bit word. Not a bit-depth effect applied to a clean signal: the same sequence of steps the converter performed.
+The 12-bit switch is probably my favorite part.
 
-That is a reading of published behaviour, not anyone's ROM, and the source says where it simplifies: the filter runs per voice, because its cutoff follows that voice's pitch, while the converter runs once on the mix, the way a whole kit hits one set of chips.
+Its behavior draws on [Patina](https://github.com/lockedown/patina), Dave Locke's MIT-licensed, clean-room study of classic hardware samplers. I used its documented behavior as a reference for three parts of the signal chain:
 
-## The Rust was 2.3 times faster, on every machine I tried
+* **Linear interpolation when changing pitch**, following the Akai S900's approach to playing samples at different rates.
+* **A one-pole low-pass filter that follows the pitch ratio.** Pitching a sample up also raises the cutoff, changing its tone along with its speed.
+* **Sample-rate reduction with zero-order hold, followed by 12-bit quantization.** The converter holds each value until the next update, then reduces the amplitude resolution.
 
-I kept a second copy of the engine in JavaScript. It began as the test oracle: the Rust and the JavaScript run the same scripted bar and have to agree within 1e-6, sample for sample, which is what proves the Rust does what the comments claim. Having it meant I could also answer the question honestly.
+Together, those do more to the sound than reducing the bit depth alone.
 
-Same pattern, five voices a step, converter chain on, rendered offline through each engine:
+This is an approximation based on published behavior. The source calls out the simplifications: filtering happens per voice so it can follow each voice's pitch, while the converter processes the combined mix.
 
-| Measured | Rust | JavaScript |
-|---|---|---|
-| 30 second bar, full speed | 55 ms (545x real time) | 124 ms (242x) |
-| 20 second bar, CPU throttled 6x | 230 ms (87x) | 530 ms (38x) |
-| Share of a 2.9 ms block, throttled 6x | 1.1% | 2.6% |
+## Rust was faster. Both engines were fast enough.
 
-The Rust wins by the same ratio everywhere, and the ratio does not matter. Both are so far inside the budget that a phone six times slower than my laptop would still be using a fortieth of the time it has. If I had shipped the JavaScript, nobody would have heard a difference.
+I kept a JavaScript version of the engine for testing. Both versions render the same scripted pattern, and the output has to agree within `1e-6`, sample for sample.
 
-I still want the Rust there, for the reason that does not show up in a throughput number: it has no collector. A garbage collection pause on the audio thread is not slower audio, it is a click, and the tail is the only part of an audio budget that matters. But I am not going to pretend the benchmark says that. The benchmark says both were fast enough.
+That checks whether the implementations agree. It also gave me a useful performance comparison.
 
-## The thread was the thing that mattered
+I rendered the same pattern offline through each engine, with five voices per step and the converter enabled:
 
-Here is the measurement that actually changed my mind.
+| Measurement | Rust | JavaScript |
+|---|---:|---:|
+| 30 seconds of audio, no CPU throttling | 55 ms | 126 ms |
+| 20 seconds of audio, 6x CPU throttling | 229 ms | 517 ms |
+| Average processing time as a share of a 2.9 ms block, 6x throttling | 1.1% | 2.6% |
 
-While the pattern played, I jammed the main thread with a 300 millisecond busy loop, the kind a heavy React render or a big JSON parse produces. Then I asked the audio thread how many blocks it had completed.
+Rust was about 2.3 times faster in these tests. But both engines had plenty of room left in the processing budget.
 
-Both engines completed 160 blocks out of 160. Not a single one late. Meanwhile a `setTimeout` due 50 milliseconds into that stall fired 250 milliseconds late.
+That was useful to know. Throughput alone was not a compelling reason to choose Rust here.
 
-So the answer to "how do I make web audio solid" is not the language. It is: get off the main thread, and put the clock where the samples are. The sequencer in this sampler counts samples inside the worklet rather than scheduling from a timer, which is why the bar keeps time while you drag the window around.
+I still preferred its control over memory allocation. Keeping allocation and garbage collection out of the engine's processing path removes one source of unpredictable pauses. An offline benchmark does not establish how often playback will glitch, though. These numbers show that both engines can do the arithmetic quickly enough.
 
-## Two hours I would like back
+## Keeping time inside the worklet
 
-Two things cost me an hour each, and both are now comments in the source.
+The next test was closer to what I actually cared about.
 
-A compiled `WebAssembly.Module` cannot be sent to an AudioWorklet. The worklet is a separate agent cluster, so the structured clone fails, and `postMessage` does not throw, and the message simply never arrives. You sit there watching a handshake that will never complete. The fix is to send the bytes and compile them on the other side:
+While a pattern played, I blocked the main thread with a 300-millisecond busy loop. I wanted to see what would happen when the page was occupied by something like a heavy render or a large JSON parse.
+
+Both engines completed every audio block they were due during the test. A `setTimeout` scheduled to fire 50 milliseconds into the stall fired about 250 milliseconds late.
+
+The audio kept moving while the page's timer waited.
+
+That is why the sequencer counts samples inside the worklet. Its timing comes from the audio it is producing, rather than a main-thread timer telling it when to play the next step.
+
+Rust gave me more headroom. Moving audio processing and sequencing into the worklet let playback continue while the main thread was blocked.
+
+## Two things that cost me an afternoon
+
+The first was getting the WebAssembly module into the worklet.
+
+I initially tried sending a compiled `WebAssembly.Module`. In the setup I was testing, it never arrived, leaving the sampler waiting for an initialization handshake that did not finish.
+
+Sending the bytes and compiling inside the worklet fixed it:
 
 ```js
-// main thread
+// Main thread
 node.port.postMessage({ type: "init", bytes }, [bytes]);
-// worklet
-this.wasm = new WebAssembly.Instance(new WebAssembly.Module(msg.bytes), {}).exports;
+
+// Worklet
+const module = new WebAssembly.Module(msg.bytes);
+this.wasm = new WebAssembly.Instance(module, {}).exports;
 ```
 
-And an AudioWorkletGlobalScope is a small room. No `fetch`, no `TextDecoder`, and no `performance.now`, which I discovered only after writing a per-block timing histogram that could never have produced a number. I deleted it and measured throughput on the main thread instead, which is the honest instrument for the question anyway.
+The second was assuming the worklet had the same utilities I used elsewhere in the browser.
 
-## Go and hit something
+I ran into missing APIs, including `fetch`, `TextDecoder`, and `performance.now`. That last one broke my plan to collect a per-block timing histogram.
 
-There are five presets in the transport: pick House or Boom bap and it starts playing, at the right tempo, with the converter set the way that groove wants it. That is the fastest way in.
+I moved the offline throughput measurements to the main thread and kept the playback test separate. They answer different questions: how quickly the engine can render audio, and whether it keeps working while the page is busy.
 
-The pads answer the moment you touch them, and how hard depends on where: the top of a pad is soft, the bottom is full. Two fingers make two sounds. The keyboard grid is the usual one, ZXCV up to 1234. On a phone it fills the screen and buzzes.
+## Make a loop
 
-If you have your own sounds, drop a file onto a pad, or press Load. A pad holds six seconds, which is two bars of a break at 90bpm. That audio is decoded in your browser and goes straight into the pad's buffer; it is not uploaded, and it is not mine to keep.
+The easiest way to start is with one of the six presets. Pick House or Boom bap and it loads a pattern, sets the tempo, and configures the converter.
 
-The loop you export lands in My Samples, and double clicking it in Explorer opens it back in the Sampler, on a pad. A desktop where the programs know about each other's files is most of the reason to build a desktop.
+From there, play over it. Touch near the top of a pad for a softer hit, or near the bottom for a louder one. You can play multiple pads at once, or use the keyboard grid from ZXCV up to 1234. On a phone, the sampler fills the screen, and the pads buzz where the device supports it.
 
-There is a Vinyl switch next to 12-bit. It adds what a record adds: a hiss floor about 48dB down, a crackle a dozen times a second, and enough drive to round the peaks off. Every break you have ever loved came through that, and a kit synthesised in a browser sounds like a machine until it does too.
+To use your own sounds, drop a file onto a pad, press Load, or hold Sample to record through your microphone. Each pad holds up to six seconds. Files are decoded locally, and microphone capture stops when you release Sample. Your recordings stay in your browser.
 
-Your microphone is asked for only while you hold Sample, and let go of the moment you release. Nothing leaves your browser, ever. The loop you export is yours, and it lands in My Samples for Explorer to find, which still feels like the best part of having a desktop.
+There is also a Vinyl switch next to 12-bit. It adds low-level hiss, occasional crackle, and a little drive to soften the peaks. I like what it does to the synthesized kit, especially with the converter on.
 
-Then turn on 12-bit, and listen to it get worse.
+When you have a loop you like, export it. The WAV appears in My Samples. Double-click it in Explorer and it opens back in the sampler, ready to use on a pad.
+
+That little round trip is one of my favorite parts. It makes the desktop feel like a place where the things I build belong together.
+
+[Open the sampler](/), pick a preset, and try the 12-bit switch while it plays.
