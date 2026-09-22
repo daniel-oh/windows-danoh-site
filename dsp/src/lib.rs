@@ -102,6 +102,13 @@ struct State {
     held: f32,
     peak: f32,
 
+    /// Record surface: hiss, the odd crackle, and a little saturation. What
+    /// turns a clean kit into something that sounds like it was lifted off a
+    /// record, which is the whole point of a break.
+    vinyl: f32,
+    rng: u32,
+    pop: f32,
+
     io: *mut f32,
     bounce: *mut f32,
     ready: bool,
@@ -127,6 +134,9 @@ static mut STATE: State = State {
     dec_phase: 0.0,
     held: 0.0,
     peak: 0.0,
+    vinyl: 0.0,
+    rng: 0x2545_f491,
+    pop: 0.0,
     io: core::ptr::null_mut(),
     bounce: core::ptr::null_mut(),
     ready: false,
@@ -159,6 +169,8 @@ pub extern "C" fn init(sample_rate: f32) {
     s.voices = [Voice::SILENT; VOICES];
     s.held = 0.0;
     s.dec_phase = 0.0;
+    s.rng = 0x2545_f491;
+    s.pop = 0.0;
     for pad in 0..PADS {
         let slot = pad_slot(s, pad);
         mem::zero(slot.as_mut_ptr(), PAD_CAP);
@@ -232,7 +244,8 @@ pub extern "C" fn name_len(pad: u32) -> u32 {
 // ------------------------------------------------------------------ control
 
 /// 0 master, 1 vintage on/off, 2 machine rate Hz, 3 word length in bits,
-/// 4 tempo BPM, 5 swing 0..0.75, 6 transport, 7 filter cutoff Hz.
+/// 4 tempo BPM, 5 swing 0..0.75, 6 transport, 7 filter cutoff Hz,
+/// 8 vinyl 0..1.
 #[no_mangle]
 pub extern "C" fn set_param(id: u32, value: f32) {
     let s = state();
@@ -253,6 +266,7 @@ pub extern "C" fn set_param(id: u32, value: f32) {
             s.playing = on;
         }
         7 => s.cutoff = value.clamp(200.0, 20_000.0),
+        8 => s.vinyl = value.clamp(0.0, 1.0),
         _ => {}
     }
 }
@@ -418,6 +432,28 @@ pub extern "C" fn trim_normalize(pad: u32) -> u32 {
 
 // ------------------------------------------------------------------- render
 
+/// xorshift32, so the surface noise is the same every run and the tests can
+/// compare against the JavaScript twin sample for sample.
+fn next_rand(state: &mut u32) -> f32 {
+    let mut x = *state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    *state = x;
+    (x >> 8) as f32 / 8_388_608.0 - 1.0
+}
+
+/// Pade approximation of tanh: the soft knee that keeps a loud bar from
+/// tearing, and the reason a hot break sounds thick rather than clipped.
+fn saturate(x: f32) -> f32 {
+    // The approximation is only a tanh up to |3|, where it reaches exactly
+    // 1; past that it grows again, so the input is clamped first. Without
+    // that it is not a soft knee at all, just a clipper with extra steps.
+    let x = x.clamp(-3.0, 3.0);
+    let x2 = x * x;
+    x * (27.0 + x2) / (27.0 + 9.0 * x2)
+}
+
 fn quantize(x: f32, bits: f32) -> f32 {
     // Mid-tread quantiser at the machine's word length: 12 bits means 2048
     // steps either side of zero. The level count is a shift, not powf: a word
@@ -490,8 +526,6 @@ fn render(s: &mut State, out: *mut f32, frames: usize) {
             s.voices[vi].pos = pos + v.rate;
         }
 
-        mix *= s.master;
-
         if s.vintage {
             // Decimate to the machine rate and hold, then quantise: the
             // converter, in that order.
@@ -502,6 +536,24 @@ fn render(s: &mut State, out: *mut f32, frames: usize) {
             }
             mix = s.held;
         }
+
+        if s.vinyl > 0.0 {
+            // Hiss at about -48dBFS, a crackle a dozen times a second, then
+            // drive. Added after the converter, the way surface noise arrives
+            // after the record was cut.
+            let hiss = next_rand(&mut s.rng) * 0.004 * s.vinyl;
+            let roll = (next_rand(&mut s.rng) + 1.0) * 0.5;
+            if roll < 12.0 / s.sample_rate {
+                s.pop = next_rand(&mut s.rng) * 0.22 * s.vinyl;
+            }
+            mix = saturate((mix + s.pop + hiss) * (1.0 + 0.35 * s.vinyl));
+            s.pop *= 0.72;
+        }
+
+        // The fader is last, after the converter and the record surface: a
+        // machine's crunch does not change when you turn it down, and mute
+        // means silence, hiss included.
+        mix *= s.master;
 
         // Soft clip, so a busy bar leans on the ceiling instead of tearing.
         if mix > 1.0 {
@@ -552,6 +604,8 @@ pub extern "C" fn bounce(frames: u32) -> u32 {
     let held = s.held;
     let dec = s.dec_phase;
     let peak = s.peak;
+    let rng = s.rng;
+    let pop = s.pop;
 
     s.playing = true;
     s.step = 0;
@@ -559,6 +613,8 @@ pub extern "C" fn bounce(frames: u32) -> u32 {
     s.voices = [Voice::SILENT; VOICES];
     s.held = 0.0;
     s.dec_phase = 0.0;
+    s.rng = 0x2545_f491;
+    s.pop = 0.0;
 
     let ptr = s.bounce;
     render(s, ptr, n);
@@ -570,6 +626,8 @@ pub extern "C" fn bounce(frames: u32) -> u32 {
     s.held = held;
     s.dec_phase = dec;
     s.peak = peak;
+    s.rng = rng;
+    s.pop = pop;
     n as u32
 }
 

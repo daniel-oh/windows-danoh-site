@@ -17,6 +17,7 @@ export const PARAM = {
   swing: 5,
   playing: 6,
   cutoff: 7,
+  vinyl: 8,
 } as const;
 
 export type Stats = {
@@ -168,7 +169,13 @@ export class SamplerEngine {
   /** Decodes a file at the context's rate and puts it on a pad. Mono,
    * because a pad is one voice; the file never leaves the browser. */
   async loadFile(pad: number, file: File) {
-    const decoded = await this.ctx.decodeAudioData(await file.arrayBuffer());
+    return this.loadAudio(pad, await file.arrayBuffer());
+  }
+
+  /** The same, for bytes that came from somewhere other than a file picker,
+   * such as the desktop's own filesystem. */
+  async loadAudio(pad: number, bytes: ArrayBuffer) {
+    const decoded = await this.ctx.decodeAudioData(bytes);
     const frames = decoded.length;
     const mono = new Float32Array(frames);
     const channels = decoded.numberOfChannels;

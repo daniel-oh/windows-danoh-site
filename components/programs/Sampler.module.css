@@ -70,16 +70,45 @@
 
 .field input[type="range"] {
   width: 84px;
+  /* 98.css leaves a range at its track height, which is a two pixel grab
+   * target. Give both sliders a real one. */
+  height: 24px;
 }
 
 .field select {
   font-size: 11px;
 }
 
+/* Output cluster: mute, volume, meter, wrapping together. */
+.output {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 180px;
+}
+
+.mute {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  /* Explicit, because the glyph is drawn with currentColor and 98.css
+   * leaves button colour transparent in this context. */
+  color: #000;
+}
+
+.volume {
+  width: 88px;
+  height: 24px;
+  flex: 0 1 88px;
+}
+
 /* The level meter: pixel-quantised so it reads as segments, not a smooth bar. */
 .meterWrap {
-  flex: 1;
-  min-width: 60px;
+  flex: 1 1 110px;
+  min-width: 48px;
   height: 14px;
   background: #000;
   box-shadow:
@@ -230,6 +259,14 @@
   font-size: 11px;
 }
 
+/* These two beat the global mobile rule that gives every window button
+ * 14px of side padding: sixteen steps with that padding do not fit a phone,
+ * and a pad draws its own label. */
+.grid .pad,
+.steps .step {
+  padding: 0;
+}
+
 .steps {
   grid-area: steps;
   display: grid;
@@ -301,20 +338,44 @@
     grid-template-areas:
       "transport"
       "grid"
-      "side"
       "steps"
+      "side"
       "footer";
   }
   .pad {
     min-height: 64px;
   }
-  .step {
-    min-height: 34px;
+  /* Eight across, twice: sixteen steps on a phone would be 19px wide, which
+   * is under the target-size floor and too small to hit while the bar runs.
+   * Two rows of eight is how half the hardware lays it out anyway. */
+  .steps {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  .steps .step {
+    min-height: 40px;
   }
   .transportBtn,
   .recBtn,
-  .sampleBtn {
+  .sampleBtn,
+  .mute {
     min-height: 40px;
+  }
+  .mute {
+    min-width: 40px;
+  }
+  /* On a phone the output cluster gets its own line, with the slider taking
+   * the room it needs to be draggable with a thumb. */
+  .output {
+    flex: 1 0 100%;
+  }
+  .volume {
+    flex: 1 1 auto;
+    width: auto;
+  }
+  /* Both sliders get a thumb-sized target, not just the new one. */
+  .volume,
+  .field input[type="range"] {
+    height: 40px;
   }
 }
 

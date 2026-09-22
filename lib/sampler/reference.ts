@@ -97,6 +97,9 @@ export class ReferenceEngine {
   private cutoff = 7000;
   private decPhase = 0;
   private held = 0;
+  private vinyl = 0;
+  private rng = 0x2545f491;
+  private pop = 0;
 
   constructor(
     private sampleRate: number,
@@ -137,6 +140,9 @@ export class ReferenceEngine {
       case 7:
         this.cutoff = f(clamp(value, 200, 20000));
         break;
+      case 8:
+        this.vinyl = f(clamp(value, 0, 1));
+        break;
       default:
         break;
     }
@@ -174,6 +180,22 @@ export class ReferenceEngine {
 
   seqSet(step: number, pad: number, velocity: number) {
     this.pattern[step * PADS + pad] = f(velocity);
+  }
+
+  /** xorshift32, matching dsp/src/lib.rs bit for bit. */
+  private rand(): number {
+    let x = this.rng;
+    x ^= x << 13;
+    x ^= x >>> 17;
+    x ^= x << 5;
+    this.rng = x >>> 0;
+    return f((this.rng >>> 8) / 8388608 - 1);
+  }
+
+  private saturate(x: number): number {
+    const c = f(Math.min(3, Math.max(-3, x)));
+    const x2 = f(c * c);
+    return f(f(c * f(27 + x2)) / f(27 + f(9 * x2)));
   }
 
   private quantize(x: number): number {
@@ -225,8 +247,6 @@ export class ReferenceEngine {
         v.pos += v.rate;
       }
 
-      mix = f(mix * this.master);
-
       if (this.vintage) {
         this.decPhase += this.machineRate / this.sampleRate;
         if (this.decPhase >= 1) {
@@ -235,6 +255,19 @@ export class ReferenceEngine {
         }
         mix = this.held;
       }
+
+      if (this.vinyl > 0) {
+        const hiss = f(f(this.rand() * 0.004) * this.vinyl);
+        const roll = f(f(this.rand() + 1) * 0.5);
+        if (roll < 12 / this.sampleRate) {
+          this.pop = f(f(this.rand() * 0.22) * this.vinyl);
+        }
+        mix = this.saturate(f(f(mix + this.pop + hiss) * f(1 + f(0.35 * this.vinyl))));
+        this.pop = f(this.pop * 0.72);
+      }
+
+      // The fader is last: see dsp/src/lib.rs.
+      mix = f(mix * this.master);
 
       if (mix > 1) mix = 1;
       else if (mix < -1) mix = -1;

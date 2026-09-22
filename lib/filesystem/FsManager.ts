@@ -264,6 +264,15 @@ export class FsManager {
     return this.rootDrive.getFile(path, depth as any);
   }
 
+  /** A file's bytes, for the things that are not text. */
+  async readBytes(path: string): Promise<ArrayBuffer | null> {
+    const mountedDrive = this.getMountedDriveForPath(path);
+    if (mountedDrive) {
+      return mountedDrive.readBytes(this.getRelativePath(path));
+    }
+    return this.rootDrive.readBytes(path);
+  }
+
   async insert(path: string, item: DeepFolder | DeepFile): Promise<void> {
     const mountedDrive = this.getMountedDriveForPath(path);
     if (mountedDrive) {

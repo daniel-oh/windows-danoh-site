@@ -13,6 +13,8 @@ export type Preset = {
   swing: number;
   /** Twelve bit converter on, for the ones that want it. */
   vintage?: boolean;
+  /** Record surface on: hiss, crackle and a little drive. */
+  vinyl?: boolean;
   /** pad -> the steps it plays, and how hard. */
   hits: { pad: number; steps: number[]; velocity?: number }[];
 };
@@ -32,16 +34,36 @@ export const PRESETS: Preset[] = [
   },
   {
     // Swung, snare late on the two and four, the way a sampler with a
-    // twelve bit converter was usually pointed.
+    // twelve bit converter was usually pointed. The quiet snares between
+    // the loud ones are the ghost notes: play a break without them and it
+    // sounds like a drum machine, which it is.
     name: "Boom bap",
     bpm: 88,
     swing: 0.55,
     vintage: true,
+    vinyl: true,
     hits: [
       { pad: 0, steps: [0, 3, 8, 10] },
       { pad: 2, steps: [4, 12] },
+      { pad: 2, steps: [7, 11], velocity: 0.28 },
       { pad: 5, steps: [0, 2, 4, 6, 8, 10, 12, 14], velocity: 0.5 },
-      { pad: 3, steps: [7], velocity: 0.7 },
+      { pad: 3, steps: [14], velocity: 0.6 },
+    ],
+  },
+  {
+    // The tempo most of the funk breaks worth having sit at, with the kick
+    // pushed off the beat and the snare answering.
+    name: "Funk break",
+    bpm: 104,
+    swing: 0.25,
+    vinyl: true,
+    hits: [
+      { pad: 0, steps: [0, 6, 11] },
+      { pad: 2, steps: [4, 12] },
+      { pad: 2, steps: [2, 7, 10, 15], velocity: 0.26 },
+      { pad: 5, steps: [0, 2, 4, 6, 8, 10, 12, 14], velocity: 0.55 },
+      { pad: 6, steps: [14], velocity: 0.5 },
+      { pad: 12, steps: [3, 9], velocity: 0.35 },
     ],
   },
   {
@@ -49,9 +71,11 @@ export const PRESETS: Preset[] = [
     name: "Breakbeat",
     bpm: 168,
     swing: 0.15,
+    vinyl: true,
     hits: [
       { pad: 0, steps: [0, 6, 10] },
       { pad: 2, steps: [4, 12], velocity: 0.95 },
+      { pad: 2, steps: [9, 15], velocity: 0.24 },
       { pad: 3, steps: [14], velocity: 0.7 },
       { pad: 5, steps: [2, 6, 8, 14], velocity: 0.55 },
       { pad: 6, steps: [11], velocity: 0.5 },
@@ -75,6 +99,7 @@ export const PRESETS: Preset[] = [
     bpm: 74,
     swing: 0.3,
     vintage: true,
+    vinyl: true,
     hits: [
       { pad: 0, steps: [0, 7] },
       { pad: 2, steps: [8] },

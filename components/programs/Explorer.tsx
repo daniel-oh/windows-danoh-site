@@ -21,6 +21,8 @@ import disk from "@/components/assets/disk.png";
 import { mountDirectory } from "@/lib/filesystem/directoryMapping";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
 import { runProgramFromPath } from "@/lib/runProgramFromPath";
+import { createWindow } from "@/lib/createWindow";
+import { PROGRAMS } from "@/lib/programs";
 import { alert } from "@/lib/alert";
 
 export function Explorer({ id }: { id: string }) {
@@ -80,6 +82,14 @@ export function Explorer({ id }: { id: string }) {
         });
       } else if (item.name.endsWith(".exe")) {
         runProgramFromPath(path);
+      } else if (/\.(wav|mp3|m4a|ogg|flac|aac)$/i.test(item.name)) {
+        // Audio opens in the Sampler, on a pad, the way a .exe opens as a
+        // program. This is also the other half of the Sampler's Export.
+        createWindow({
+          ...PROGRAMS.sampler,
+          title: `Sampler - ${item.name}`,
+          program: { type: "sampler", loadPath: path },
+        });
       }
     }
   };

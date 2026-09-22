@@ -19,6 +19,7 @@ import {
   velocityFromPoint,
 } from "@/lib/sampler/pads";
 import { PRESETS, presetSteps } from "@/lib/sampler/presets";
+import { gainFor, levelLabel, readVolume, writeVolume } from "@/lib/sampler/volume";
 import { encodeWav, loopFilename } from "@/lib/sampler/wav";
 import styles from "./Sampler.module.css";
 
@@ -30,11 +31,27 @@ import styles from "./Sampler.module.css";
 // the level meter are written straight to their elements, thirty times a
 // second, so holding a chord down never costs a React render.
 
+// A pixel speaker, drawn rather than imported, like the other glyphs on
+// this desktop. Crossed out when muted, so the state is not colour alone.
+function Speaker({ muted }: { muted: boolean }) {
+  return (
+    <svg viewBox="0 0 11 11" width="11" height="11" shapeRendering="crispEdges" aria-hidden="true">
+      <path d="M1 4h2l3-3v9l-3-3H1z" fill="currentColor" />
+      {muted ? (
+        <path d="M7 4h1v1h1V4h1v1H9v1h1v1H9V6H8v1H7V6h1V5H7z" fill="currentColor" />
+      ) : (
+        <path d="M7 3h1v5H7zM9 2h1v7H9z" fill="currentColor" />
+      )}
+    </svg>
+  );
+}
+
 const SAMPLES_DIR = "/user/My Samples";
 const MAX_SECONDS = 6;
 
 export function Sampler({ id }: { id: string }) {
   const win = useAtomValue(windowAtomFamily(id));
+  const openWith = win.program.type === "sampler" ? win.program.loadPath : undefined;
   // 98.css draws a checkbox from the label beside the input, so each one
   // needs a real id: nesting the input inside the label renders no box.
   const uid = useId();
@@ -59,6 +76,10 @@ export function Sampler({ id }: { id: string }) {
   const [wave, setWave] = useState<Wave | null>(null);
   const [say, setSay] = useState("");
   const [preset, setPreset] = useState("");
+  const [vinyl, setVinyl] = useState(false);
+  // Remembered across visits: a volume you have to set every time is a
+  // volume that is wrong every time.
+  const [{ level, muted }, setVolume] = useState(() => readVolume());
   const fileRef = useRef<HTMLInputElement>(null);
   const [dropPad, setDropPad] = useState(-1);
 
@@ -120,13 +141,18 @@ export function Sampler({ id }: { id: string }) {
       engine.setParam(PARAM.bpm, bpm);
       engine.setParam(PARAM.swing, swing);
       engine.setParam(PARAM.vintage, vintage ? 1 : 0);
+      engine.setParam(PARAM.vinyl, vinyl ? 1 : 0);
+      engine.setParam(PARAM.master, gainFor(level, muted));
       engine.requestWave(live.current.selected);
       return engine;
     } catch {
       setPhase("blocked");
       return null;
     }
-  }, [bpm, swing, vintage]);
+    // The engine is created once; these are its starting values, so they
+    // are read rather than subscribed to.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // The program holds a real audio device, so it lets go on close, on
   // minimise and when the tab goes away, the same rule the Camera follows.
@@ -306,6 +332,14 @@ export function Sampler({ id }: { id: string }) {
     setSay(`Pad ${selected + 1} captured`);
   };
 
+  // --------------------------------------------------------------- volume
+
+  const applyVolume = (nextLevel: number, nextMuted: boolean) => {
+    setVolume({ level: nextLevel, muted: nextMuted });
+    writeVolume(nextLevel, nextMuted);
+    engineRef.current?.setParam(PARAM.master, gainFor(nextLevel, nextMuted));
+  };
+
   // -------------------------------------------------------------- presets
 
   const applyPreset = async (name: string) => {
@@ -328,6 +362,8 @@ export function Sampler({ id }: { id: string }) {
     engine.setParam(PARAM.swing, found.swing);
     setVintage(!!found.vintage);
     engine.setParam(PARAM.vintage, found.vintage ? 1 : 0);
+    setVinyl(!!found.vinyl);
+    engine.setParam(PARAM.vinyl, found.vinyl ? 1 : 0);
 
     // Straight into playing: a preset that needs a second button press is
     // not a preset.
@@ -386,6 +422,29 @@ export function Sampler({ id }: { id: string }) {
       setExporting(false);
     }
   };
+
+  // A file the desktop opened us with: Explorer hands over a path, we put it
+  // on pad 1 and say so. The other half of Export.
+  const loadedOnce = useRef(false);
+  useEffect(() => {
+    if (!openWith || loadedOnce.current) return;
+    loadedOnce.current = true;
+    void (async () => {
+      const engine = engineRef.current ?? (await ensure());
+      if (!engine) return;
+      const name = openWith.split("/").pop() ?? "sample";
+      try {
+        const fs = await getFsManager();
+        const bytes = await fs.readBytes(openWith);
+        if (!bytes) throw new Error("missing");
+        await engine.loadAudio(0, bytes);
+        setSelected(0);
+        setSay(`${name} on pad 1`);
+      } catch {
+        setSay(`${name} could not be opened.`);
+      }
+    })();
+  }, [openWith, ensure]);
 
   // ----------------------------------------------------------- waveform
 
@@ -459,6 +518,15 @@ export function Sampler({ id }: { id: string }) {
         >
           <span className={styles.recDot} aria-hidden="true" /> Rec
         </button>
+        <div className={`field-row ${styles.check}`}>
+          <input
+            id={`${uid}-quantize`}
+            type="checkbox"
+            checked={quantize}
+            onChange={(e) => setQuantize(e.target.checked)}
+          />
+          <label htmlFor={`${uid}-quantize`}>Quantize</label>
+        </div>
         <label className={styles.field}>
           Tempo
           <input
@@ -501,8 +569,33 @@ export function Sampler({ id }: { id: string }) {
             ))}
           </select>
         </label>
-        <div className={styles.meterWrap} aria-hidden="true">
-          <div ref={meterRef} className={styles.meter} />
+        {/* Output: mute, level, meter. Kept together as one cluster so it
+            wraps as a unit on a phone instead of scattering. */}
+        <div className={styles.output}>
+          <button
+            type="button"
+            className={styles.mute}
+            onClick={() => applyVolume(level, !muted)}
+            aria-pressed={muted}
+            aria-label={muted ? "Unmute" : "Mute"}
+            title={muted ? "Unmute" : "Mute"}
+          >
+            <Speaker muted={muted} />
+          </button>
+          <input
+            type="range"
+            className={styles.volume}
+            min={0}
+            max={100}
+            step={1}
+            value={level}
+            onChange={(e) => applyVolume(Number(e.target.value), false)}
+            aria-label="Volume"
+            aria-valuetext={levelLabel(level, muted)}
+          />
+          <div className={styles.meterWrap} aria-hidden="true">
+            <div ref={meterRef} className={styles.meter} />
+          </div>
         </div>
       </div>
 
@@ -616,12 +709,15 @@ export function Sampler({ id }: { id: string }) {
           </div>
           <div className={`field-row ${styles.check}`}>
             <input
-              id={`${uid}-quantize`}
+              id={`${uid}-vinyl`}
               type="checkbox"
-              checked={quantize}
-              onChange={(e) => setQuantize(e.target.checked)}
+              checked={vinyl}
+              onChange={(e) => {
+                setVinyl(e.target.checked);
+                engineRef.current?.setParam(PARAM.vinyl, e.target.checked ? 1 : 0);
+              }}
             />
-            <label htmlFor={`${uid}-quantize`}>Quantize</label>
+            <label htmlFor={`${uid}-vinyl`}>Vinyl</label>
           </div>
         </div>
         <div className={styles.sideRow}>

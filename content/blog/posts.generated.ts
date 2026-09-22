@@ -12,7 +12,7 @@ export const posts = [
     summary:
       "A sixteen pad sampler in my Windows 98 desktop. The Rust engine beat the JavaScript one by 2.3 times, and that is not what made it work.",
     tags: ["engineering", "audio", "launch"],
-    readingTime: "5 min",
+    readingTime: "6 min",
     image: "/blog/sampler/sampler.jpg",
     imageWidth: 1600,
     imageHeight: 1244,

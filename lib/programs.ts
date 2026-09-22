@@ -121,8 +121,9 @@ export const PROGRAMS: Record<ProgramKey, ProgramDef> = {
     title: "Sampler",
     program: { type: "sampler" },
     // Wide enough for the pad grid beside the waveform, tall enough that the
-    // sixteen step row is not the thing that gets scrolled to.
-    size: { width: 560, height: 470 },
+    // sixteen step row is on screen: the bar is the point, so it does not
+    // live below the fold.
+    size: { width: 560, height: 548 },
     icon: "/icons/sampler.png",
   },
 };

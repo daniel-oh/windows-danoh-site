@@ -130,6 +130,14 @@ export class Drive {
     }
   }
 
+  /** A file's bytes, untouched. getFile(deep) decodes as text, which is
+   * right for a registry and wrong for a WAV. */
+  async readBytes(path: string): Promise<ArrayBuffer | null> {
+    const item = await this.fs.getItem(path);
+    if (!item || item.kind !== "file") return null;
+    return readFileAsArrayBuffer(await (item as FileSystemFileHandle).getFile());
+  }
+
   async move(oldPath: string, newPath: string): Promise<void> {
     const item = await this.fs.getItem(oldPath);
     if (!item) {

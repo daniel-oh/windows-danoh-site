@@ -35,7 +35,7 @@ export type Program =
   | { type: "recycle" }
   | { type: "glass" }
   | { type: "camera" }
-  | { type: "sampler" };
+  | { type: "sampler"; loadPath?: string };
 
 export type AlertAction = {
   label: string;

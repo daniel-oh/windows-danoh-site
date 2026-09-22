@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { PADS, ReferenceEngine } from "../reference";
 import { encodeWav, loopFilename } from "../wav";
 import { PRESETS, presetSteps } from "../presets";
+import { DEFAULT_LEVEL, gainFor, levelLabel, readVolume, writeVolume } from "../volume";
 import { keyForPad, loopFrames, padAtGrid, padForKey, stepForHit, velocityFromPoint } from "../pads";
 
 // Runs the committed public/dsp/sampler.wasm, which is what production loads.
@@ -121,6 +122,7 @@ describe("sampler wasm", () => {
     e.set_param(1, 1); // vintage
     e.set_param(2, RATE); // no decimation, so this isolates the quantiser
     e.set_param(3, 12);
+    e.set_param(0, 1); // fader at unity: it sits after the converter
     e.note_on(0, 1, 0);
     const out = render(e, 20);
     const levels = 2 ** 11;
@@ -402,5 +404,151 @@ describe("loading audio into a pad", () => {
     // Push eight seconds at it; it keeps the first six.
     for (let i = 0; i < Math.ceil((RATE * 8) / 4096); i++) len = e.record_into(pad, 4096);
     expect(len).toBe(cap);
+  });
+});
+
+describe("vinyl", () => {
+  test("adds a quiet surface, and only when it is on", async () => {
+    const e = await load();
+    expect(peak(render(e, 20))).toBe(0); // silence is silent
+
+    e.set_param(8, 1);
+    const surface = render(e, 200);
+    const floor = rms(surface);
+    // Audible as a floor, nowhere near the music: about -48dBFS.
+    expect(floor).toBeGreaterThan(0.0005);
+    expect(floor).toBeLessThan(0.02);
+    expect(peak(surface)).toBeLessThan(0.35);
+  });
+
+  test("saturates a hot bar instead of tearing it", async () => {
+    const hot = async (vinyl: number) => {
+      const e = await load();
+      e.set_param(8, vinyl);
+      e.set_param(0, 1); // the fader is after the drive, so it cannot drive
+      // A loud bar, the kind a full kit playing at once makes.
+      for (const pad of [0, 1, 2, 4, 7, 8]) e.note_on(pad, 1, 0);
+      return render(e, 30);
+    };
+    const clean = await hot(0);
+    const surfaced = await hot(1);
+    const flat = (x: Float32Array) => {
+      let n = 0;
+      for (let i = 1; i < x.length; i++) if (Math.abs(x[i]) === 1 && Math.abs(x[i - 1]) === 1) n++;
+      return n;
+    };
+    expect(peak(surfaced)).toBeLessThanOrEqual(1);
+    // Six pads at once goes past any ceiling; what matters is that the knee
+    // spends less time pinned there than the hard clipper does.
+    expect(flat(surfaced)).toBeLessThan(flat(clean));
+  });
+
+  test("a normal bar never reaches the ceiling at all", async () => {
+    const e = await load();
+    e.set_param(8, 1);
+    e.set_param(0, 1);
+    for (const pad of [0, 5]) e.note_on(pad, 0.9, 0);
+    const out = render(e, 30);
+    expect(peak(out)).toBeLessThan(1);
+  });
+
+  test("still matches the JavaScript reference with the surface on", async () => {
+    const e = await load();
+    const pads: Float32Array[] = [];
+    const lens: number[] = [];
+    for (let i = 0; i < PADS; i++) {
+      const len = e.pad_len(i);
+      lens.push(len);
+      pads.push(new Float32Array(new Float32Array(e.memory.buffer, e.pad_ptr(i), len)));
+    }
+    const ref = new ReferenceEngine(RATE, pads, lens);
+    for (const [id, value] of [
+      [1, 1],
+      [8, 1],
+      [4, 104],
+    ] as const) {
+      e.set_param(id, value);
+      ref.setParam(id, value);
+    }
+    e.seq_set(0, 0, 0.9);
+    ref.seqSet(0, 0, 0.9);
+    e.set_param(6, 1);
+    ref.setParam(6, 1);
+    const mine = render(e, 120);
+    const theirs = ref.process(120 * 128);
+    let worst = 0;
+    for (let i = 0; i < mine.length; i++) worst = Math.max(worst, Math.abs(mine[i] - theirs[i]));
+    expect(worst).toBeLessThan(1e-6);
+  });
+});
+
+describe("volume", () => {
+  test("the curve puts the useful range under your thumb", () => {
+    expect(gainFor(0)).toBe(0);
+    expect(gainFor(100)).toBe(1);
+    // Half way is a quarter of full scale, about -12dB, not half as loud.
+    expect(gainFor(50)).toBeCloseTo(0.25, 3);
+    expect(gainFor(DEFAULT_LEVEL)).toBeCloseTo(0.64, 2);
+    // Monotonic, and out of range positions do not escape.
+    expect(gainFor(-20)).toBe(0);
+    expect(gainFor(140)).toBe(1);
+  });
+
+  test("mute is silent but remembers where the slider was", () => {
+    expect(gainFor(80, true)).toBe(0);
+    expect(gainFor(80, false)).toBeGreaterThan(0);
+    expect(levelLabel(80, true)).toBe("Muted");
+    expect(levelLabel(80, false)).toBe("Volume 80 percent");
+  });
+
+  test("survives storage that refuses to work", () => {
+    const original = window.localStorage.getItem;
+    // A private window, or site data blocked: reading throws.
+    Object.defineProperty(window.localStorage, "getItem", {
+      configurable: true,
+      value: () => {
+        throw new Error("denied");
+      },
+    });
+    expect(readVolume()).toEqual({ level: DEFAULT_LEVEL, muted: false });
+    expect(() => writeVolume(50, true)).not.toThrow();
+    Object.defineProperty(window.localStorage, "getItem", {
+      configurable: true,
+      value: original,
+    });
+  });
+
+  test("remembers a level and a mute across visits", () => {
+    writeVolume(42, false);
+    expect(readVolume()).toEqual({ level: 42, muted: false });
+    writeVolume(42, true);
+    expect(readVolume()).toEqual({ level: 42, muted: true });
+  });
+});
+
+describe("the fader is the last thing in the chain", () => {
+  test("mute is silent even with the record surface on", async () => {
+    const e = await load();
+    e.set_param(8, 1); // vinyl
+    e.set_param(0, 0); // muted
+    e.note_on(0, 1, 0);
+    expect(peak(render(e, 40))).toBe(0);
+  });
+
+  test("turning down does not change the crunch, only the level", async () => {
+    const at = async (master: number) => {
+      const e = await load();
+      e.set_param(1, 1);
+      e.set_param(3, 6); // an obvious word length
+      e.set_param(0, master);
+      e.note_on(0, 1, 0);
+      return render(e, 20);
+    };
+    const full = await at(1);
+    const half = await at(0.5);
+    let worst = 0;
+    for (let i = 0; i < full.length; i++) worst = Math.max(worst, Math.abs(full[i] * 0.5 - half[i]));
+    // Exactly half, sample for sample: the quantiser saw the same signal.
+    expect(worst).toBeLessThan(1e-6);
   });
 });
