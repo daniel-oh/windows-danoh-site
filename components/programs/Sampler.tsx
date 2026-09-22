@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useAtomValue } from "jotai";
 import { windowAtomFamily } from "@/state/window";
 import { getFsManager } from "@/state/fsManager";
@@ -34,6 +34,9 @@ const MAX_SECONDS = 3;
 
 export function Sampler({ id }: { id: string }) {
   const win = useAtomValue(windowAtomFamily(id));
+  // 98.css draws a checkbox from the label beside the input, so each one
+  // needs a real id: nesting the input inside the label renders no box.
+  const uid = useId();
   const mobile = useIsMobile();
   const motion = useMotionAllowed();
 
@@ -503,8 +506,9 @@ export function Sampler({ id }: { id: string }) {
           </button>
         </div>
         <div className={styles.sideRow}>
-          <label className={styles.check}>
+          <div className={`field-row ${styles.check}`}>
             <input
+              id={`${uid}-vintage`}
               type="checkbox"
               checked={vintage}
               onChange={(e) => {
@@ -512,16 +516,17 @@ export function Sampler({ id }: { id: string }) {
                 engineRef.current?.setParam(PARAM.vintage, e.target.checked ? 1 : 0);
               }}
             />
-            12-bit
-          </label>
-          <label className={styles.check}>
+            <label htmlFor={`${uid}-vintage`}>12-bit</label>
+          </div>
+          <div className={`field-row ${styles.check}`}>
             <input
+              id={`${uid}-quantize`}
               type="checkbox"
               checked={quantize}
               onChange={(e) => setQuantize(e.target.checked)}
             />
-            Quantize
-          </label>
+            <label htmlFor={`${uid}-quantize`}>Quantize</label>
+          </div>
         </div>
         <div className={styles.sideRow}>
           <button type="button" onClick={clearPattern}>

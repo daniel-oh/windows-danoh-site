@@ -20,11 +20,11 @@ export const PARAM = {
 } as const;
 
 export type Stats = {
+  /** Blocks the audio thread completed since the last call. */
   blocks: number;
-  p50?: number;
-  p95?: number;
-  p99?: number;
-  max?: number;
+  frames?: number;
+  /** The audio thread's own clock, in seconds. */
+  time?: number;
   /** Microseconds available per block at this sample rate. */
   budget?: number;
 };
@@ -200,7 +200,8 @@ export class SamplerEngine {
     });
   }
 
-  /** Per-block timing since the last call, for the benchmark. */
+  /** How many blocks the audio thread completed since the last call. Used by
+   * the benchmark to show it kept running while the main thread was stuck. */
   stats(): Promise<Stats> {
     return new Promise((resolve) => {
       const port = this.node.port;

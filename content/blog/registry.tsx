@@ -34,6 +34,7 @@ import { Rive } from "@/components/mdx/Rive";
 import { Reel } from "@/components/mdx/Reel";
 import { ScrollTable } from "@/components/mdx/ScrollTable";
 
+import AudioThread, { meta as audioThread } from "./posts/audio-thread.mdx";
 import Camera, { meta as camera } from "./posts/camera.mdx";
 import Cutout, { meta as cutout } from "./posts/background-remover.mdx";
 import Pivots, { meta as pivots } from "./posts/three-pivots-and-a-lowercase-k.mdx";
@@ -52,6 +53,7 @@ type MDXContent = ComponentType<{ components?: MDXComponents }>;
 // `satisfies` typo-proofs every meta against the BlogPost shape at
 // compile time — a missing field in an MDX meta fails tsc, not prod.
 const entries = [
+  [audioThread, AudioThread],
   [camera, Camera],
   [cutout, Cutout],
   [pivots, Pivots],

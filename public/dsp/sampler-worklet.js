@@ -17,10 +17,12 @@ class SamplerProcessor extends AudioWorkletProcessor {
     this.wasm = null;
     this.recording = -1; // pad index while sampling, else -1
     this.lastPost = 0;
-    // Per-block wasm time in microseconds, kept as a plain array and drained
-    // on request. Measuring is cheap; reporting from here is not, so the UI
-    // asks for it instead of being told.
-    this.times = [];
+    // Blocks completed since the last stats request. An AudioWorkletGlobalScope
+    // has no performance.now (only Date and currentTime), so there is no honest
+    // way to time a single 2.7ms block from in here; what this can prove is
+    // that the audio thread kept getting its blocks while the main thread was
+    // busy, which is the property worth having.
+    this.blocks = 0;
     this.port.onmessage = (e) => this.onMessage(e.data);
   }
 
@@ -80,20 +82,13 @@ class SamplerProcessor extends AudioWorkletProcessor {
         break;
       }
       case "stats": {
-        const t = this.times.slice().sort((a, b) => a - b);
-        this.times = [];
-        if (!t.length) {
-          this.port.postMessage({ type: "stats", blocks: 0 });
-          break;
-        }
-        const at = (q) => t[Math.min(t.length - 1, Math.floor(t.length * q))];
+        const blocks = this.blocks;
+        this.blocks = 0;
         this.port.postMessage({
           type: "stats",
-          blocks: t.length,
-          p50: at(0.5),
-          p95: at(0.95),
-          p99: at(0.99),
-          max: t[t.length - 1],
+          blocks,
+          frames: blocks * BLOCK,
+          time: currentTime,
           budget: (BLOCK / sampleRate) * 1e6,
         });
         break;
@@ -150,7 +145,7 @@ class SamplerProcessor extends AudioWorkletProcessor {
 
     const frames = out[0].length;
     const t0 = currentTime;
-    const started = typeof performance !== "undefined" ? performance.now() : 0;
+    this.blocks++;
 
     // Recording first: record_into consumes the io buffer, then process()
     // fills the same buffer with output. One scratch buffer, two uses, no
@@ -172,8 +167,6 @@ class SamplerProcessor extends AudioWorkletProcessor {
     const step = w.process(frames);
     const io = new Float32Array(w.memory.buffer, w.io_ptr(), frames);
     for (let c = 0; c < out.length; c++) out[c].set(io);
-
-    if (started) this.times.push((performance.now() - started) * 1000);
 
     // The UI needs the playhead and the meter, not every block: about 30 a
     // second is enough to look live and cheap enough to be free.

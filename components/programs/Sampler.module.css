@@ -213,9 +213,10 @@
 }
 
 .check {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  font-size: 11px;
+}
+
+.check label {
   font-size: 11px;
 }
 

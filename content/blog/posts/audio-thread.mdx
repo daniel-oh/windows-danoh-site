@@ -1,0 +1,102 @@
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "audio-thread",
+  title: "The audio thread gets 2.7 milliseconds",
+  date: "2026-09-22",
+  author: "Daniel Oh",
+  summary:
+    "A sixteen pad sampler in my Windows 98 desktop. The Rust engine beat the JavaScript one by 2.3 times, and that is not what made it work.",
+  tags: ["engineering", "audio", "launch"],
+  readingTime: "5 min",
+  image: "/blog/sampler/sampler.jpg",
+  imageWidth: 1600,
+  imageHeight: 1244,
+  imageAlt:
+    "The Sampler program open on the danoh.com desktop: a four by four grid of pads labelled with keyboard keys and drum names, a waveform of the kick, 12-bit and Quantize checkboxes, and a sixteen step row with the playhead on step six.",
+  imageCaption:
+    "Sixteen pads, a sixteen step bar, and a converter that can take the whole thing back to 1987.",
+};
+
+There is a Sampler on [the desktop](/) now. Tap a pad and it plays a drum. Hold Sample and it records whatever your microphone hears into that pad. Arm Rec and your hits land in a sixteen step bar. Press Export and the bar becomes a WAV in My Samples, where Explorer can find it.
+
+The interesting part is not the pads. It is the deadline.
+
+## Two point seven milliseconds, over and over
+
+Web Audio does its work in an AudioWorklet: a separate thread, handed one block of 128 frames at a time. At 48kHz that is a block every 2.67 milliseconds, at 44.1kHz every 2.9. Your code fills the block and returns. Fill it late and the speakers get nothing to play, which sounds like a click.
+
+Nothing else on a web page has a deadline like that. A dropped animation frame is a stutter you might not notice. A dropped audio block is a defect you hear across the room.
+
+The other thing about that thread: it is not the main thread. The main thread is where React renders, where garbage collects, where a long task blocks everything for as long as it likes. Audio cannot be there.
+
+## So the engine is Rust, compiled to 18KB
+
+The sampler's engine is a small Rust crate with no dependencies, built to `wasm32-unknown-unknown` and instantiated inside the worklet. It is 18,391 bytes. It compiles in about 2 milliseconds.
+
+Two decisions came out of the deadline.
+
+**Nothing allocates after load.** The pads need about ten megabytes, which the module takes from WebAssembly memory once, at init, with a bump allocator. After that, `process()` does arithmetic into memory it already owns. There is no allocator to call, no collector to run, and no way for a pause to arrive from somewhere else.
+
+**The kit is a function, not a download.** All sixteen sounds are synthesised in Rust when the program opens: swept sines for the kicks and toms, filtered noise for the hats and the clap, a pair of detuned squares for the cowbell. That takes 7 milliseconds and means the program ships no audio files at all. The whole instrument, engine and kit, is a smaller download than one drum sample would have been.
+
+## The crunch comes from a machine I have never owned
+
+The 12-bit switch is the part people reach for twice.
+
+I did not invent the behaviour behind it. It follows what [Patina](https://github.com/lockedown/patina) documents, an MIT licensed, clean-room study by Dave Locke of what classic hardware samplers actually do to a sound. Three of its findings are in the switch:
+
+- **Linear interpolation** when a sample is transposed, which is what an Akai S900 does, rather than the smoother resampling a modern engine would reach for.
+- **A one-pole lowpass whose cutoff tracks the transpose ratio**, so pitching a sample up opens the filter with it. This is why old samplers sound different up an octave, not just faster.
+- **Real decimation with zero-order hold**, dropping the mix to the machine's sample rate and holding each value, then quantising to a twelve bit word. Not a bit-depth effect applied to a clean signal: the same sequence of steps the converter performed.
+
+That is a reading of published behaviour, not anyone's ROM, and the source says where it simplifies: the filter runs per voice, because its cutoff follows that voice's pitch, while the converter runs once on the mix, the way a whole kit hits one set of chips.
+
+## The Rust was 2.3 times faster, on every machine I tried
+
+I kept a second copy of the engine in JavaScript. It began as the test oracle: the Rust and the JavaScript run the same scripted bar and have to agree within 1e-6, sample for sample, which is what proves the Rust does what the comments claim. Having it meant I could also answer the question honestly.
+
+Same pattern, five voices a step, converter chain on, rendered offline through each engine:
+
+| Measured | Rust | JavaScript |
+|---|---|---|
+| 30 second bar, full speed | 55 ms (545x real time) | 124 ms (242x) |
+| 20 second bar, CPU throttled 6x | 230 ms (87x) | 530 ms (38x) |
+| Share of a 2.9 ms block, throttled 6x | 1.1% | 2.6% |
+
+The Rust wins by the same ratio everywhere, and the ratio does not matter. Both are so far inside the budget that a phone six times slower than my laptop would still be using a fortieth of the time it has. If I had shipped the JavaScript, nobody would have heard a difference.
+
+I still want the Rust there, for the reason that does not show up in a throughput number: it has no collector. A garbage collection pause on the audio thread is not slower audio, it is a click, and the tail is the only part of an audio budget that matters. But I am not going to pretend the benchmark says that. The benchmark says both were fast enough.
+
+## The thread was the thing that mattered
+
+Here is the measurement that actually changed my mind.
+
+While the pattern played, I jammed the main thread with a 300 millisecond busy loop, the kind a heavy React render or a big JSON parse produces. Then I asked the audio thread how many blocks it had completed.
+
+Both engines completed 160 blocks out of 160. Not a single one late. Meanwhile a `setTimeout` due 50 milliseconds into that stall fired 250 milliseconds late.
+
+So the answer to "how do I make web audio solid" is not the language. It is: get off the main thread, and put the clock where the samples are. The sequencer in this sampler counts samples inside the worklet rather than scheduling from a timer, which is why the bar keeps time while you drag the window around.
+
+## Two hours I would like back
+
+Two things cost me an hour each, and both are now comments in the source.
+
+A compiled `WebAssembly.Module` cannot be sent to an AudioWorklet. The worklet is a separate agent cluster, so the structured clone fails, and `postMessage` does not throw, and the message simply never arrives. You sit there watching a handshake that will never complete. The fix is to send the bytes and compile them on the other side:
+
+```js
+// main thread
+node.port.postMessage({ type: "init", bytes }, [bytes]);
+// worklet
+this.wasm = new WebAssembly.Instance(new WebAssembly.Module(msg.bytes), {}).exports;
+```
+
+And an AudioWorkletGlobalScope is a small room. No `fetch`, no `TextDecoder`, and no `performance.now`, which I discovered only after writing a per-block timing histogram that could never have produced a number. I deleted it and measured throughput on the main thread instead, which is the honest instrument for the question anyway.
+
+## Go and hit something
+
+The pads answer the moment you touch them, and how hard depends on where: the top of a pad is soft, the bottom is full. Two fingers make two sounds. The keyboard grid is the usual one, ZXCV up to 1234. On a phone it fills the screen and buzzes.
+
+Your microphone is asked for only while you hold Sample, and let go of the moment you release. Nothing leaves your browser. The loop you export is yours, and it lands in My Samples for Explorer to find, which still feels like the best part of having a desktop.
+
+Then turn on 12-bit, and listen to it get worse.
