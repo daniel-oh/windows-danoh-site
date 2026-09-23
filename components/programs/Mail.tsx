@@ -116,6 +116,8 @@ export function Mail({ id }: { id: string }) {
     if (!CONTACT_EMAIL) return;
     if (!body.trim()) {
       setErrorMsg("Add a message before sending.");
+      // Take the visitor to the field that needs them.
+      document.getElementById("mail-body")?.focus();
       setStatus("error");
       return;
     }
@@ -376,6 +378,9 @@ export function Mail({ id }: { id: string }) {
         <textarea
           id="mail-body"
           rows={7}
+          aria-required="true"
+          aria-invalid={status === "error" && !body.trim() ? true : undefined}
+          aria-describedby={status === "error" ? "mail-error" : undefined}
           value={body}
           onChange={(e) => setBody(e.target.value)}
           maxLength={4000}
@@ -429,6 +434,7 @@ export function Mail({ id }: { id: string }) {
 
       {status === "error" && (
         <div
+          id="mail-error"
           role="alert"
           style={{
             fontSize: 12,

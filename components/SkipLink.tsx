@@ -12,12 +12,15 @@ import styles from "./SkipLink.module.css";
 export function SkipLink({
   href = "#main",
   label = "Skip to main content",
+  onClick,
 }: {
   href?: string;
   label?: string;
+  /** For targets an anchor cannot name, like whichever window is open. */
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }) {
   return (
-    <a href={href} className={styles.skipLink}>
+    <a href={href} className={styles.skipLink} onClick={onClick}>
       {label}
     </a>
   );

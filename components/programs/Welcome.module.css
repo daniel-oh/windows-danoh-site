@@ -149,3 +149,26 @@
   display: flex;
   gap: 10px;
 }
+
+/* Read by screen readers, not drawn. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The logo video's pause control: a real button (keyboard, screen
+ * readers) that looks like the logo, not like a 98.css button. */
+.logoButton {
+  all: unset;
+  display: block;
+  margin: 0 auto;
+  cursor: pointer;
+}
+.logoButton:focus-visible {
+  outline: 2px solid #000080;
+  outline-offset: 2px;
+}

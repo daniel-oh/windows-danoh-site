@@ -188,7 +188,10 @@ export function BootScreen() {
       <div
         id="danoh-boot"
         ref={rootRef}
-        role="presentation"
+        // Decoration over the real page. role="presentation" does not hide
+        // children, so screen readers read out the BIOS lines and the skip
+        // hint; aria-hidden does.
+        aria-hidden="true"
         style={{
           display: "none",
           position: "fixed",

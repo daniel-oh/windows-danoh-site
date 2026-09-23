@@ -295,7 +295,8 @@ export const Desktop = () => {
   return (
     <div
       className={styles.desktop}
-      role="main"
+      role="group"
+      aria-label="Desktop icons"
       onClick={() => setSelectedIcon(null)}
       onKeyDown={onKeyDown}
       // Background menu only — icons' own onContextMenu stopPropagation,

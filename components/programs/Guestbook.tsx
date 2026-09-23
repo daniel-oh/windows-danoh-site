@@ -45,7 +45,7 @@ export function Guestbook() {
       setEntries(data.entries ?? []);
       setError(null);
     } catch {
-      setError("Couldn't load the wall. Try again in a sec.");
+      setError("Couldn't load the wall.");
     } finally {
       setLoading(false);
     }
@@ -198,11 +198,12 @@ export function Guestbook() {
         >
           <span>{message.length}/{MAX_MESSAGE}</span>
           <div>
-            {feedback && (
-              <span id="gb-feedback" role="status" style={{ marginRight: 8 }}>
-                {feedback}
-              </span>
-            )}
+            {/* Always rendered: a live region that appears already holding
+                its text is often not announced, so the result of signing
+                could go unheard. Only the text changes. */}
+            <span id="gb-feedback" role="status" style={{ marginRight: feedback ? 8 : 0 }}>
+              {feedback}
+            </span>
             <button type="submit" disabled={submitting}>
               {submitting ? "Sending…" : "Sign the guestbook"}
             </button>
@@ -221,7 +222,18 @@ export function Guestbook() {
       >
         {loading && <div style={{ fontSize: 12, color: "#444" }}>Loading…</div>}
         {!loading && error && (
-          <div style={{ fontSize: 12, color: "#800000" }}>{error}</div>
+          <div role="alert" style={{ fontSize: 12, color: "#800000", display: "flex", gap: 8, alignItems: "center" }}>
+            <span>{error}</span>
+            <button
+              type="button"
+              onClick={() => {
+                setLoading(true);
+                void load();
+              }}
+            >
+              Retry
+            </button>
+          </div>
         )}
         {!loading && !error && entries.length === 0 && (
           <div style={{ fontSize: 12, color: "#444" }}>

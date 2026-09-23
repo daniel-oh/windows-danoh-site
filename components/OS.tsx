@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { focusedWindowAtom } from "@/state/focusedWindow";
 import { windowsListAtom } from "@/state/windowsList";
 import { isMobile } from "@/lib/isMobile";
+import { SkipLink } from "@/components/SkipLink";
 import { windowAtomFamily, type WindowState } from "@/state/window";
 import { Window } from "./Window";
 import { startMenuOpenAtom } from "@/state/startMenu";
@@ -293,7 +294,11 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   }, []);
 
   return (
+    // The whole desktop is the main landmark: windows are the content.
+    // role="main" used to sit on the icon grid alone, leaving every
+    // window outside any landmark.
     <div
+      role="main"
       style={{
         height: "100dvh",
         width: "100vw",
@@ -312,6 +317,20 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
         e.preventDefault();
       }}
     >
+      {/* The icons come first in the tab order; this jumps past them to
+          the window in front (WCAG 2.4.1), as the content pages' skip
+          links do. */}
+      <SkipLink
+        href="#"
+        label="Skip to the open window"
+        onClick={(e) => {
+          e.preventDefault();
+          const store = getDefaultStore();
+          const target =
+            store.get(focusedWindowAtom) ?? store.get(windowsListAtom).at(-1);
+          if (target) document.getElementById(target)?.focus();
+        }}
+      />
       <div
         ref={parallaxRef}
         aria-hidden="true"
@@ -629,7 +648,7 @@ function StartMenu() {
     {
       label: "Report a bug",
       cb: () => {
-        window.open("https://forms.gle/ZqG1eLbgBtwadLe4A", "_blank");
+        window.open("https://forms.gle/ZqG1eLbgBtwadLe4A", "_blank", "noopener,noreferrer");
       },
     },
     {

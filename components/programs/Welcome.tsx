@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Welcome.module.css";
 import { Odometer } from "../Odometer";
 import check from "@/components/assets/check.png";
-import { sortedPosts } from "@/content/blog/posts";
+import { newestPosts } from "@/content/blog/posts";
 import { createWindow } from "@/lib/createWindow";
 import { openProgram, PROGRAMS } from "@/lib/programs";
 import { useVisitorCount } from "@/lib/useVisitorCount";
@@ -78,25 +78,45 @@ const SidebarLogo = () => {
       />
     );
   }
+  return <LoopingLogo />;
+};
+
+// An 8 second loop, so WCAG 2.2.2 needs a way to stop it that works for
+// everyone. It used to be a click on an aria-hidden, unfocusable video:
+// no keyboard, no screen reader. Now the video sits in a real button.
+const LoopingLogo = () => {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [playing, setPlaying] = useState(true);
+  const label = playing ? "Pause the logo animation" : "Play the logo animation";
   return (
-    <video
-      className={styles.sidebarLogo}
-      poster="/danoh-logo-poster.png"
-      autoPlay
-      loop
-      muted
-      playsInline
-      aria-hidden="true"
-      title="Click to pause"
-      onClick={(e) => {
-        const v = e.currentTarget;
+    <button
+      type="button"
+      className={styles.logoButton}
+      aria-label={label}
+      title={label}
+      onClick={() => {
+        const v = ref.current;
+        if (!v) return;
         if (v.paused) void v.play();
         else v.pause();
       }}
     >
-      <source src="/danoh-logo-animated.webm" type="video/webm" />
-      <source src="/danoh-logo-animated.mp4" type="video/mp4" />
-    </video>
+      <video
+        ref={ref}
+        className={styles.sidebarLogo}
+        poster="/danoh-logo-poster.png"
+        autoPlay
+        loop
+        muted
+        playsInline
+        aria-hidden="true"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+      >
+        <source src="/danoh-logo-animated.webm" type="video/webm" />
+        <source src="/danoh-logo-animated.mp4" type="video/mp4" />
+      </video>
+    </button>
   );
 };
 
@@ -197,11 +217,11 @@ const contentByKey = {
     );
   },
   blog: () => {
-    const recentPosts = sortedPosts.slice(0, 5);
+    const recentPosts = newestPosts.slice(0, 5);
     return (
       <>
         <header style={{ marginBottom: 0 }}>
-          <h3 style={{ margin: 0, lineHeight: 1.1 }}>Blog</h3>
+          <h2 style={{ margin: 0, lineHeight: 1.1, fontSize: "1.25rem" }}>Blog</h2>
           <p
             style={{
               margin: "2px 0 0 0",
@@ -280,7 +300,7 @@ const contentByKey = {
             }}
           />
           <div>
-            <h3 style={{ margin: 0 }}>Daniel Oh</h3>
+            <h2 style={{ margin: 0, fontSize: "1.25rem" }}>Daniel Oh</h2>
             <div style={{ fontSize: 11, color: "#444" }}>
               Sr. Platform Engineer at Nike &middot; Chicago, IL
             </div>
@@ -322,10 +342,10 @@ const contentByKey = {
   updates: () => {
     return (
       <>
-        <h3>Updates</h3>
+        <h2 style={{ fontSize: "1.25rem" }}>Updates</h2>
 
         <div style={{ borderLeft: "2px solid #808080", paddingLeft: 14, marginTop: 8 }}>
-          <h4 style={{ margin: "0 0 4px" }}>Jun 10, 2026</h4>
+          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Jun 10, 2026</h3>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
             Boot screens, 3D Pipes, and genie windows
           </p>
@@ -353,7 +373,7 @@ const contentByKey = {
             </Link>.
           </p>
 
-          <h4 style={{ margin: "0 0 4px" }}>May 11, 2026</h4>
+          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>May 11, 2026</h3>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
             Floeberg launch and a security pass
           </p>
@@ -378,7 +398,7 @@ const contentByKey = {
             spam-relay cap).
           </p>
 
-          <h4 style={{ margin: "0 0 4px" }}>Apr 17, 2026</h4>
+          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 17, 2026</h3>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>MDX, new programs, mobile polish</p>
           <p style={{ margin: "0 0 8px" }}>
             Blog now runs on MDX. Posts are individual{" "}
@@ -406,7 +426,7 @@ const contentByKey = {
             half-baked.
           </p>
 
-          <h4 style={{ margin: "0 0 4px" }}>Apr 13, 2026</h4>
+          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 13, 2026</h3>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>danoh.com goes live</p>
           <p style={{ margin: "0 0 12px" }}>
             Launched this site. A static portfolio felt too predictable, so I built a retro
@@ -414,14 +434,14 @@ const contentByKey = {
             Claude Sonnet 5, and a single Docker container.
           </p>
 
-          <h4 style={{ margin: "0 0 4px" }}>Apr 11, 2026</h4>
+          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 11, 2026</h3>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Fix and Iterate ships</p>
           <p style={{ margin: "0 0 12px" }}>
             Click the <code>?</code> on any generated app to talk to the AI that built it.
             Describe a bug, request a feature, and the app updates live. No reload, no copy-paste.
           </p>
 
-          <h4 style={{ margin: "0 0 4px" }}>Apr 10, 2026</h4>
+          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 10, 2026</h3>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Mobile, security, and polish</p>
           <p style={{ margin: "0 0 12px" }}>
             Full touch support for phones and tablets. Sandboxed iframes, rate limiting,
@@ -429,7 +449,7 @@ const contentByKey = {
             and drag to rearrange.
           </p>
 
-          <h4 style={{ margin: "0 0 4px" }}>Apr 9, 2026</h4>
+          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 9, 2026</h3>
           <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>First commit</p>
           <p style={{ margin: "0 0 4px" }}>
             Forked{" "}
@@ -446,7 +466,7 @@ const contentByKey = {
   advanced: () => {
     return (
       <>
-        <h3>Advanced</h3>
+        <h2 style={{ fontSize: "1.25rem" }}>Advanced</h2>
         <p>
           Everything here is a file. Open <strong>Explorer</strong> to browse.
           Generated apps can read, write, and save files too.
@@ -541,6 +561,12 @@ export function Welcome({ id: _id }: { id: string }) {
           onSelect={handleEntrySelect}
         />
         <div className={styles.mainContent}>
+          {/* The Welcome tab carries the page's visible h1. Returning
+              visitors open on another tab, which left the page with no h1
+              and starting at a lower heading. */}
+          {selectedEntry !== "welcome" && (
+            <h1 className={styles.srOnly}>Daniel Oh, danoh.com</h1>
+          )}
           {Content ? <Content /> : <p>No content for this section.</p>}
         </div>
       </div>

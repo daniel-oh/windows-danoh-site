@@ -342,6 +342,10 @@ export function Explorer({ id }: { id: string }) {
   }, [id, selectedItem, handleCopy, handleCut, handlePaste]);
 
   const renderItems = (items: Record<string, StubItem>, path: string) => {
+    const paths = Object.keys(items).map((k) => `${path}/${items[k].name}`.replace("//", "/"));
+    // One Tab stop for the whole list (the selected row, else the first);
+    // arrows move within it. Every row used to be its own Tab stop.
+    const tabStop = selectedItem && paths.includes(selectedItem) ? selectedItem : paths[0];
     return Object.keys(items).map((key) => {
       const item = items[key];
       const itemPath = `${path}/${item.name}`.replace("//", "/");
@@ -356,8 +360,9 @@ export function Explorer({ id }: { id: string }) {
           // Rows were mouse-only: no way to select, open or rename from
           // the keyboard (including the Save/Open pickers). Enter opens,
           // Space selects, arrows move between rows.
-          tabIndex={0}
-          aria-selected={selectedItem === itemPath}
+          tabIndex={itemPath === tabStop ? 0 : -1}
+          // aria-selected is not allowed on a plain table row; aria-current is.
+          aria-current={selectedItem === itemPath ? "true" : undefined}
           onKeyDown={(e) => {
             if (e.target !== e.currentTarget) return; // rename <input>
             if (e.key === "Enter") {

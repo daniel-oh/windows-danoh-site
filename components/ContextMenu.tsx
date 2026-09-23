@@ -100,10 +100,15 @@ export function ContextMenu() {
   const { x, y, items } = contextMenu;
 
   return (
+    // The menu role sits on the element that takes focus. It used to be on
+    // the inner div, so focus landed on an element with no role and a
+    // screen reader never heard that a menu had opened.
     <div
       ref={menuRef}
       tabIndex={-1}
       className="window"
+      role="menu"
+      aria-label="Context menu"
       style={{
         position: "absolute",
         top: y,
@@ -112,7 +117,7 @@ export function ContextMenu() {
         outline: "none",
       }}
     >
-      <div className={styles.contextMenu} role="menu" aria-label="Context menu">
+      <div className={styles.contextMenu} role="none">
         {items.map((item, index) => (
           <button key={index} role="menuitem" className="menu-item" onClick={item.onClick}>
             {item.label}

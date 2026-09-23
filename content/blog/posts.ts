@@ -25,6 +25,12 @@ export const sortedPosts = [...posts].sort((a, b) => {
   return new Date(b.date).getTime() - new Date(a.date).getTime();
 });
 
+// Newest first, pins ignored: for anything labelled "latest". The pinned
+// April welcome post used to open the home page's "Latest from the blog".
+export const newestPosts = [...posts].sort(
+  (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+);
+
 // --- Related / adjacent helpers -------------------------------------
 export function getRelatedPosts(slug: string, limit = 3): BlogPost[] {
   const current = sortedPosts.find((p) => p.slug === slug);

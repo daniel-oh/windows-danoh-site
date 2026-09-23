@@ -30,8 +30,12 @@ export default function GlobalError({
     }
   }, [error]);
 
+  // This replaces the root layout, so it brings its own lang and title.
   return (
-    <html>
+    <html lang="en">
+      <head>
+        <title>Something went wrong · danoh.com</title>
+      </head>
       <body
         style={{
           height: "100dvh",

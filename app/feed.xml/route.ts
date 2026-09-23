@@ -143,7 +143,7 @@ export async function GET() {
       <guid isPermaLink="true">${url}</guid>
       <pubDate>${rfc822(post.date)}</pubDate>
       <dc:creator>${escapeXml(post.author)}</dc:creator>
-      <description><![CDATA[${post.summary}]]></description>
+      <description>${cdata(post.summary)}</description>
 ${(() => {
         const html = renderPostHtml(render, post.slug);
         return html ? `      <content:encoded>${cdata(html)}</content:encoded>\n` : "";

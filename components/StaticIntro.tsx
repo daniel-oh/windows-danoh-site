@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { sortedPosts } from "@/content/blog/posts";
+import { newestPosts } from "@/content/blog/posts";
 
 // Server-rendered boot screen. This is the SEO fix for the SPA problem:
 // the raw homepage HTML previously contained ~41 characters of icon
@@ -50,7 +50,7 @@ export function StaticIntro() {
             Latest from the blog
           </p>
           <ul style={{ margin: "0 0 10px", paddingLeft: 20, fontSize: 12 }}>
-            {sortedPosts.slice(0, 5).map((p) => (
+            {newestPosts.slice(0, 5).map((p) => (
               <li key={p.slug} style={{ margin: "2px 0" }}>
                 <Link href={`/blog/${p.slug}`}>{p.title}</Link>
               </li>

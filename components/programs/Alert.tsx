@@ -36,7 +36,7 @@ export function Alert({ id }: { id: string }) {
       <div className={styles.alertContent}>
         {icon === "x" && (
           <div className={styles.alertIcon}>
-            <Image src={xIcon} alt="Alert Icon" width={32} height={32} />
+            <Image src={xIcon} alt="" width={32} height={32} />
           </div>
         )}
         <div className={styles.alertMessage} id={`alert-message-${id}`}>
