@@ -49,9 +49,6 @@
     inset -2px -2px #808080, inset 2px 2px #dfdfdf;
 }
 
-.titleBarLink:hover {
-  text-decoration: underline;
-}
 
 .titleBarLink:active {
   /* Pressed: bevel inverts and the label nudges, like a real caption
@@ -113,9 +110,6 @@
   cursor: default;
 }
 
-.menuItem:hover {
-  box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
-}
 
 .addressRow {
   display: flex;
@@ -237,9 +231,6 @@
   text-decoration: none;
 }
 
-.tagLink:hover {
-  background: #fff;
-}
 
 /* Post byline: avatar + author-first meta row. */
 .byline {
@@ -309,9 +300,6 @@
   text-decoration: underline;
 }
 
-.markdown a:hover {
-  color: #0000ff;
-}
 
 .markdown blockquote {
   /* Sunken read-only-field idiom — it was styled identically to the
@@ -497,7 +485,6 @@
   text-decoration: none;
 }
 
-.copyrightLink:hover,
 .copyrightLink:focus-visible {
   color: #000080;
   text-decoration: underline;
@@ -520,9 +507,6 @@
   font-size: 13px;
 }
 
-.footerLink:hover {
-  color: #0000ff;
-}
 
 .indexHeader {
   display: flex;
@@ -686,9 +670,6 @@ input[type="search"].searchInput:focus-visible {
   border: 1px solid #000;
 }
 
-.featured:hover {
-  background: #fffbc8;
-}
 
 .featuredIcon {
   width: 32px;
@@ -750,9 +731,6 @@ input[type="search"].searchInput:focus-visible {
   text-align: center;
 }
 
-.iconCard:hover {
-  background: #dfdfdf;
-}
 
 .iconCardIcon {
   width: 40px;
@@ -877,9 +855,6 @@ input[type="search"].searchInput:focus-visible {
   color: #000;
 }
 
-.indexLink:hover {
-  background: #dfdfdf;
-}
 
 .indexIcon {
   width: 28px;
@@ -985,10 +960,6 @@ input[type="search"].searchInput:focus-visible {
   min-width: 0;
 }
 
-.relatedLink:hover {
-  background: #dfdfdf;
-  text-decoration: none;
-}
 
 .relatedItemTitle {
   display: block;
@@ -1078,9 +1049,6 @@ input[type="search"].searchInput:focus-visible {
     inset -2px -2px grey, inset 2px 2px #dfdfdf;
 }
 
-.eofBtn:hover {
-  text-decoration: underline;
-}
 
 .eofBtn:active {
   box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff,
@@ -1363,10 +1331,6 @@ input[type="search"].searchInput:focus-visible {
  * softens out of focus. Pure CSS; undone for reduced motion below. */
 /* :focus-visible is exempt: blurring the link a keyboard user is on makes
  * the focused row the hardest one on the rail to read. */
-.tocList:hover a:not(:hover):not(:focus-visible) {
-  filter: blur(1.2px);
-  opacity: 0.7;
-}
 
 /* Current section: bold sunken row, the Win98 read of Cloudflare's
  * orange rail segment. */
@@ -1430,6 +1394,85 @@ input[type="search"].searchInput:focus-visible {
   }
 }
 
+
+/* --- Hover ---------------------------------------------------------- */
+/* Hover is a pointer affordance, not a state. Behind (hover: hover) so a
+ * tap on a phone does not leave a card, a link or a button stuck looking
+ * hovered until you happen to tap somewhere else. The base, :active and
+ * :focus-visible styles for these controls live above and apply to
+ * everyone. Same guard the Start menu already uses (OS.module.css). */
+@media (hover: hover) {
+  .titleBarLink:hover {
+    text-decoration: underline;
+  }
+
+  .menuItem:hover {
+    box-shadow: inset -1px -1px #808080, inset 1px 1px #fff;
+  }
+
+  .tagLink:hover {
+    background: #fff;
+  }
+
+  .markdown a:hover {
+    color: #0000ff;
+  }
+
+  .copyrightLink:hover {
+    color: #000080;
+    text-decoration: underline;
+  }
+
+  .footerLink:hover {
+    color: #0000ff;
+  }
+
+  .featured:hover {
+    background: #fffbc8;
+  }
+
+  .iconCard:hover {
+    background: #dfdfdf;
+  }
+
+  .indexLink:hover {
+    background: #dfdfdf;
+  }
+
+  .relatedLink:hover {
+    background: #dfdfdf;
+    text-decoration: none;
+  }
+
+  .eofBtn:hover {
+    text-decoration: underline;
+  }
+
+  /* The view toggles and topic chips on the index: they had :active and
+   * aria-pressed states but nothing under the cursor. */
+  .viewBtn:hover:not([aria-pressed="true"]),
+  .topicChip:hover:not([aria-pressed="true"]) {
+    background: #dfdfdf;
+  }
+
+  /* Back to top: the face lightens and the progress trace fills in,
+   * so the control answers the cursor before it is clicked. */
+  .backToTop:hover {
+    background: #d8d4cc;
+  }
+
+  .backToTop:hover .backToTopTrace path {
+    stroke: #1084d0;
+  }
+
+  .tocList:hover a:not(:hover):not(:focus-visible) {
+    filter: blur(1.2px);
+    opacity: 0.7;
+  }
+}
+
+/* After the hover block on purpose: this turns the rail's blur back off,
+ * and same-specificity rules are settled by order. */
 @media (prefers-reduced-motion: reduce) {
   .tocList a {
     transition: none;

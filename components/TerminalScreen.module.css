@@ -200,9 +200,7 @@
   background: var(--term-primary-bg);
 }
 
-.primary:hover,
 .primary:focus-visible,
-.secondary:hover,
 .secondary:focus-visible {
   background: var(--term-accent);
   color: #000;
@@ -212,6 +210,17 @@
 .primary:active,
 .secondary:active {
   transform: translateY(1px);
+}
+
+/* Pointer only, so the button does not stay lit after a tap. The
+ * focus-visible half above still serves keyboards on any device. */
+@media (hover: hover) {
+  .primary:hover,
+  .secondary:hover {
+    background: var(--term-accent);
+    color: #000;
+    outline: none;
+  }
 }
 
 .signature {

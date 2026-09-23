@@ -8,9 +8,11 @@
     text-align: left;
   }
 
-  & > button:hover {
-    background-color: darkblue;
-    color: white;
+  @media (hover: hover) {
+    & > button:hover {
+      background-color: darkblue;
+      color: white;
+    }
   }
 }
 

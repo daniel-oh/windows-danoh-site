@@ -24,18 +24,22 @@
   display: flex;
 }
 
-.versionItem:hover {
-  background-color: #000080;
-  color: white;
+@media (hover: hover) {
+  .versionItem:hover {
+    background-color: #000080;
+    color: white;
+  }
 }
 
 .versionItem.current {
   background-color: #dfdfdf;
 }
 
-.versionItem.current:hover {
-  background-color: #000080;
-  color: white;
+@media (hover: hover) {
+  .versionItem.current:hover {
+    background-color: #000080;
+    color: white;
+  }
 }
 
 .versionDate {

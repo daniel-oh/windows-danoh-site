@@ -72,8 +72,10 @@
   outline-offset: -2px;
 }
 
-.postList li:hover {
-  background: #dfdfdf;
+@media (hover: hover) {
+  .postList li:hover {
+    background: #dfdfdf;
+  }
 }
 
 .selectedPost {
@@ -199,8 +201,10 @@
     text-decoration: underline;
   }
 
-  & a:hover {
-    color: #0000ff;
+  @media (hover: hover) {
+    & a:hover {
+      color: #0000ff;
+    }
   }
 
   & a:focus-visible {

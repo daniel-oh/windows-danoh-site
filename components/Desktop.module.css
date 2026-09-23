@@ -17,8 +17,12 @@
   transition: transform 100ms ease;
   padding: 4px;
 
-  &:hover {
-    transform: scale(1.05);
+  /* Pointer only: on a phone this left the tapped icon sitting enlarged
+   * until you tapped elsewhere. */
+  @media (hover: hover) {
+    &:hover {
+      transform: scale(1.05);
+    }
   }
 
   &:active {

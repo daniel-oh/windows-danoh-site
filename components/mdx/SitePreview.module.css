@@ -82,8 +82,10 @@
   transition: transform 400ms ease;
 }
 
-.window:hover .image {
-  transform: scale(1.03);
+@media (hover: hover) {
+  .window:hover .image {
+    transform: scale(1.03);
+  }
 }
 
 .visit {
@@ -98,8 +100,10 @@
   color: #000080;
 }
 
-.window:hover .visit {
-  text-decoration: underline;
+@media (hover: hover) {
+  .window:hover .visit {
+    text-decoration: underline;
+  }
 }
 
 .figcaption {

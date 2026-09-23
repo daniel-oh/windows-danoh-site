@@ -36,8 +36,11 @@
     padding: 4px 16px;
   }
 
-  & > button:hover {
-    background-color: darkblue;
-    color: white;
+  /* Pointer only: a tap should not leave a menu title highlighted. */
+  @media (hover: hover) {
+    & > button:hover {
+      background-color: darkblue;
+      color: white;
+    }
   }
 }
