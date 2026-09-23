@@ -12,6 +12,7 @@ import wrappedFetch from "@/lib/wrappedFetch";
 import { alert } from "@/lib/alert";
 import { useServerPrograms } from "@/lib/useServerPrograms";
 import { registerCloseGuard } from "@/lib/windowCloseGuards";
+import { MAX_KEY_LENGTH, MAX_PUBLIC_KEYS, MAX_VALUE_CHARS } from "@/lib/registryLimits";
 import {
   isPendingFirstRun,
   resolvePendingFirstRun,
@@ -30,6 +31,10 @@ const STREAM_BOOTSTRAP = `<!doctype html><html><head><meta charset="utf-8"></hea
 (function () {
   var started = false;
   window.addEventListener("message", function (e) {
+    // Only the desktop that made this frame may write into it. Any window
+    // holding a handle to danoh.com (an opener, say) can post to its
+    // frames, and this used to document.write whatever arrived.
+    if (e.source !== window.parent) return;
     var d = e.data || {};
     if (d.op === "danoh-stream-chunk") {
       if (!started) { started = true; document.open(); }
@@ -200,18 +205,43 @@ function IframeInner({ id }: { id: string }) {
         // never listens for this id and simply ignores the message.
         case "set": {
           if (typeof key !== "string") break;
-          await updateRegistry((r) => ({ ...r, [namespaceKey(key)]: value }));
-          reply();
+          // The whole registry is one file, re-read on every operation, and
+          // every public_ key lands in every later generation's prompt, so
+          // one runaway app could slow or break the desktop for good.
+          const size = JSON.stringify(value ?? null)?.length ?? 0;
+          if (key.length > MAX_KEY_LENGTH || size > MAX_VALUE_CHARS) {
+            reply({ error: "That value is too large to save." });
+            break;
+          }
+          const full = namespaceKey(key);
+          try {
+            let refused = false;
+            await updateRegistry((r) => {
+              const shared = Object.keys(r).filter((k) => k.startsWith("public_"));
+              if (full.startsWith("public_") && !(full in r) && shared.length >= MAX_PUBLIC_KEYS) {
+                refused = true;
+                return r;
+              }
+              return { ...r, [full]: value };
+            });
+            reply(refused ? { error: "Too many shared settings on this desktop." } : undefined);
+          } catch {
+            reply({ error: "Could not save that. Try again." });
+          }
           break;
         }
         case "delete": {
           if (typeof key !== "string") break;
-          await updateRegistry((r) => {
-            const next = { ...r };
-            delete next[namespaceKey(key)];
-            return next;
-          });
-          reply();
+          try {
+            await updateRegistry((r) => {
+              const next = { ...r };
+              delete next[namespaceKey(key)];
+              return next;
+            });
+            reply();
+          } catch {
+            reply({ error: "Could not delete that. Try again." });
+          }
           break;
         }
         case "listKeys": {
@@ -238,21 +268,32 @@ function IframeInner({ id }: { id: string }) {
                 .slice(-10)
                 .map((m: any) => ({ role: m.role, content: typeof m.content === "string" ? m.content.slice(0, 5000) : "" }))
             : [];
-          const result = await wrappedFetch(`/api/chat`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              messages: iframeMessages,
-              returnJson,
-              settings: currentSettings,
-            }),
-          });
-          // Generated apps bake the result string into their UI — a raw
-          // {"error":"Unauthorized"} object would render as gibberish.
-          const chatValue =
-            result.status === 401
-              ? "Chat API is not available. Add your own API key in Settings to enable this feature."
-              : await result.json();
+          // Generated apps bake the result string into their UI, so every
+          // outcome is a readable string: a raw {"error":...} object renders
+          // as gibberish, and a throw here used to leave the app waiting
+          // forever for a reply that never came.
+          let chatValue: unknown;
+          try {
+            const result = await wrappedFetch(`/api/chat`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                messages: iframeMessages,
+                returnJson,
+                settings: currentSettings,
+              }),
+            });
+            chatValue =
+              result.status === 401
+                ? "Chat API is not available. Add your own API key in Settings to enable this feature."
+                : result.status === 429
+                  ? "Chat is busy right now. Try again in a little while."
+                  : result.ok
+                    ? await result.json()
+                    : "Chat is unavailable right now. Try again in a moment.";
+          } catch {
+            chatValue = "Chat is unavailable right now. Try again in a moment.";
+          }
           (event.source as Window).postMessage(
             { operation: "result", value: chatValue, id },
             "*"

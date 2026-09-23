@@ -81,6 +81,14 @@ const nextConfig = {
             // origin and no allow=, so they inherit neither.
             value: "camera=(self), microphone=(self), geolocation=(), payment=()",
           },
+          // A page that opens danoh.com used to keep a handle to it, and
+          // through that could post into its frames. This puts danoh.com in
+          // its own browsing context group when a cross-origin page opens
+          // it; "allow-popups" keeps windows danoh.com opens itself working.
+          {
+            key: "Cross-Origin-Opener-Policy",
+            value: "same-origin-allow-popups",
+          },
           // Enforced CSP. Constraints are the third-party origins we
           // actually use (PostHog / Plausible / Stripe) plus
           // 'unsafe-inline' + 'unsafe-eval' which Next.js's runtime

@@ -14,13 +14,15 @@ import { createPaymentRequiredResponse } from "@/server/paymentRequiredResponse"
 import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
-import { parseJson, requireJson } from "@/lib/api/json";
+import { parseJson, rejectOversized, requireJson } from "@/lib/api/json";
 
 export async function POST(req: Request) {
   // Before the gates: forces a CORS preflight, so a cross-site form
   // can't spend a visitor's session or rate-limit budget.
   const notJson = requireJson(req);
   if (notJson) return notJson;
+  const oversized = await rejectOversized(req);
+  if (oversized) return oversized;
   // Icons need Replicate. Without a token this route used to pass the
   // gates (spending the visitor's rate-limit budget), pay for a Haiku call
   // to write an image prompt, and only then fail inside generateIcon, on
@@ -92,8 +94,13 @@ export async function POST(req: Request) {
     return upstreamErrorResponse("image", new Error("Empty image response"));
   }
 
-  const path = await put(`icons/${generateUniqueID()}.png`, image);
-  return new Response(path, { status: 200 });
+  try {
+    const path = await put(`icons/${generateUniqueID()}.png`, image);
+    return new Response(path, { status: 200 });
+  } catch (err) {
+    console.warn("[icon] storage unavailable:", err);
+    return Response.json({ error: "Icon storage unavailable" }, { status: 503 });
+  }
 }
 
 function generateUniqueID() {

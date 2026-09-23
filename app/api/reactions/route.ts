@@ -1,5 +1,5 @@
 import { query, hasDatabase } from "@/lib/db";
-import { getClientIP } from "@/lib/api/clientIP";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson, requireJson } from "@/lib/api/json";
 import { sortedPosts } from "@/content/blog/posts";
@@ -16,7 +16,7 @@ const RL_WINDOW_MS = 10 * 60 * 1000;
 const bucket = createRateLimitBucket();
 
 function rateLimit(req: Request): Response | null {
-  const ip = getClientIP(req);
+  const ip = rateLimitKey(getClientIP(req));
   if (bucket.tripAndRecord(ip, RL_MAX, RL_WINDOW_MS)) {
     return Response.json(
       { error: "Too many reactions. Slow down." },

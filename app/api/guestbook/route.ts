@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getCheapestModel } from "@/ai/client";
 import { notifyAdmin } from "@/lib/notify";
 import { renderGuestbookNotice } from "@/lib/email/templates";
-import { getClientIP } from "@/lib/api/clientIP";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
 import { createLastSeenBucket, createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson, requireJson } from "@/lib/api/json";
 
@@ -169,7 +169,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Message is required" }, { status: 400 });
   }
 
-  if (ipBucket.tripAndRecord(ip, IP_LIMIT, IP_WINDOW_MS)) {
+  if (ipBucket.tripAndRecord(rateLimitKey(ip), IP_LIMIT, IP_WINDOW_MS)) {
     return Response.json(
       { error: "Too many submissions from your network. Try again later." },
       { status: 429 }

@@ -17,7 +17,9 @@ import { getMaxTokens } from "@/ai/getMaxTokens";
 import { checkAccess } from "@/lib/apiGuard";
 import { costGuard } from "@/lib/api/costGuard";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
-import { requireJson } from "@/lib/api/json";
+import { rejectOversized, requireJson } from "@/lib/api/json";
+
+import { MAX_KEY_LENGTH, MAX_PROMPT_KEYS as MAX_KEYS } from "@/lib/registryLimits";
 
 // POST, not GET: the response streams into the sandboxed bootstrap
 // iframe via parent fetch + postMessage (see Iframe.tsx), so nothing
@@ -34,6 +36,49 @@ export async function POST(req: Request) {
   // navigation. Requiring application/json (not form-settable) stops it.
   const notJson = requireJson(req);
   if (notJson) return notJson;
+  const oversized = await rejectOversized(req);
+  if (oversized) return jsonRejectionAsHtml(oversized);
+
+  // Parse and validate before the gates, so a malformed or oversized
+  // request is refused without spending an invite use or budget. A clone,
+  // because the own-key check in the gates reads the body too.
+  let body: unknown;
+  try {
+    body = await req.clone().json();
+  } catch {
+    return new Response("Invalid JSON", { status: 400 });
+  }
+  const { description, keys: rawKeys } = (body ?? {}) as {
+    description?: unknown;
+    keys?: unknown;
+  };
+  const desc = typeof description === "string" ? description : null;
+  const parsed = rawKeys ?? [];
+  if (
+    !Array.isArray(parsed) ||
+    !parsed.every((k: unknown) => typeof k === "string")
+  ) {
+    return new Response("Invalid keys parameter", { status: 400 });
+  }
+  // Every key is written into the system prompt, so the count and length
+  // are what bound the prompt's size. Real apps use a handful.
+  if (parsed.length > MAX_KEYS || parsed.some((k: string) => k.length > MAX_KEY_LENGTH)) {
+    return new Response("Too many keys", { status: 400 });
+  }
+  // Validate each key matches allowed characters
+  const keyPattern = /^[a-zA-Z0-9_-]+$/;
+  if (!parsed.every((k: string) => keyPattern.test(k))) {
+    return new Response("Invalid key format", { status: 400 });
+  }
+  const keys: string[] = parsed;
+  if (!desc) {
+    return new Response("No description", {
+      status: 404,
+    });
+  }
+  if (desc.length > 2000) {
+    return new Response("Description too long (max 2000 characters)", { status: 400 });
+  }
 
   const denied = await checkAccess(req, "program");
   if (denied) return jsonRejectionAsHtml(denied);
@@ -43,17 +88,6 @@ export async function POST(req: Request) {
   // global daily caps. Bypassed when the visitor brings their own key.
   const capped = await costGuard(req);
   if (capped) return jsonRejectionAsHtml(capped);
-
-  let body: unknown;
-  try {
-    body = await req.json();
-  } catch {
-    return new Response("Invalid JSON", { status: 400 });
-  }
-  const { description, keys: rawKeys } = (body ?? {}) as {
-    description?: unknown;
-    keys?: unknown;
-  };
 
   const settings = await getSettingsFromJSON(body);
 
@@ -91,29 +125,6 @@ export async function POST(req: Request) {
       tokensUsed: 1,
       action: "program",
     });
-  }
-
-  const desc = typeof description === "string" ? description : null;
-  const parsed = rawKeys ?? [];
-  if (
-    !Array.isArray(parsed) ||
-    !parsed.every((k: unknown) => typeof k === "string")
-  ) {
-    return new Response("Invalid keys parameter", { status: 400 });
-  }
-  // Validate each key matches allowed characters
-  const keyPattern = /^[a-zA-Z0-9_-]+$/;
-  if (!parsed.every((k: string) => keyPattern.test(k))) {
-    return new Response("Invalid key format", { status: 400 });
-  }
-  const keys: string[] = parsed;
-  if (!desc) {
-    return new Response("No description", {
-      status: 404,
-    });
-  }
-  if (desc.length > 2000) {
-    return new Response("Description too long (max 2000 characters)", { status: 400 });
   }
 
   let programStream;

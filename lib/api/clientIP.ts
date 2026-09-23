@@ -84,3 +84,28 @@ export function getClientIP(req: Request): string {
   }
   return peer;
 }
+
+/**
+ * The key to rate-limit on. IPv4 is the address. IPv6 is its /64: one
+ * connection is normally handed a whole /64, so keying on the full
+ * address gave anyone 2^64 fresh identities, and every per-IP limit (the
+ * access-code lockout included) meant nothing. Store and log the full
+ * address from getClientIP; key buckets and counters on this.
+ */
+export function rateLimitKey(ip: string): string {
+  if (isIP(ip) !== 6) return ip;
+  const lower = ip.toLowerCase();
+  const [head, tail] = lower.split("::");
+  const front = head ? head.split(":") : [];
+  let groups = front;
+  if (tail !== undefined) {
+    const back = tail ? tail.split(":") : [];
+    groups = [...front, ...Array(Math.max(0, 8 - front.length - back.length)).fill("0"), ...back];
+  }
+  return (
+    groups
+      .slice(0, 4)
+      .map((g) => parseInt(g || "0", 16).toString(16))
+      .join(":") + "::/64"
+  );
+}

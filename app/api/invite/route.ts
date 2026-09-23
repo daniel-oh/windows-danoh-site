@@ -1,6 +1,6 @@
 import { query } from "@/lib/db";
 import { hashInviteCode } from "@/lib/inviteHash";
-import { getClientIP } from "@/lib/api/clientIP";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson } from "@/lib/api/json";
 import { constantTimeEqual } from "@/lib/api/constantTimeEqual";
@@ -21,7 +21,7 @@ function isAdmin(req: Request): boolean {
   const auth = req.headers.get("authorization");
   if (!auth || !ADMIN_TOKEN) return false;
 
-  const ip = getClientIP(req);
+  const ip = rateLimitKey(getClientIP(req));
   if (failBucket.isTripped(ip, FAIL_LIMIT, FAIL_WINDOW_MS)) {
     return false;
   }

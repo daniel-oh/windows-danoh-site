@@ -1,5 +1,5 @@
 import { query, hasDatabase } from "@/lib/db";
-import { getClientIP } from "@/lib/api/clientIP";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson, requireJson } from "@/lib/api/json";
 
@@ -10,7 +10,7 @@ const RL_WINDOW_MS = 10 * 60 * 1000;
 const bucket = createRateLimitBucket();
 
 function rateLimit(req: Request): boolean {
-  return bucket.tripAndRecord(getClientIP(req), RL_MAX, RL_WINDOW_MS);
+  return bucket.tripAndRecord(rateLimitKey(getClientIP(req)), RL_MAX, RL_WINDOW_MS);
 }
 
 function isValidVisitor(v: unknown): v is string {

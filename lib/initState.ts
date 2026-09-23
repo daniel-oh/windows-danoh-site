@@ -37,9 +37,9 @@ export function initState() {
   const sharedPrompt = readShareablePrompt();
 
   if (sharedPrompt) {
-    // Shareable link flow: land directly on Run with the prompt pre-filled
-    // and auto-submitted. We still open Welcome behind it so the visitor has
-    // context about where they are after the generated program appears.
+    // Shareable link flow: land directly on Run with the prompt filled in,
+    // waiting for the visitor to press Open (see Run.tsx). Welcome opens
+    // behind it so the visitor has context about where they are.
     openProgram("welcome");
     createWindow({
       title: "Run",

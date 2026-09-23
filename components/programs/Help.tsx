@@ -1,5 +1,6 @@
 "use client";
 
+import { hasSession } from "@/lib/hasSession";
 import {
   ProgramEntry,
   programAtomFamily,
@@ -26,12 +27,7 @@ import { CallChip, type CallChipStatus } from "../fx/CallChip";
 // Fix & Iterate calls the AI (and would spend tokens / the shared
 // budget), so it's gated exactly like the Run dialog: a visitor needs
 // an access-code session or their own Anthropic key before they can
-// prompt it. document.cookie is the same signal Run uses.
-function hasSession() {
-  return (
-    typeof document !== "undefined" && document.cookie.includes("lr_session=")
-  );
-}
+// prompt it. hasSession() is the same signal Run uses.
 
 type Message = {
   role: string;

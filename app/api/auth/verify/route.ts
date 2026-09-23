@@ -1,9 +1,10 @@
 import { query } from "@/lib/db";
 import { cookies } from "next/headers";
+import { setSessionCookies } from "@/lib/sessionCookie";
 import { getCodeHash } from "@/lib/accessCode";
 import { hashInviteCode } from "@/lib/inviteHash";
-import { getClientIP } from "@/lib/api/clientIP";
-import { parseJson } from "@/lib/api/json";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
+import { parseJson, requireJson } from "@/lib/api/json";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { constantTimeEqual } from "@/lib/api/constantTimeEqual";
 import crypto from "crypto";
@@ -16,7 +17,7 @@ const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const attempts = createRateLimitBucket();
 
 function rateLimit(req: Request): Response | null {
-  if (attempts.isTripped(getClientIP(req), RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
+  if (attempts.isTripped(rateLimitKey(getClientIP(req)), RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
     return new Response(
       JSON.stringify({ error: "Too many attempts. Try again later." }),
       { status: 429 }
@@ -26,14 +27,18 @@ function rateLimit(req: Request): Response | null {
 }
 
 function recordFailure(req: Request): void {
-  attempts.record(getClientIP(req), RATE_LIMIT_WINDOW_MS);
+  attempts.record(rateLimitKey(getClientIP(req)), RATE_LIMIT_WINDOW_MS);
 }
 
 function recordSuccess(req: Request): void {
-  attempts.reset(getClientIP(req));
+  attempts.reset(rateLimitKey(getClientIP(req)));
 }
 
 export async function POST(req: Request) {
+  // A cross-site text/plain form could otherwise post an attacker's code
+  // and swap the visitor's session (their saved programs seem to vanish).
+  const notJson = requireJson(req);
+  if (notJson) return notJson;
   const limited = rateLimit(req);
   if (limited) return limited;
 
@@ -84,13 +89,7 @@ export async function POST(req: Request) {
     );
 
     const cookieStore = await cookies();
-    cookieStore.set("lr_session", sessionId, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-      maxAge: 60 * 60 * 24, // 24 hours
-    });
+    setSessionCookies(cookieStore, sessionId);
 
     recordSuccess(req);
     return new Response(JSON.stringify({ ok: true }), { status: 200 });
@@ -117,13 +116,7 @@ export async function POST(req: Request) {
   await query("INSERT INTO sessions (id, code_hash) VALUES ($1, $2)", [sessionId, codeHash]);
 
   const cookieStore = await cookies();
-  cookieStore.set("lr_session", sessionId, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
-    maxAge: 60 * 60 * 24, // 24 hours
-  });
+  setSessionCookies(cookieStore, sessionId);
 
   recordSuccess(req);
   return new Response(JSON.stringify({ ok: true }), { status: 200 });

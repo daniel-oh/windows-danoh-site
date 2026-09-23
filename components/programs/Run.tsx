@@ -1,5 +1,6 @@
 "use client";
 import { useAtomValue, useSetAtom } from "jotai";
+import { hasSession } from "@/lib/hasSession";
 import { windowsListAtom } from "@/state/windowsList";
 import { windowAtomFamily } from "@/state/window";
 import { createWindow } from "../../lib/createWindow";
@@ -25,9 +26,6 @@ import { markPendingFirstRun } from "@/lib/pendingFirstRun";
 import { getFsManager } from "@/state/fsManager";
 import { PROGRAMS_PATH } from "@/lib/filesystem/defaultFileSystem";
 
-function hasSession() {
-  return document.cookie.includes("lr_session=");
-}
 
 // The program id doubles as its VFS folder name and the registry
 // namespace prefix (`${id}:key` in Iframe), so path separators and
@@ -73,7 +71,6 @@ export function Run({ id }: { id: string }) {
       : undefined;
   const [isLoading, setIsLoading] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
-  const autoSubmittedRef = useRef(false);
   const promptRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => {
     // Bypass access code if user has their own API key
@@ -155,14 +152,11 @@ export function Run({ id }: { id: string }) {
     [id, isLoading, programsDispatch, windowsDispatch]
   );
 
-  // Auto-fire when opened via a shareable URL (?run=...)
-  useEffect(() => {
-    if (!authenticated) return;
-    if (!initialPrompt) return;
-    if (autoSubmittedRef.current) return;
-    autoSubmittedRef.current = true;
-    submitPrompt(initialPrompt);
-  }, [authenticated, initialPrompt, submitPrompt]);
+  // A shareable ?run= link fills the prompt in and stops there. It used
+  // to generate at once for anyone with a session or their own key, which
+  // let a stranger's link spend that budget or key and build whatever it
+  // liked, a fake "re-enter your key" form included. The visitor reads it
+  // and presses Open.
 
   if (!authenticated) {
     return (
@@ -186,15 +180,9 @@ export function Run({ id }: { id: string }) {
               margin: 0,
             }}
           >
-            Queued:{" "}
-            <strong>
-              &ldquo;
-              {initialPrompt.length > 90
-                ? `${initialPrompt.slice(0, 90)}…`
-                : initialPrompt}
-              &rdquo;
-            </strong>{" "}
-            · runs as soon as you&apos;re in.
+            From a shared link: <strong>&quot;{initialPrompt}&quot;</strong>{" "}
+            It will be filled in once you are in. Nothing runs until you
+            press Open.
           </p>
         )}
         <fieldset>
@@ -258,6 +246,20 @@ export function Run({ id }: { id: string }) {
           Describe any app you can imagine. The AI will generate a fully
           functional program for you in seconds.
         </p>
+        {initialPrompt && (
+          <p
+            style={{
+              fontSize: 11,
+              background: "#ffffe1",
+              border: "1px solid #808080",
+              padding: "4px 6px",
+              margin: 0,
+            }}
+          >
+            This prompt came from a shared link. Read it, then press Open to
+            run it.
+          </p>
+        )}
       </div>
       <div className="field-row">
         <textarea

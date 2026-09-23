@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { clearSessionCookies } from "@/lib/sessionCookie";
 import { query, hasDatabase } from "@/lib/db";
 import { isLocal } from "@/lib/isLocal";
 import { getCodeHash } from "@/lib/accessCode";
@@ -42,7 +43,7 @@ export async function checkAccess(
   );
 
   if (!sessionResult || sessionResult.rows.length === 0) {
-    cookieStore.delete("lr_session");
+    clearSessionCookies(cookieStore);
     return new Response(
       JSON.stringify({ error: "Session expired. Please re-enter access code." }),
       { status: 401 }
@@ -61,7 +62,7 @@ export async function checkAccess(
     );
 
     if (!inviteResult || inviteResult.rows.length === 0) {
-      cookieStore.delete("lr_session");
+      clearSessionCookies(cookieStore);
       return new Response(
         JSON.stringify({ error: "This code is no longer valid." }),
         { status: 401 }
@@ -86,14 +87,27 @@ export async function checkAccess(
       );
     }
 
-    // Record generation and increment invite usage
+    // Claim the use in one statement. Reading `used` above and adding one
+    // afterwards let parallel requests all pass the check and run past
+    // total_uses; the conditional UPDATE only succeeds while a use is left.
+    const claimed = await query(
+      `UPDATE invite_codes SET used = used + 1
+       WHERE code_hash = $1 AND used < total_uses
+         AND (expires_at IS NULL OR expires_at > NOW())
+       RETURNING used`,
+      [session.invite_code_hash]
+    );
+    if (!claimed || claimed.rows.length === 0) {
+      return new Response(
+        JSON.stringify({
+          error: `This code has been fully used (${invite.total_uses}/${invite.total_uses} generations).`,
+        }),
+        { status: 429 }
+      );
+    }
     await query(
       "INSERT INTO generations (session_id, endpoint) VALUES ($1, $2)",
       [sessionId, endpoint]
-    );
-    await query(
-      "UPDATE invite_codes SET used = used + 1 WHERE code_hash = $1",
-      [session.invite_code_hash]
     );
 
     return null;
@@ -102,7 +116,7 @@ export async function checkAccess(
   // Master code session: check hourly rate limit
   const currentHash = getCodeHash();
   if (session.code_hash !== currentHash) {
-    cookieStore.delete("lr_session");
+    clearSessionCookies(cookieStore);
     return new Response(
       JSON.stringify({ error: "Session expired. Please re-enter access code." }),
       { status: 401 }

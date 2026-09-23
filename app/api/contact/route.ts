@@ -1,6 +1,6 @@
 import { adminEmail, canSendEmail, notifyAdmin, sendEmail } from "@/lib/notify";
 import { renderContactNotice, renderVisitorReceipt } from "@/lib/email/templates";
-import { getClientIP } from "@/lib/api/clientIP";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
 import { parseJson, requireJson } from "@/lib/api/json";
 import {
   createLastSeenBucket,
@@ -132,7 +132,7 @@ export async function POST(req: Request) {
   const cleanSubject = clean(subject, MAX_SUBJECT);
   const cleanReplyTo = isValidEmail(replyTo) ? (replyTo as string) : null;
 
-  if (ipBucket.tripAndRecord(ip, IP_LIMIT, IP_WINDOW_MS)) {
+  if (ipBucket.tripAndRecord(rateLimitKey(ip), IP_LIMIT, IP_WINDOW_MS)) {
     return Response.json(
       { error: "Too many messages from your network. Try again later." },
       { status: 429 }

@@ -15,13 +15,15 @@ import { costGuard } from "@/lib/api/costGuard";
 import { sanitizeUserMessages } from "@/lib/sanitizeMessages";
 import { buildHelpSystem, extractAppContext } from "@/lib/helpPrompt";
 import { upstreamErrorResponse } from "@/lib/api/upstreamError";
-import { parseJson, requireJson } from "@/lib/api/json";
+import { parseJson, rejectOversized, requireJson } from "@/lib/api/json";
 
 export async function POST(req: Request) {
   // Before the gates: forces a CORS preflight, so a cross-site form
   // can't spend a visitor's session or rate-limit budget.
   const notJson = requireJson(req);
   if (notJson) return notJson;
+  const oversized = await rejectOversized(req);
+  if (oversized) return oversized;
   const denied = await checkAccess(req, "help");
   if (denied) return denied;
   const capped = await costGuard(req);

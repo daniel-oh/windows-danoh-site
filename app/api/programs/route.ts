@@ -1,5 +1,6 @@
 import { query, hasDatabase } from "@/lib/db";
 import { cookies } from "next/headers";
+import { clearSessionCookies } from "@/lib/sessionCookie";
 import { parseJson, requireJson } from "@/lib/api/json";
 
 // Upper bounds on what a session may store per program. The generation
@@ -11,7 +12,11 @@ const MAX_ID = 200;
 const MAX_NAME = 200;
 const MAX_PROMPT = 4000;
 const MAX_ICON = 200_000;
-const MAX_CODE = 6_000_000;
+// A generated app is at most ~80 KB (20k output tokens); 6 MB per row
+// times 50 rows let one session park 300 MB.
+const MAX_CODE = 1_000_000;
+// And across the whole session.
+const MAX_SESSION_CODE = 10_000_000;
 // Matches PROGRAM_LIMIT in state/programs.tsx, the client's own ceiling.
 // Without a server-side count one session could park 6 MB rows forever.
 const MAX_PROGRAMS_PER_SESSION = 50;
@@ -20,7 +25,13 @@ const MAX_PROGRAMS_PER_SESSION = 50;
 // volume). The FK on programs.session_id then turned every save into an
 // unhandled 500. Treat it like checkAccess does: drop the dead cookie.
 async function sessionExists(sessionId: string): Promise<boolean> {
-  const res = await query("SELECT 1 FROM sessions WHERE id = $1", [sessionId]);
+  // Same 1-day bound as checkAccess and the cookie: a captured cookie
+  // value used to keep reading and writing programs for the 90 days the
+  // rows live.
+  const res = await query(
+    "SELECT 1 FROM sessions WHERE id = $1 AND created_at > NOW() - INTERVAL '1 day'",
+    [sessionId]
+  );
   return !!res && res.rows.length > 0;
 }
 
@@ -38,7 +49,7 @@ export async function GET() {
   const cookieStore = await cookies();
   const sessionId = cookieStore.get("lr_session")?.value;
 
-  if (!sessionId) {
+  if (!sessionId || !(await sessionExists(sessionId))) {
     return Response.json([]);
   }
 
@@ -73,7 +84,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: true });
   }
   if (!(await sessionExists(sessionId))) {
-    cookieStore.delete("lr_session");
+    clearSessionCookies(cookieStore);
     return Response.json({ error: "Session expired" }, { status: 401 });
   }
 
@@ -109,7 +120,8 @@ export async function POST(req: Request) {
   // against the cap.
   const usage = await query(
     `SELECT count(*)::int AS n,
-            bool_or(id = $2) AS has_this
+            bool_or(id = $2) AS has_this,
+            coalesce(sum(length(code)) FILTER (WHERE id <> $2), 0)::bigint AS other_bytes
        FROM programs WHERE session_id = $1`,
     [sessionId, id]
   );
@@ -119,6 +131,9 @@ export async function POST(req: Request) {
       { error: `Program limit reached (${MAX_PROGRAMS_PER_SESSION})` },
       { status: 409 }
     );
+  }
+  if (row && Number(row.other_bytes) + (safeCode?.length ?? 0) > MAX_SESSION_CODE) {
+    return Response.json({ error: "Saved programs are too large" }, { status: 413 });
   }
 
   await query(

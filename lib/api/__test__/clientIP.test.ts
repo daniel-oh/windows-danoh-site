@@ -1,7 +1,7 @@
 /**
  * @jest-environment node
  */
-import { getClientIP } from "@/lib/api/clientIP";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
 
 const req = (headers: Record<string, string>) =>
   new Request("https://danoh.com/api/visits", { headers });
@@ -73,5 +73,30 @@ describe("getClientIP", () => {
   it("no usable header: 'unknown'", () => {
     expect(getClientIP(req({}))).toBe("unknown");
     expect(getClientIP(req({ "x-forwarded-for": "not-an-ip" }))).toBe("unknown");
+  });
+});
+
+describe("rateLimitKey", () => {
+  it("keeps IPv4 as the address", () => {
+    expect(rateLimitKey("203.0.113.9")).toBe("203.0.113.9");
+  });
+
+  it("groups an IPv6 /64, however the address is written", () => {
+    const a = rateLimitKey("2001:db8:abcd:12:1:2:3:4");
+    expect(a).toBe("2001:db8:abcd:12::/64");
+    expect(rateLimitKey("2001:0DB8:ABCD:0012:ffff::1")).toBe(a);
+    expect(rateLimitKey("2001:db8:abcd:12::")).toBe(a);
+  });
+
+  it("keeps different /64s apart", () => {
+    expect(rateLimitKey("2001:db8:abcd:13::1")).not.toBe(rateLimitKey("2001:db8:abcd:12::1"));
+  });
+
+  it("expands a short prefix", () => {
+    expect(rateLimitKey("2001:db8::1")).toBe("2001:db8:0:0::/64");
+  });
+
+  it("passes non-addresses through", () => {
+    expect(rateLimitKey("unknown")).toBe("unknown");
   });
 });

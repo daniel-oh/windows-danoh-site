@@ -22,7 +22,7 @@
 // pay their own bill. Logged-in users aren't bypassed by default;
 // the frequency cap is still a useful backup to the token balance.
 
-import { getClientIP } from "@/lib/api/clientIP";
+import { getClientIP, rateLimitKey } from "@/lib/api/clientIP";
 import { hasOwnAnthropicKey } from "@/lib/api/hasOwnAnthropicKey";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { captureServerEvent } from "@/lib/capture";
@@ -133,7 +133,7 @@ async function tripGlobalDailyInDb(cap: number): Promise<boolean | null> {
 }
 
 export async function costGuard(req: Request): Promise<Response | null> {
-  const ip = getClientIP(req);
+  const ip = rateLimitKey(getClientIP(req));
 
   // Visitor bringing their own key pays their own bill, so the
   // per-visitor / global budget caps don't apply. But keep a generous

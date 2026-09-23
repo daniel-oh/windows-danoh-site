@@ -47,7 +47,7 @@ const SHORTCUTS: { section: string; items: Shortcut[] }[] = [
       {
         keys: ["?run=..."],
         description:
-          "Append to the URL (e.g. ?run=a+snake+game) to auto-open Run with a prompt",
+          "Append to the URL (e.g. ?run=a+snake+game) to open Run with that prompt filled in",
       },
     ],
   },

@@ -3,6 +3,12 @@ import { createServiceClient } from "./supabase/service";
 
 export async function put(path: string, blob: Blob): Promise<string> {
   if (isLocal()) {
+    // Production runs in local mode too (see CLAUDE.md), where this branch
+    // would write into the container with no size limit and hand back a
+    // localhost URL no visitor can load. It is for `npm run dev` only.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Icon storage is not configured in production");
+    }
     const fs = await import("fs-extra");
 
     const buffer = await blob.arrayBuffer();
