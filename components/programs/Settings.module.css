@@ -38,6 +38,12 @@
   margin: 0;
 }
 
+/* Blue on #444 is 1.1:1 against the words around it, so colour alone does
+ * not say "link" here. */
+.note a {
+  text-decoration: underline;
+}
+
 .button {
   min-width: 110px;
 }

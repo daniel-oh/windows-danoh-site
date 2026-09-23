@@ -2,6 +2,7 @@ import { query, hasDatabase } from "@/lib/db";
 import { getClientIP } from "@/lib/api/clientIP";
 import { createRateLimitBucket } from "@/lib/api/rateLimit";
 import { parseJson, requireJson } from "@/lib/api/json";
+import { sortedPosts } from "@/content/blog/posts";
 
 // One reaction: a like. Older rows may carry "love" or "fire" from the
 // three-emoji bar this replaced; each visitor still counts once, as a like.
@@ -25,8 +26,12 @@ function rateLimit(req: Request): Response | null {
   return null;
 }
 
+// Only posts that exist. The pattern alone let anyone mint rows (and a
+// count) for any slug they liked the look of.
+const SLUGS = new Set(sortedPosts.map((p) => p.slug));
+
 function isValidSlug(s: unknown): s is string {
-  return typeof s === "string" && /^[a-z0-9-]{1,80}$/.test(s);
+  return typeof s === "string" && SLUGS.has(s);
 }
 
 function isValidVisitor(v: unknown): v is string {

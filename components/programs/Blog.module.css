@@ -94,7 +94,8 @@
 
 .postDate {
   font-size: 10px;
-  color: #666;
+  /* 5.3:1 on the silver face; #666 was 3.2:1 at 10px. */
+  color: #444;
   margin-top: 2px;
 }
 
@@ -140,7 +141,8 @@
 
 .postMeta {
   font-size: 11px;
-  color: #555;
+  /* #555 was 3.9:1 on the silver face at 11px. */
+  color: #444;
   margin-bottom: 8px;
   display: flex;
   gap: 6px;

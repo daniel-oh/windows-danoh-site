@@ -52,7 +52,7 @@ export function Resume() {
           company="Nike"
           location="Remote"
           title="Cybersecurity, Sr. Platform Engineer"
-          dates="Apr 2023 – Present"
+          dates="Apr 2023 - Present"
         >
           <li>Designed a two-pronged enterprise security compliance strategy across 50+ AWS accounts: a managed services platform using Crossplane Kubernetes manifests with developer-friendly CLI tools for baked-in security and NFRs (happy path), paired with Wiz auto-remediation to shut down non-compliant resources (enforcement path)</li>
           <li>Built and maintained platform infrastructure used by 10+ engineering teams, including the CIS Data Lakehouse on Databricks, Kubernetes Terraform modules, and ArgoCD GitOps deployment patterns</li>
@@ -65,7 +65,7 @@ export function Resume() {
           company="Capital Markets Gateway"
           location="New York, NY"
           title="DevOps Engineer"
-          dates="Jul 2021 – Apr 2023"
+          dates="Jul 2021 - Apr 2023"
         >
           <li>Migrated the full network stack from public-facing to private architecture on Azure using Terragrunt, Cloudflare, GitHub Actions, and Harness CD</li>
           <li>Replaced CircleCI with self-hosted private GitHub Actions runners, improving pipeline security and reducing external dependency</li>
@@ -78,7 +78,7 @@ export function Resume() {
           company="Avanade"
           location="Chicago, IL"
           title="Consultant, Site Reliability Engineer"
-          dates="2019 – 2021"
+          dates="2019 - 2021"
         >
           <li>Delivered cloud enterprise solutions on Azure Kubernetes Service with IaC, Ansible, and CI/CD for Fortune 100 healthcare, financial services, and e-commerce clients including Zoro (Grainger)</li>
           <li>Platform architect for a healthcare provider with 72 distributed teams, migrating from IBM Bluemix to Azure with self-serve provisioning via ServiceNow, Terraform Enterprise, and GitHub Actions</li>
@@ -89,8 +89,8 @@ export function Resume() {
         <Job
           company="Allstate Insurance"
           location="Northbrook, IL"
-          title="Technology Leadership Program – DevOps Engineer"
-          dates="2017 – 2019"
+          title="Technology Leadership Program, DevOps Engineer"
+          dates="2017 - 2019"
         >
           <li>Deployed a production serverless iOS application for cybersecurity and fraud detection; configured AWS VPC automation with Jenkins</li>
           <li>Led triage as Scrum Master for 20+ developers across 3 product lines using JIRA</li>

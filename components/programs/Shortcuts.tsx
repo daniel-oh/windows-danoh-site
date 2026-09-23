@@ -55,7 +55,12 @@ const SHORTCUTS: { section: string; items: Shortcut[] }[] = [
 
 export function Shortcuts() {
   return (
+    // Focusable so the list scrolls from the keyboard: nothing inside it
+    // takes focus, so arrow keys had nowhere to land.
     <div
+      tabIndex={0}
+      role="region"
+      aria-label="Keyboard shortcuts"
       style={{
         padding: 12,
         overflow: "auto",

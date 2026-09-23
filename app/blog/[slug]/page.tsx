@@ -69,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       creator: "@danohstudio",
       title: post.title,
       description: post.summary,
-      images: [cardImage],
+      images: [{ url: cardImage, alt: `${post.title}, a post by Daniel Oh` }],
     },
   };
 }
@@ -85,6 +85,9 @@ export default async function Post({ params }: Props) {
   const postYear = post.date.slice(0, 4);
   const authorPerson = {
     "@type": "Person",
+    // The same entity the home page and the blog index declare, so a
+    // crawler sees one Daniel Oh rather than a second, unlinked one.
+    "@id": "https://danoh.com/#person",
     name: post.author,
     url: "https://danoh.com",
     // sameAs links resolve the byline to verified profiles so Google
@@ -138,7 +141,8 @@ export default async function Post({ params }: Props) {
       <SkipLink />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+        // `<` escaped so no string in a post's metadata can close the tag.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }}
       />
       <BreadcrumbLd
         trail={[{ name: "Blog", path: "/blog" }, { name: post.title }]}

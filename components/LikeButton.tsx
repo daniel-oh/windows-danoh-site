@@ -78,7 +78,10 @@ export function LikeButton({ slug, framed = false }: { slug: string; framed?: bo
       type="button"
       className={styles.button}
       aria-pressed={liked}
-      aria-label={`Like this post, ${count} ${count === 1 ? "like" : "likes"}`}
+      // No count until it has loaded: "0 likes" read out first is wrong.
+      aria-label={
+        loaded ? `Like this post, ${count} ${count === 1 ? "like" : "likes"}` : "Like this post"
+      }
       data-liked={liked ? "" : undefined}
       onClick={onClick}
     >

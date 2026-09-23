@@ -72,19 +72,30 @@ export class FsManager {
     });
     base.onMount = (refresh: () => void) => {
       let busy = false;
+      // A write that lands while a read is in flight may not be in that
+      // read, so it earns one more pass as soon as the current one ends.
+      let again = false;
       const check = async () => {
-        if (busy) return;
+        if (busy) {
+          again = true;
+          return;
+        }
         busy = true;
         try {
-          const value = await read();
-          const sig = JSON.stringify(value);
-          if (sig !== last) {
-            last = sig;
-            stash = { value };
-            refresh();
-          }
-        } catch {
-          // A read that fails (a folder mid-delete) is retried next tick.
+          do {
+            again = false;
+            try {
+              const value = await read();
+              const sig = JSON.stringify(value);
+              if (sig !== last) {
+                last = sig;
+                stash = { value };
+                refresh();
+              }
+            } catch {
+              // A read that fails (a folder mid-delete) is retried next tick.
+            }
+          } while (again);
         } finally {
           busy = false;
         }

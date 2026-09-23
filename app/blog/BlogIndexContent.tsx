@@ -344,7 +344,7 @@ export function BlogIndexContent({ posts }: { posts: BlogPost[] }) {
         <div className={styles.searchEmpty}>
           <p className={styles.indexSummary} style={{ margin: 0 }}>
             {trimmed
-              ? `No posts match “${trimmed}”.`
+              ? `No posts match "${trimmed}".`
               : "No posts match the selected topics."}
           </p>
           <button

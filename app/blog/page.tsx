@@ -64,7 +64,8 @@ export default function BlogIndex() {
       <SkipLink />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
+        // `<` escaped so no post title can close the tag.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld).replace(/</g, "\\u003c") }}
       />
       <BreadcrumbLd trail={[{ name: "Blog" }]} />
       <div className={`${styles.shell} ${styles.shellWide}`}>

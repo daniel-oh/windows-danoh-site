@@ -144,7 +144,7 @@ const SNAKE_HTML = `<!doctype html>
       ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 8);
       glow("#00ffd5", 10);
       ctx.fillStyle = "#00ffd5"; ctx.font = "12px monospace";
-      ctx.fillText("SCORE " + score + " — press New Game or Space", canvas.width / 2, canvas.height / 2 + 18);
+      ctx.fillText("SCORE " + score + " · press New Game or Space", canvas.width / 2, canvas.height / 2 + 18);
       ctx.shadowBlur = 0;
     }
   }
