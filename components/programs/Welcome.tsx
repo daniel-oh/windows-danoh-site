@@ -120,6 +120,102 @@ const LoopingLogo = () => {
   );
 };
 
+// The Welcome window's changelog, newest first.
+const UPDATES: { date: string; title: string; body: React.ReactNode }[] = [
+  {
+    date: "Sep 22, 2026",
+    title: "Sampler",
+    body: (
+      <>
+        Sixteen pads, a Rust audio engine and a 12-bit switch. Record
+        through your mic, loop a bar, and export a WAV that opens from
+        Explorer. How it keeps time:{" "}
+        <Link href="/blog/audio-thread" style={{ color: "#000080", textDecoration: "underline" }}>Building a sampler with 2.7 milliseconds to spare</Link>.
+      </>
+    ),
+  },
+  {
+    date: "Sep 18, 2026",
+    title: "Camera and Glass",
+    body: (
+      <>
+        A 1998 webcam that saves chunky, sixteen-colour snaps to My
+        Pictures, all in your browser, and Glass, a pane of liquid glass.
+        The error pages now glitch like a broken display.
+      </>
+    ),
+  },
+  {
+    date: "Sep 17, 2026",
+    title: "Sonnet 5, and a background remover",
+    body: (
+      <>
+        Generated apps now run on Claude Sonnet 5, better and cheaper. New
+        post: <Link href="/blog/background-remover" style={{ color: "#000080", textDecoration: "underline" }}>4 GB to 76 MB, open-sourcing Kayrage&apos;s background remover</Link>.
+      </>
+    ),
+  },
+  {
+    date: "Jul 16, 2026",
+    title: "The blog becomes a Win98 window",
+    body: <>The blog and every post were redesigned as Explorer and document windows, with a real resume page to match.</>,
+  },
+  {
+    date: "Jun 10, 2026",
+    title: "Boot screen, 3D Pipes, genie windows",
+    body: (
+      <>
+        Each session boots from a BIOS screen, 3D Pipes takes over when
+        you go idle, and windows genie into the taskbar. Built with
+        Claude&apos;s Fable 5: <Link href="/blog/letting-fable-5-loose" style={{ color: "#000080", textDecoration: "underline" }}>field notes</Link>.
+      </>
+    ),
+  },
+  {
+    date: "May 11, 2026",
+    title: "Privacy page and cost guardrails",
+    body: <>A plain-language privacy page, a contact form that really sends, and spending caps on every AI endpoint.</>,
+  },
+  {
+    date: "Apr 17, 2026",
+    title: "MDX blog and four new programs",
+    body: <>Posts can embed live React. Minesweeper, an AI-moderated Guestbook, Mail and a Recycle Bin arrived.</>,
+  },
+  {
+    date: "Apr 13, 2026",
+    title: "danoh.com goes live",
+    body: <>A retro desktop that builds real apps with AI, instead of a static portfolio.</>,
+  },
+  {
+    date: "Apr 11, 2026",
+    title: "Fix & Iterate",
+    body: (
+      <>
+        Click the <code>?</code> on any generated app, describe a bug or a
+        feature, and the app updates live.
+      </>
+    ),
+  },
+  {
+    date: "Apr 9, 2026",
+    title: "First commit",
+    body: (
+      <>
+        Forked{" "}
+        <a
+          href="https://github.com/SawyerHood/windows9x"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "#000080", textDecoration: "underline" }}
+        >
+          windows9x
+        </a>{" "}
+        by Sawyer Hood and started building.
+      </>
+    ),
+  },
+];
+
 const openBlog = (slug?: string) => {
   // Spread the shared Blog config (title/size) and override just the
   // program so the clicked post threads through — without initialSlug
@@ -344,121 +440,16 @@ const contentByKey = {
       <>
         <h2 style={{ fontSize: "1.25rem" }}>Updates</h2>
 
+        {/* Short on purpose: one or two lines per entry, only what a
+            visitor would find interesting. Dates are the day it shipped. */}
         <div style={{ borderLeft: "2px solid #808080", paddingLeft: 14, marginTop: 8 }}>
-          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Jun 10, 2026</h3>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-            Boot screens, 3D Pipes, and genie windows
-          </p>
-          <p style={{ margin: "0 0 8px" }}>
-            The desktop finally moves like the machine it&apos;s
-            pretending to be. First visit each session opens with a
-            BIOS boot sequence (any key skips it). Idle for a minute
-            and the 3D Pipes screensaver takes over, rebuilt in
-            three.js. Windows genie into the taskbar when minimized,
-            and Settings grew an optional CRT scanline mode. Also new:
-            Snake.exe in neon (the walls are lethal now, as nature
-            intended), a live taskbar clock, an optional startup chime
-            (off by default, lives in Settings), and <code>Ctrl+`</code>{" "}
-            to cycle windows from the keyboard.
-          </p>
-          <p style={{ margin: "0 0 12px" }}>
-            Under the hood: the blog got a Win98 design pass and a
-            rebuilt content pipeline with one source of truth per
-            post, the homepage is finally crawlable, and four audit
-            passes (accessibility, SEO, mobile, security) closed out.
-            Most of this batch was built with Claude&apos;s new Fable
-            5 model. Field notes:{" "}
-            <Link href="/blog/letting-fable-5-loose" style={{ color: "#000080", textDecoration: "underline" }}>
-              Letting Fable 5 loose on this site
-            </Link>.
-          </p>
-
-          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>May 11, 2026</h3>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>
-            Floeberg launch and a security pass
-          </p>
-          <p style={{ margin: "0 0 8px" }}>
-            Two new posts on the work side of my life:{" "}
-            <em>Two sites, one operator</em> (the brand split) and{" "}
-            <em>Building Floeberg</em> (the stack: self-hosted gotrue,
-            idempotent Stripe pipeline, one wave channel projected to
-            both web and Discord).
-          </p>
-          <p style={{ margin: "0 0 12px" }}>
-            Also shipped: a plain-language{" "}
-            <a href="/privacy" style={{ color: "#000080", textDecoration: "underline" }}>/privacy</a>{" "}
-            page, contact form that actually sends email from a branded
-            sender with a visitor receipt, a keyboard skip-link on the
-            blog pages, a retro Matrix-green logout screen, copy-paste
-            attribution that auto-appends the source URL when you quote
-            a post, and cost guardrails on every AI endpoint. Under the
-            hood: every CRITICAL and HIGH item from the security audit
-            closed (OAuth open-redirect, Stripe webhook idempotency,
-            invite-code hashing, prompt-injection escape, contact-form
-            spam-relay cap).
-          </p>
-
-          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 17, 2026</h3>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>MDX, new programs, mobile polish</p>
-          <p style={{ margin: "0 0 8px" }}>
-            Blog now runs on MDX. Posts are individual{" "}
-            <code>.mdx</code> files that can embed live React components.
-            The new <em>Rive in MDX</em> post has an animation running
-            inline. Feed also picked up RSS, anonymous 👍 ❤️ 🔥 reactions,
-            pinned-post support, and related-posts nav.
-          </p>
-          <p style={{ margin: "0 0 8px" }}>
-            Four new programs on the desktop: Minesweeper (pirate-themed),
-            an AI-moderated Guestbook, Mail, and a Recycle Bin. Welcome
-            gained a classic hit counter. Any generated app can be
-            shared over URL. Try <code>danoh.com/?run=a+snake+game</code>{" "}
-            to open Run with the prompt pre-filled.
-          </p>
-          <p style={{ margin: "0 0 12px" }}>
-            Mobile audited top to bottom: proper 44px touch targets on
-            forms, scrollable Start menu, fixed Minesweeper&apos;s
-            fat-finger problem, tighter window chrome. Security tightened
-            at the same time (iframe registry namespaced per program,
-            auth rate-limited, CSP enforced, Guestbook gets a bot
-            honeypot + 30s cooldown). One thing that didn&apos;t land: a
-            dark theme. Colors clashed with the 98 palette and visibility
-            suffered, so I pulled it rather than ship something
-            half-baked.
-          </p>
-
-          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 13, 2026</h3>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>danoh.com goes live</p>
-          <p style={{ margin: "0 0 12px" }}>
-            Launched this site. A static portfolio felt too predictable, so I built a retro
-            desktop that generates real apps with AI. The whole thing runs on Next.js 16,
-            Claude Sonnet 5, and a single Docker container.
-          </p>
-
-          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 11, 2026</h3>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Fix and Iterate ships</p>
-          <p style={{ margin: "0 0 12px" }}>
-            Click the <code>?</code> on any generated app to talk to the AI that built it.
-            Describe a bug, request a feature, and the app updates live. No reload, no copy-paste.
-          </p>
-
-          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 10, 2026</h3>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>Mobile, security, and polish</p>
-          <p style={{ margin: "0 0 12px" }}>
-            Full touch support for phones and tablets. Sandboxed iframes, rate limiting,
-            prompt injection protections, and constant-time auth. Desktop icons snap to grid
-            and drag to rearrange.
-          </p>
-
-          <h3 style={{ margin: "0 0 4px", fontSize: "1rem" }}>Apr 9, 2026</h3>
-          <p style={{ margin: "0 0 4px", fontWeight: "bold" }}>First commit</p>
-          <p style={{ margin: "0 0 4px" }}>
-            Forked{" "}
-            <a href="https://github.com/SawyerHood/windows9x" target="_blank" rel="noopener noreferrer" style={{ color: "#000080", textDecoration: "underline" }}>
-              windows9x
-            </a>{" "}
-            by Sawyer Hood. Upgraded to Next.js 16, React 19, swapped in the Anthropic SDK,
-            and started building.
-          </p>
+          {UPDATES.map((u) => (
+            <div key={u.date} style={{ marginBottom: 12 }}>
+              <h3 style={{ margin: "0 0 2px", fontSize: "1rem" }}>{u.date}</h3>
+              <p style={{ margin: "0 0 2px", fontWeight: "bold" }}>{u.title}</p>
+              <p style={{ margin: 0 }}>{u.body}</p>
+            </div>
+          ))}
         </div>
       </>
     );
