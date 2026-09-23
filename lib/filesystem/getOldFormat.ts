@@ -19,10 +19,14 @@ type VirtualFolder = {
 const KEY = "filesystem";
 
 export function getOldFormat(): DeepFolder | null {
-  if (!globalThis.localStorage) {
+  // Reading localStorage can itself throw (storage blocked), and this runs
+  // while the filesystem is set up.
+  let storedData: string | null;
+  try {
+    storedData = globalThis.localStorage?.getItem(KEY) ?? null;
+  } catch {
     return null;
   }
-  const storedData = localStorage.getItem(KEY);
   if (!storedData) {
     return null;
   }

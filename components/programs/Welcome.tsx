@@ -508,17 +508,21 @@ export function Welcome({ id: _id }: { id: string }) {
     { title: "Advanced", key: "advanced" },
   ];
 
+  // Storage can throw (Safari "Block all cookies", some private modes);
+  // Welcome opens at boot, so an unguarded read here broke the desktop.
   const [selectedEntry, setSelectedEntry] = useState(() => {
-    if (typeof window !== "undefined") {
-      const onboarded = localStorage.getItem("onboarded");
-      return onboarded ? "blog" : "welcome";
+    try {
+      return localStorage.getItem("onboarded") ? "blog" : "welcome";
+    } catch {
+      return "welcome";
     }
-    return "welcome";
   });
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !localStorage.getItem("onboarded")) {
-      localStorage.setItem("onboarded", "true");
+    try {
+      if (!localStorage.getItem("onboarded")) localStorage.setItem("onboarded", "true");
+    } catch {
+      // Not remembering the first visit is fine.
     }
   }, []);
 

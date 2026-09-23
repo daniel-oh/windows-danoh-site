@@ -17,15 +17,29 @@ function writeCookie(id: string) {
     (secure ? "; Secure" : "");
 }
 
+// One id per page load when storage is blocked, so a visitor with
+// storage off still gets a consistent id for this visit.
+let memoryId: string | null = null;
+
+function newId(): string {
+  return typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
 export function getVisitorId(): string {
   if (typeof window === "undefined") return "";
-  let id = window.localStorage.getItem(VISITOR_KEY);
-  if (!id) {
-    id =
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : Math.random().toString(36).slice(2) + Date.now().toString(36);
-    window.localStorage.setItem(VISITOR_KEY, id);
+  let id: string | null;
+  try {
+    id = window.localStorage.getItem(VISITOR_KEY);
+    if (!id) {
+      id = newId();
+      window.localStorage.setItem(VISITOR_KEY, id);
+    }
+  } catch {
+    // Safari "Block all cookies" throws on localStorage itself.
+    memoryId ??= newId();
+    id = memoryId;
   }
   writeCookie(id);
   return id;

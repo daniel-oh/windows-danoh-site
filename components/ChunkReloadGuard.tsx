@@ -40,9 +40,14 @@ export function ChunkReloadGuard() {
 
     const maybeReload = (err: unknown) => {
       if (!looksLikeChunkError(err)) return;
-      const last = Number(sessionStorage.getItem(RELOAD_KEY) || "0");
-      if (Date.now() - last < RELOAD_COOLDOWN_MS) return; // already tried
-      sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+      try {
+        const last = Number(sessionStorage.getItem(RELOAD_KEY) || "0");
+        if (Date.now() - last < RELOAD_COOLDOWN_MS) return; // already tried
+        sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+      } catch {
+        // No storage, so no way to remember trying: do not reload in a loop.
+        return;
+      }
       window.location.reload();
     };
 

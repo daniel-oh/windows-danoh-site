@@ -19,9 +19,16 @@ export const RECYCLE_BIN_LIMIT = 20;
 
 // LocalStorage-backed so the bin survives a refresh. Retain up to
 // RECYCLE_BIN_LIMIT entries, newest-first.
-const binStorage = createJSONStorage<RecycleBinEntry[]>(() =>
-  typeof window !== "undefined" ? window.localStorage : undefined!
-);
+// Guarded like state/settings.tsx: Safari's "Block all cookies" throws on
+// the localStorage accessor itself, and with getOnInit this runs when the
+// module loads, which took the whole desktop down. In-memory instead.
+const binStorage = createJSONStorage<RecycleBinEntry[]>(() => {
+  try {
+    return typeof window !== "undefined" ? window.localStorage : undefined!;
+  } catch {
+    return undefined!;
+  }
+});
 
 // getOnInit matters here: the atom is written (window closed) before it
 // is ever read (Recycle window opened). Without it, the first write of a

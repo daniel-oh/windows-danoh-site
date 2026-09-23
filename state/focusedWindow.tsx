@@ -9,6 +9,9 @@ const _focusedAtom = atom<string | null>(null);
 // stacking instead of the old focused/unfocused 0-or-1 toggle.
 const _zMapAtom = atom<Record<string, number>>({});
 const _nextZAtom = atom(1);
+// Well under the taskbar (z-index 1000 in OS.module.css), even with every
+// window counted.
+const RENUMBER_AT = 500;
 
 export const focusedWindowAtom = atom(
   (get) => get(_focusedAtom),
@@ -20,11 +23,23 @@ export const focusedWindowAtom = atom(
     const prev = get(_focusedAtom);
     const next = typeof update === "function" ? update(prev) : update;
     set(_focusedAtom, next);
-    if (next) {
-      const z = get(_nextZAtom);
-      set(_zMapAtom, { ...get(_zMapAtom), [next]: z });
-      set(_nextZAtom, z + 1);
+    if (!next) return;
+    let zMap = get(_zMapAtom);
+    // Already in front: nothing to raise. Every press used to bump the
+    // counter (a click twice, a tap up to four times), and past the
+    // taskbar's z-index of 1000 windows covered the taskbar and the Start
+    // menu, a few Minesweeper games in.
+    const top = Math.max(0, ...Object.values(zMap));
+    if (zMap[next] !== undefined && zMap[next] === top) return;
+    let z = get(_nextZAtom);
+    if (z > RENUMBER_AT) {
+      // Squeeze the stack back to 1..N, same order.
+      const order = Object.entries(zMap).sort((a, b) => a[1] - b[1]);
+      zMap = Object.fromEntries(order.map(([id], i) => [id, i + 1]));
+      z = order.length + 1;
     }
+    set(_zMapAtom, { ...zMap, [next]: z });
+    set(_nextZAtom, z + 1);
   }
 );
 
