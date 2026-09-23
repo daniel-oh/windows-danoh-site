@@ -295,7 +295,10 @@ export function Minesweeper() {
         display: "flex",
         flexDirection: "column",
         gap: 8,
-        alignItems: "center",
+        // "safe": when the board is wider than the window (Intermediate on
+        // a phone), plain center pushed its left columns out of reach of
+        // the scrollbar. safe falls back to start instead.
+        alignItems: "safe center",
         overflow: "auto",
         flex: 1,
       }}

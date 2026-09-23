@@ -1,6 +1,7 @@
 "use client";
 
 import cx from "classnames";
+import { isMobile } from "@/lib/isMobile";
 import {
   atom,
   getDefaultStore,
@@ -227,6 +228,14 @@ function WindowInner({ id }: { id: string }) {
         className={cx("title-bar", {
           inactive: focusedWindow !== id,
         })}
+        // Double-click the title bar to maximize or restore, as on the real
+        // thing. Not from the buttons in it.
+        onDoubleClick={(e) => {
+          // Phones keep windows maximized; a stray double tap should not
+          // shrink one into a floating window.
+          if (isMobile() || (e.target as HTMLElement).closest("button")) return;
+          dispatch({ type: "TOGGLE_MAXIMIZE" });
+        }}
         {...createResizeEvent((e, delta) => {
           // Read status from the store, not the render closure: the drag
           // listeners installed at mousedown outlive this render, so the

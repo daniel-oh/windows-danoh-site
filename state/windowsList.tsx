@@ -30,6 +30,8 @@ const NON_RECYCLABLE = new Set<string>([
   "history",
   "run",
   "settings",
+  // Closing the bin put the bin in the bin.
+  "recycle",
 ]);
 
 const _listAtom = atom<WindowsListState>([]);

@@ -140,6 +140,12 @@ select:focus-visible {
 .window .title-bar-controls button[aria-label="Close"] {
   background-position: center center;
 }
+/* A drag on a title bar moves the window; it must not also scroll the page
+ * or, on Android, pull to refresh (which reloads and loses every window). */
+.window .title-bar {
+  touch-action: none;
+}
+
 /* 98.css's 2px gap left Close 22px of clear space from Maximize, under the
  * 24px WCAG 2.5.8 asks for at 24x20. Two more pixels, same look. (Phones
  * get 26px buttons below and pass on size alone.) */

@@ -102,7 +102,8 @@ export function Settings({ id }: { id: string }) {
             aria-label="Anthropic API key"
           />
         </div>
-        <div className={cx("field-row")} style={{ gap: 4 }}>
+        {/* Wraps: four 75px buttons do not fit a 320px phone in one row. */}
+        <div className={cx("field-row")} style={{ gap: 4, flexWrap: "wrap" }}>
           <button onClick={() => setShowKey(!showKey)} style={{ minWidth: 60 }} aria-label={showKey ? "Hide API key" : "Show API key"}>
             {showKey ? "Hide" : "Show"}
           </button>

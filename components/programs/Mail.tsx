@@ -388,7 +388,8 @@ export function Mail({ id }: { id: string }) {
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
               e.preventDefault();
-              void send();
+              // Same rule as the Send button: not while one is in flight.
+              if (status !== "sending") void send();
             }
           }}
         />

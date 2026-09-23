@@ -7,6 +7,7 @@ import { getDefaultStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { focusedWindowAtom } from "@/state/focusedWindow";
 import { windowsListAtom } from "@/state/windowsList";
+import { isMobile } from "@/lib/isMobile";
 import { windowAtomFamily, type WindowState } from "@/state/window";
 import { Window } from "./Window";
 import { startMenuOpenAtom } from "@/state/startMenu";
@@ -53,6 +54,32 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   // unused — this is a subscription-for-side-effect.
   useAtom(fsManagerAtom);
   const [windows] = useAtom(windowsListAtom);
+
+  // Rotation or a narrower browser: bring every window back on screen
+  // (maximized on a phone). Debounced, because a drag-resize of the
+  // browser fires this continuously.
+  useEffect(() => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    const fit = () => {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        const store = getDefaultStore();
+        const payload = {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          phone: isMobile(),
+        };
+        for (const id of store.get(windowsListAtom)) {
+          store.set(windowAtomFamily(id), { type: "FIT_VIEWPORT", payload });
+        }
+      }, 150);
+    };
+    window.addEventListener("resize", fit);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", fit);
+    };
+  }, []);
   const setFocusedWindow = useSetAtom(focusedWindowAtom);
   const registry = useAtomValue(registryValueAtom);
 

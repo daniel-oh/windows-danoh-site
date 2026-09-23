@@ -55,9 +55,15 @@ export function Iframe({ id }: { id: string }) {
   const window = useAtomValue(windowAtomFamily(id));
   assert(window.program.type === "iframe", "Window is not an iframe");
   const program = useAtomValue(programAtomFamily(window.program.programID));
-  // Return null if the program is not found
+  // Restored from the Recycle Bin after the program itself was deleted:
+  // say so, rather than showing an empty window.
   if (!program) {
-    return null;
+    return (
+      <p style={{ padding: 12, margin: 0 }}>
+        This program is no longer on the desktop, so there is nothing to
+        show. It may have been deleted.
+      </p>
+    );
   }
   return <IframeInner id={id} />;
 }

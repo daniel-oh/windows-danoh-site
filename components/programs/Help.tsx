@@ -62,10 +62,14 @@ ${getApiText(keys)}`;
 function extractHtmlFromResponse(str: string): string | null {
   const codeStart = str.indexOf("```html");
   if (codeStart === -1) return null;
-  const htmlStart = str.indexOf("<html>", codeStart);
+  // <html lang="en"> as well as a bare <html>: replies with attributes
+  // were shown as "Fix applied" but never applied.
+  const open = /<html\b[^>]*>/i.exec(str.slice(codeStart));
+  if (!open) return null;
+  const htmlStart = codeStart + open.index;
   const htmlEnd = str.indexOf("</html>", htmlStart);
-  if (htmlStart === -1 || htmlEnd === -1) return null;
-  return str.slice(htmlStart + 6, htmlEnd);
+  if (htmlEnd === -1) return null;
+  return str.slice(htmlStart + open[0].length, htmlEnd);
 }
 
 function hasHtmlCodeBlock(str: string): boolean {
@@ -160,7 +164,15 @@ export function Help({ id }: { id: string }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: allMessages,
+          // The source is re-read on every send. It used to be captured
+          // once when the window opened: opened mid-generation it was
+          // empty, and after a Reload or an applied fix the next fix was
+          // built on the old code and undid the change.
+          messages: allMessages.map((m, i) =>
+            i === 0 && m.role === "system"
+              ? { ...m, content: makePrompt(program, keys) }
+              : m
+          ),
           settings: getSettings(),
         }),
       });
