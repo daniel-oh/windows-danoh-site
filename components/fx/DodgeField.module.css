@@ -1,0 +1,26 @@
+.field {
+  /* The runner moves by transform only, so this box keeps whatever size
+   * the content has and the layout around it never shifts. */
+  position: relative;
+  display: block;
+}
+
+.runner {
+  display: block;
+  /* Hinted, because this element is about to be translated on a pointer
+   * move and nothing else on the page is. */
+  will-change: transform;
+}
+
+/* Once it has given up it stops being a moving target, so it should read
+ * like ordinary content again. */
+.field[data-gave] .runner {
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .runner {
+    transition: none !important;
+    transform: none !important;
+  }
+}
