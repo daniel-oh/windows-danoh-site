@@ -21,6 +21,13 @@ ARG NEXT_PUBLIC_POSTHOG_KEY
 ARG NEXT_PUBLIC_POSTHOG_HOST
 ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
 ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
+# Production runs in local mode (CLAUDE.md), and the build has to know it:
+# without this the home page's getUser() looked like the Supabase path at
+# build time, read cookies(), and "/" was rendered on every request with
+# Cache-Control: no-store (kept out of the back/forward cache) while every
+# other page was static. The container's runtime env still sets it too.
+ARG NEXT_PUBLIC_LOCAL_MODE=true
+ENV NEXT_PUBLIC_LOCAL_MODE=$NEXT_PUBLIC_LOCAL_MODE
 RUN npm run build
 
 FROM base AS runner

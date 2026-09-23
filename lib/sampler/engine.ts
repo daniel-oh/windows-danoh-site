@@ -39,6 +39,10 @@ type Handlers = {
   onRecordFull?: (pad: number) => void;
 };
 
+// Set in next.config.mjs from a hash of the worklet and the wasm, so the
+// two are always fetched as a matching pair.
+const DSP_VERSION = process.env.NEXT_PUBLIC_DSP_VERSION ?? "dev";
+
 /** Largest file Load or Explorer will decode. */
 export const MAX_FILE_BYTES = 30 * 1024 * 1024;
 
@@ -149,8 +153,8 @@ export class SamplerEngine {
     // WebAssembly.Module cannot be posted to one (it is a separate agent
     // cluster, and the message vanishes without an error).
     const [, bytes] = await Promise.all([
-      ctx.audioWorklet.addModule("/dsp/sampler-worklet.js"),
-      fetch("/dsp/sampler.wasm").then((r) => {
+      ctx.audioWorklet.addModule(`/dsp/sampler-worklet.js?v=${DSP_VERSION}`),
+      fetch(`/dsp/sampler.wasm?v=${DSP_VERSION}`).then((r) => {
         if (!r.ok) throw new Error(`sampler.wasm ${r.status}`);
         return r.arrayBuffer();
       }),

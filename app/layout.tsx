@@ -1,11 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "98.css";
 import "./globals.css";
 import { CSPostHogProvider } from "@/lib/CSPosthogProvider";
 import { ChunkReloadGuard } from "@/components/ChunkReloadGuard";
-
-const inter = Inter({ subsets: ["latin"], display: "swap" });
 
 // One copy each. These were written out three times (metadata, openGraph,
 // twitter) and had to be edited in lockstep. Not lib/buildMetadata.ts:
@@ -94,7 +91,7 @@ export default function RootLayout({
         <script
           defer
           data-domain="danoh.com"
-          src="https://analytics.wuxiamaxxing.com/js/script.file-downloads.hash.outbound-links.pageview-props.tagged-events.js"
+          src="https://analytics.wuxiamaxxing.com/js/script.file-downloads.outbound-links.pageview-props.tagged-events.js"
         />
         <script
           dangerouslySetInnerHTML={{
@@ -103,7 +100,9 @@ export default function RootLayout({
         />
       </head>
       <CSPostHogProvider>
-        <body className={inter.className}>
+        {/* No Inter: it was preloaded on every page, set on <body>, and
+            overridden by the pixel font everywhere text is drawn. */}
+        <body>
           <ChunkReloadGuard />
           {children}
         </body>

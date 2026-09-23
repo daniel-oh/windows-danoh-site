@@ -11,6 +11,10 @@ import { EventType, RuntimeLoader } from "@rive-app/canvas";
 // asset stay in lock-step (a version mismatch would crash WASM init).
 if (typeof window !== "undefined") {
   RuntimeLoader.setWasmUrl("/rive.wasm");
+  // The fallback (for older CPUs) defaulted to a jsDelivr URL, which the
+  // CSP's connect-src blocks, so on those devices Rive failed outright
+  // while the copy in /public went unused.
+  RuntimeLoader.setWasmFallbackUrl("/rive_fallback.wasm");
 }
 
 export type RiveProps = {

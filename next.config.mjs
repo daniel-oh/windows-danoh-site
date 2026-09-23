@@ -1,4 +1,18 @@
 import createMDX from "@next/mdx";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+
+// The Sampler loads a worklet and a wasm module that must match each
+// other (they share a message protocol and an ABI), from fixed URLs in
+// public/. Each was cached on its own schedule, so after a deploy a
+// browser could pair a four-hour-old worklet with a new engine. Both
+// URLs carry this hash of the pair, so they change together and only
+// when either file does.
+const DSP_VERSION = createHash("sha256")
+  .update(readFileSync("public/dsp/sampler.wasm"))
+  .update(readFileSync("public/dsp/sampler-worklet.js"))
+  .digest("hex")
+  .slice(0, 12);
 
 // Plugins are passed as string identifiers so Turbopack can serialize
 // them (function refs would trip "does not have serializable options").
@@ -20,6 +34,7 @@ const withMDX = createMDX({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  env: { NEXT_PUBLIC_DSP_VERSION: DSP_VERSION },
   output: "standalone",
   images: {
     remotePatterns: [{ hostname: "localhost" }],
@@ -117,6 +132,23 @@ const nextConfig = {
       {
         source: "/vendor/:font(.*\\.woff2?)",
         headers: [{ key: "Access-Control-Allow-Origin", value: "*" }],
+      },
+      // Next serves public/ files with max-age=0, and the edge only
+      // stretches that for the file types it recognises; .wasm (Rive's
+      // 1.7 MB runtime, the Sampler engine) was revalidated on every
+      // visit. A day, then serve stale while checking. The Sampler's
+      // files are also versioned by DSP_VERSION above.
+      {
+        source: "/:file(.*\\.wasm)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
+      },
+      {
+        source: "/dsp/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=604800" },
+        ],
       },
       {
         source: "/api/program",
