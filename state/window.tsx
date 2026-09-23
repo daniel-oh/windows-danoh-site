@@ -46,6 +46,9 @@ export type WindowState = {
   // The status to return to when un-minimizing. Captured on minimize so
   // a maximized window doesn't come back as a normal-sized one.
   restoreStatus?: "maximized" | "normal";
+  // Maximized by FIT_VIEWPORT because the viewport went phone-narrow, not
+  // by the visitor. Only these are restored when it widens again.
+  autoMaximized?: boolean;
   pos: {
     x: number;
     y: number;
@@ -179,21 +182,36 @@ function windowReducerInner(
       return {
         ...state,
         status: state.status === "maximized" ? "normal" : "maximized",
+        // The visitor chose this, so a later resize must not undo it.
+        autoMaximized: false,
       };
     case "FIT_VIEWPORT": {
       // Positions were only checked when a window moved, so rotating a
       // phone or narrowing the browser could leave a window's controls
-      // off the right edge. On a phone a window is maximized, as it would
-      // have been had it opened there; otherwise the whole window comes
-      // back into view where it fits.
+      // off the right edge. Phone-narrow: maximize, as the window would
+      // have been had it opened there, and remember that it was us.
+      // Wide again: restore the windows we maximized (they used to stay
+      // full screen over the whole desktop, icons and all, after DevTools
+      // docked or the window was snapped to half the screen), and bring
+      // every normal window back into view.
       const { width, height, phone } = action.payload;
-      if (state.status !== "normal") return state;
-      if (phone) return { ...state, status: "maximized" };
-      const w = state.size.width;
-      const h = state.size.height === "auto" ? 0 : state.size.height;
-      const x = Math.min(state.pos.x, Math.max(0, width - w));
-      const y = Math.min(state.pos.y, Math.max(0, height - 40 - Math.min(h, height - 40)));
-      return x === state.pos.x && y === state.pos.y ? state : { ...state, pos: { x: Math.max(0, x), y: Math.max(0, y) } };
+      if (phone) {
+        return state.status === "normal"
+          ? { ...state, status: "maximized", autoMaximized: true }
+          : state;
+      }
+      let next = state;
+      if (state.status === "maximized" && state.autoMaximized) {
+        next = { ...state, status: "normal", autoMaximized: false };
+      }
+      if (next.status !== "normal") return next;
+      const w = next.size.width;
+      const h = next.size.height === "auto" ? 0 : next.size.height;
+      const x = Math.max(0, Math.min(next.pos.x, Math.max(0, width - w)));
+      const y = Math.max(0, Math.min(next.pos.y, Math.max(0, height - 40 - Math.min(h, height - 40))));
+      return x === next.pos.x && y === next.pos.y && next === state
+        ? state
+        : { ...next, pos: { x, y } };
     }
     case "TOGGLE_MINIMIZE":
       if (state.status === "minimized") {
