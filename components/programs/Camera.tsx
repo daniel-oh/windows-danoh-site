@@ -47,7 +47,14 @@ export function Camera({ id }: { id: string }) {
     effectRef.current = effect;
   }, [effect]);
 
+  // Bumped by every stop. A start that was still waiting on the permission
+  // prompt when the window was minimised, hidden or closed sees the change
+  // and stops the stream it was handed, instead of switching the camera on
+  // in a window nobody is looking at.
+  const generation = useRef(0);
+
   const stop = useCallback(() => {
+    generation.current++;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     if (videoRef.current) videoRef.current.srcObject = null;
@@ -62,11 +69,16 @@ export function Camera({ id }: { id: string }) {
       return;
     }
     setPhase("starting");
+    const mine = generation.current;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
         audio: false,
       });
+      if (generation.current !== mine) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
+      }
       streamRef.current = stream;
       const video = videoRef.current;
       if (!video) {
@@ -75,8 +87,16 @@ export function Camera({ id }: { id: string }) {
       }
       video.srcObject = stream;
       await video.play();
+      if (generation.current !== mine) return;
       setPhase("on");
     } catch (e) {
+      if (generation.current !== mine) return;
+      // play() can reject after the stream is live: without this the light
+      // stays on under a "Turn on camera" button, and pressing it opens a
+      // second stream on top of the first.
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      if (videoRef.current) videoRef.current.srcObject = null;
       const name = e instanceof DOMException ? e.name : "";
       setError(
         name === "NotAllowedError"
@@ -260,8 +280,16 @@ export function Camera({ id }: { id: string }) {
       </div>
       {/* Always mounted: the snapshot lives in this canvas, and a fresh
           element on first Snap would have nothing on it. */}
-      <div className={styles.snapRow} hidden={!snapped}>
-        <canvas ref={snapRef} className={styles.snap} aria-label="Snapped picture" role="img" />
+      {/* Always in the DOM: a live region that appears together with its
+          first message is often not announced, so the first Snap was silent. */}
+      <div className={styles.snapRow} data-empty={snapped ? undefined : ""}>
+        <canvas
+          ref={snapRef}
+          className={styles.snap}
+          aria-label="Snapped picture"
+          role="img"
+          hidden={!snapped}
+        />
         <span role="status" className={styles.saved}>
           {snapped ? (saved ?? "Snapped. Save it or take another.") : ""}
         </span>

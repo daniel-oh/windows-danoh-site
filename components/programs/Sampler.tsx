@@ -6,7 +6,12 @@ import { windowAtomFamily } from "@/state/window";
 import { getFsManager } from "@/state/fsManager";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
-import { PARAM, SamplerEngine, type Wave } from "@/lib/sampler/engine";
+import { FileTooLargeError, PARAM, SamplerEngine, type Wave } from "@/lib/sampler/engine";
+
+// The engine clamps tempo to this range too (dsp/src/lib.rs, param 4).
+const MIN_BPM = 40;
+const MAX_BPM = 220;
+const clampBpm = (v: number) => Math.round(Math.min(MAX_BPM, Math.max(MIN_BPM, v)));
 import {
   DEFAULT_VELOCITY,
   PADS,
@@ -14,7 +19,7 @@ import {
   keyForPad,
   loopFrames,
   padAtGrid,
-  padForKey,
+  padForKeyEvent,
   stepForHit,
   velocityFromPoint,
 } from "@/lib/sampler/pads";
@@ -70,6 +75,10 @@ export function Sampler({ id }: { id: string }) {
   const [quantize, setQuantize] = useState(true);
   const [vintage, setVintage] = useState(false);
   const [bpm, setBpm] = useState(90);
+  // What is in the tempo box while it is being typed. The engine only
+  // plays 40 to 220, and the loop length, recorded hits and export all
+  // read `bpm`, so `bpm` only ever holds a value the engine agrees with.
+  const [tempoDraft, setTempoDraft] = useState<string | null>(null);
   const [swing, setSwing] = useState(0);
   const [sampling, setSampling] = useState(false);
   const [recorded, setRecorded] = useState<boolean[]>(() => new Array(PADS).fill(false));
@@ -93,17 +102,60 @@ export function Sampler({ id }: { id: string }) {
   const live = useRef({ armed, quantize, playing, bpm, selected });
   live.current = { armed, quantize, playing, bpm, selected };
 
+  // Whether Sample is still being held, and which pad the take is going
+  // into (the selection can move mid-take with a second finger or a key).
+  const held = useRef(false);
+  const takePad = useRef(-1);
+
+  // Every way a take ends goes through here: let go, full, minimised, tab
+  // hidden. The mic always goes with it, so the browser's recording light
+  // never outlives the take.
+  const endTake = useCallback((announce: boolean) => {
+    held.current = false;
+    const pad = takePad.current;
+    takePad.current = -1;
+    const engine = engineRef.current;
+    if (!engine) return;
+    if (pad >= 0) engine.stopRecording(pad);
+    engine.releaseMic();
+    setSampling(false);
+    // The result is announced by onPadLen, which knows whether anything
+    // survived the trim.
+    if (announce && pad >= 0) setSay(`Pad ${pad + 1} captured`);
+  }, []);
+
   // --------------------------------------------------------------- engine
+
+  // Two presses during startup must not build two audio contexts, and a
+  // window closed during startup must not be left holding one.
+  const creating = useRef<Promise<SamplerEngine | null> | null>(null);
+  const unmounted = useRef(false);
 
   const ensure = useCallback(async (): Promise<SamplerEngine | null> => {
     if (engineRef.current) return engineRef.current;
+    if (creating.current) return creating.current;
     if (!SamplerEngine.supported()) {
       setPhase("blocked");
       return null;
     }
+    creating.current = start();
+    try {
+      return await creating.current;
+    } finally {
+      creating.current = null;
+    }
+  // `start` is the stable body below; see its note.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function start(): Promise<SamplerEngine | null> {
     setPhase("starting");
     try {
       const engine = await SamplerEngine.create();
+      if (unmounted.current) {
+        engine.close();
+        return null;
+      }
       engine.on({
         onTick: (step, peak) => {
           if (meterRef.current) {
@@ -131,7 +183,7 @@ export function Sampler({ id }: { id: string }) {
           }
         },
         onRecordFull: (pad) => {
-          setSampling(false);
+          endTake(false);
           setSay(`Pad ${pad + 1} is full at ${MAX_SECONDS} seconds.`);
         },
       });
@@ -149,15 +201,16 @@ export function Sampler({ id }: { id: string }) {
       setPhase("blocked");
       return null;
     }
-    // The engine is created once; these are its starting values, so they
-    // are read rather than subscribed to.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // The engine is created once; the values above are its starting
+    // values, so they are read rather than subscribed to.
+  }
 
   // The program holds a real audio device, so it lets go on close, on
   // minimise and when the tab goes away, the same rule the Camera follows.
   useEffect(() => {
+    unmounted.current = false;
     return () => {
+      unmounted.current = true;
       engineRef.current?.close();
       engineRef.current = null;
     };
@@ -170,13 +223,14 @@ export function Sampler({ id }: { id: string }) {
     if (!engine) return;
     engine.setParam(PARAM.playing, 0);
     engine.allOff();
+    // Now, not on the next tick: this is what turns the recording light off.
     engine.releaseMic();
     const t = setTimeout(() => {
       setPlaying(false);
-      setSampling(false);
+      endTake(false);
     }, 0);
     return () => clearTimeout(t);
-  }, [minimized]);
+  }, [minimized, endTake]);
 
   useEffect(() => {
     const onHide = () => {
@@ -185,13 +239,12 @@ export function Sampler({ id }: { id: string }) {
       if (!engine) return;
       engine.setParam(PARAM.playing, 0);
       engine.allOff();
-      engine.releaseMic();
       setPlaying(false);
-      setSampling(false);
+      endTake(false);
     };
     document.addEventListener("visibilitychange", onHide);
     return () => document.removeEventListener("visibilitychange", onHide);
-  }, []);
+  }, [endTake]);
 
   // ----------------------------------------------------------------- play
 
@@ -247,10 +300,12 @@ export function Sampler({ id }: { id: string }) {
       if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      // A select takes letters too (type-ahead), so it keeps them.
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target?.isContentEditable)
+        return;
       // Only when this window is the focused one.
       if (!target?.closest?.(`#${CSS.escape(id)}`)) return;
-      const pad = padForKey(e.key);
+      const pad = padForKeyEvent(e);
       if (pad >= 0) {
         e.preventDefault();
         void hit(pad, DEFAULT_VELOCITY);
@@ -263,6 +318,11 @@ export function Sampler({ id }: { id: string }) {
   }, [hit, id]);
 
   // ------------------------------------------------------------ transport
+
+  const commitTempo = (v: number) => {
+    setBpm(v);
+    engineRef.current?.setParam(PARAM.bpm, v);
+  };
 
   const togglePlay = async () => {
     const engine = engineRef.current ?? (await ensure());
@@ -305,31 +365,40 @@ export function Sampler({ id }: { id: string }) {
   // ------------------------------------------------------------ recording
 
   const startSample = async () => {
+    if (held.current) return;
+    held.current = true;
+    const pad = live.current.selected;
     const engine = engineRef.current ?? (await ensure());
-    if (!engine) return;
+    if (!engine || !held.current) return;
     try {
-      await engine.startRecording(selected);
-      setSampling(true);
-      setSay(`Recording into pad ${selected + 1}`);
+      await engine.openMic();
     } catch (err) {
       const name = err instanceof DOMException ? err.name : "";
+      held.current = false;
       setSay(
-        name === "NotAllowedError"
-          ? "Microphone access was declined. Allow it in the browser's site settings to sample."
-          : "No microphone was available."
+        // Let go while the browser was still asking. The stream it granted
+        // has already been stopped; the next hold records straight away.
+        name === "AbortError"
+          ? "Microphone ready. Hold Sample while you make the sound."
+          : name === "NotAllowedError"
+            ? "Microphone access was declined. Allow it in the browser's site settings to sample."
+            : "No microphone was available."
       );
+      return;
     }
+    if (!held.current) {
+      engine.releaseMic();
+      return;
+    }
+    takePad.current = pad;
+    engine.startRecording(pad);
+    setSampling(true);
+    setSay(`Recording into pad ${pad + 1}`);
   };
 
   const stopSample = () => {
-    const engine = engineRef.current;
-    if (!engine || !sampling) return;
-    engine.stopRecording(selected);
-    engine.releaseMic();
-    setSampling(false);
-    // The result is announced by onPadLen, which knows whether anything
-    // survived the trim.
-    setSay(`Pad ${selected + 1} captured`);
+    if (!held.current && takePad.current < 0) return;
+    endTake(true);
   };
 
   // --------------------------------------------------------------- volume
@@ -386,8 +455,12 @@ export function Sampler({ id }: { id: string }) {
         `${file.name} on pad ${pad + 1}` +
           (capped ? `, first ${MAX_SECONDS} seconds` : "")
       );
-    } catch {
-      setSay(`${file.name} could not be decoded. Try a WAV, MP3 or M4A.`);
+    } catch (err) {
+      setSay(
+        err instanceof FileTooLargeError
+          ? `${file.name} is too large. Pads hold ${MAX_SECONDS} seconds, so trim it to a short clip first.`
+          : `${file.name} could not be decoded. Try a WAV, MP3 or M4A.`
+      );
     }
   };
 
@@ -440,8 +513,12 @@ export function Sampler({ id }: { id: string }) {
         await engine.loadAudio(0, bytes);
         setSelected(0);
         setSay(`${name} on pad 1`);
-      } catch {
-        setSay(`${name} could not be opened.`);
+      } catch (err) {
+        setSay(
+          err instanceof FileTooLargeError
+            ? `${name} is too large for a pad. Pads hold ${MAX_SECONDS} seconds.`
+            : `${name} could not be opened.`
+        );
       }
     })();
   }, [openWith, ensure]);
@@ -504,8 +581,9 @@ export function Sampler({ id }: { id: string }) {
           onClick={togglePlay}
           className={styles.transportBtn}
           data-on={playing ? "" : undefined}
-          aria-pressed={playing}
         >
+          {/* The words are the action, so there is no aria-pressed on top:
+              "Stop, pressed" says the same thing twice and contradicts itself. */}
           {playing ? "Stop" : "Play"}
         </button>
         <button
@@ -514,7 +592,7 @@ export function Sampler({ id }: { id: string }) {
           className={styles.recBtn}
           data-on={armed ? "" : undefined}
           aria-pressed={armed}
-          aria-label="Record pads into the bar"
+          aria-label="Rec, record pads into the bar"
         >
           <span className={styles.recDot} aria-hidden="true" /> Rec
         </button>
@@ -531,13 +609,19 @@ export function Sampler({ id }: { id: string }) {
           Tempo
           <input
             type="number"
-            min={40}
-            max={220}
-            value={bpm}
+            min={MIN_BPM}
+            max={MAX_BPM}
+            value={tempoDraft ?? bpm}
             onChange={(e) => {
-              const v = Number(e.target.value) || 90;
-              setBpm(v);
-              engineRef.current?.setParam(PARAM.bpm, v);
+              setTempoDraft(e.target.value);
+              const v = Number(e.target.value);
+              if (v >= MIN_BPM && v <= MAX_BPM) commitTempo(v);
+            }}
+            onBlur={() => {
+              if (tempoDraft === null) return;
+              const v = Number(tempoDraft);
+              commitTempo(Number.isFinite(v) && tempoDraft !== "" ? clampBpm(v) : bpm);
+              setTempoDraft(null);
             }}
           />
         </label>
@@ -548,6 +632,7 @@ export function Sampler({ id }: { id: string }) {
             min={0}
             max={75}
             value={Math.round(swing * 100)}
+            aria-valuetext={swing > 0 ? `${Math.round(swing * 100)} percent swing` : "Straight, no swing"}
             onChange={(e) => {
               const v = Number(e.target.value) / 100;
               setSwing(v);
@@ -577,7 +662,8 @@ export function Sampler({ id }: { id: string }) {
             className={styles.mute}
             onClick={() => applyVolume(level, !muted)}
             aria-pressed={muted}
-            aria-label={muted ? "Unmute" : "Mute"}
+            // Fixed name, state in aria-pressed: "Mute, pressed" is muted.
+            aria-label="Mute"
             title={muted ? "Unmute" : "Mute"}
           >
             <Speaker muted={muted} />
@@ -632,9 +718,18 @@ export function Sampler({ id }: { id: string }) {
                     setSelected(pad);
                   }
                 }}
+                // Screen readers in browse mode and voice control send a
+                // bare click with no pointer and no key before it (detail
+                // 0). Real presses already fired on pointerdown or keydown.
+                onClick={(e) => {
+                  if (e.detail !== 0) return;
+                  void hit(pad, DEFAULT_VELOCITY);
+                  setSelected(pad);
+                  engineRef.current?.requestWave(pad);
+                }}
                 aria-label={`Pad ${pad + 1}, ${padName(pad)}${
                   recorded[pad] ? ", sampled" : ""
-                }, key ${keyForPad(pad)}`}
+                }${selected === pad ? ", selected" : ""}, key ${keyForPad(pad)}`}
               >
                 <span className={styles.padKey} aria-hidden="true">
                   {keyForPad(pad)}
@@ -671,7 +766,23 @@ export function Sampler({ id }: { id: string }) {
             onPointerUp={stopSample}
             onPointerLeave={stopSample}
             onPointerCancel={stopSample}
-            aria-label={`Hold to sample into pad ${selected + 1} from the microphone`}
+            // Hold Space or Enter, the keyboard's version of holding it down.
+            onKeyDown={(e) => {
+              if (e.key !== " " && e.key !== "Enter") return;
+              e.preventDefault();
+              if (!e.repeat) void startSample();
+            }}
+            onKeyUp={(e) => {
+              if (e.key !== " " && e.key !== "Enter") return;
+              e.preventDefault();
+              stopSample();
+            }}
+            onBlur={stopSample}
+            aria-label={
+              sampling
+                ? `Recording into pad ${selected + 1}, let go to stop`
+                : `Sample, hold to record into pad ${selected + 1} from the microphone`
+            }
           >
             {sampling ? "Recording" : "Sample"}
           </button>

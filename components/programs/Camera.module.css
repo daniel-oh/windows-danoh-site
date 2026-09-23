@@ -117,8 +117,15 @@
   font-size: 11px;
 }
 
-.snapRow[hidden] {
-  display: none;
+/* Before the first Snap the row holds only the (empty) live region: out of
+ * the flow so it takes no space, but still there to be announced into. */
+.snapRow[data-empty] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .loader {

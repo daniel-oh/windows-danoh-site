@@ -39,6 +39,16 @@ type Handlers = {
   onRecordFull?: (pad: number) => void;
 };
 
+/** Largest file Load or Explorer will decode. */
+export const MAX_FILE_BYTES = 30 * 1024 * 1024;
+
+export class FileTooLargeError extends Error {
+  constructor() {
+    super("File is too large to load onto a pad");
+    this.name = "FileTooLargeError";
+  }
+}
+
 export class SamplerEngine {
   readonly ctx: AudioContext;
   readonly node: AudioWorkletNode;
@@ -47,7 +57,17 @@ export class SamplerEngine {
   private handlers: Handlers = {};
   private mic: MediaStream | null = null;
   private micSource: MediaStreamAudioSourceNode | null = null;
+  // One permission prompt at a time, shared by every press that arrives
+  // while it is up, and a generation that releaseMic() bumps so a stream
+  // granted after the press ended (or the window closed) is stopped the
+  // moment it arrives instead of being left open with nobody holding it.
+  private micPending: Promise<void> | null = null;
+  private micGen = 0;
   private closed = false;
+  // Replies the worklet sends back once (a bounce, the stats), keyed by
+  // type. One permanent handler reads them, so two requests in flight at
+  // once cannot unhook each other.
+  private waiting = new Map<string, (data: never) => void>();
 
   private constructor(ctx: AudioContext, node: AudioWorkletNode, names: string[]) {
     this.ctx = ctx;
@@ -60,7 +80,27 @@ export class SamplerEngine {
       else if (m.type === "wave") this.handlers.onWave?.(m as Wave);
       else if (m.type === "padLen") this.handlers.onPadLen?.(m.pad, m.len, m.loaded);
       else if (m.type === "recordFull") this.handlers.onRecordFull?.(m.pad);
+      else {
+        const resolve = this.waiting.get(m.type);
+        if (resolve) {
+          this.waiting.delete(m.type);
+          resolve(m as never);
+        }
+      }
     };
+  }
+
+  /** Sends a request and waits for its one reply. A second request of the
+   * same kind while one is pending shares the first answer. */
+  private ask<T>(reply: string, message: object): Promise<T> {
+    return new Promise<T>((resolve) => {
+      const prev = this.waiting.get(reply);
+      this.waiting.set(reply, (data: never) => {
+        prev?.(data);
+        resolve(data as T);
+      });
+      this.node.port.postMessage(message);
+    });
   }
 
   static supported(): boolean {
@@ -79,6 +119,17 @@ export class SamplerEngine {
     const Ctor =
       window.AudioContext ??
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    // iOS treats Web Audio as a ringtone by default, so the ring/silent
+    // switch mutes it while videos on the same page play fine. An
+    // instrument is playback (Safari 17+; elsewhere this is absent).
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) {
+      try {
+        session.type = "playback";
+      } catch {
+        // Older implementations reject some types; the default still plays.
+      }
+    }
     const ctx = new Ctor({ latencyHint: "interactive" });
     // Safari hands back a suspended context even inside a gesture.
     if (ctx.state === "suspended") await ctx.resume();
@@ -147,10 +198,15 @@ export class SamplerEngine {
     this.node.port.postMessage({ type: "wave", pad });
   }
 
-  /** Opens the mic (asking permission the first time) and records into a pad. */
-  async startRecording(pad: number) {
-    if (!this.mic) {
-      this.mic = await navigator.mediaDevices.getUserMedia({
+  /** Opens the mic, asking permission the first time. Rejects with an
+   * AbortError if the mic was released (the press ended, the window closed)
+   * while the prompt was still up; the stream it got is already stopped. */
+  openMic(): Promise<void> {
+    if (this.mic) return Promise.resolve();
+    if (this.micPending) return this.micPending;
+    const gen = this.micGen;
+    this.micPending = navigator.mediaDevices
+      .getUserMedia({
         audio: {
           // A sampler wants the room, not a phone call: the three cleanups
           // below are what make a recorded snare sound like a voice memo.
@@ -159,22 +215,41 @@ export class SamplerEngine {
           autoGainControl: false,
         },
         video: false,
+      })
+      .then((stream) => {
+        if (this.closed || gen !== this.micGen) {
+          stream.getTracks().forEach((t) => t.stop());
+          throw new DOMException("The microphone was released", "AbortError");
+        }
+        this.mic = stream;
+        this.micSource = this.ctx.createMediaStreamSource(stream);
+        this.micSource.connect(this.node);
+      })
+      .finally(() => {
+        this.micPending = null;
       });
-      this.micSource = this.ctx.createMediaStreamSource(this.mic);
-      this.micSource.connect(this.node);
-    }
+    return this.micPending;
+  }
+
+  /** Starts a take on a pad. The mic must already be open. */
+  startRecording(pad: number) {
     this.node.port.postMessage({ type: "record", pad });
   }
 
   /** Decodes a file at the context's rate and puts it on a pad. Mono,
    * because a pad is one voice; the file never leaves the browser. */
   async loadFile(pad: number, file: File) {
+    if (file.size > MAX_FILE_BYTES) throw new FileTooLargeError();
     return this.loadAudio(pad, await file.arrayBuffer());
   }
 
   /** The same, for bytes that came from somewhere other than a file picker,
    * such as the desktop's own filesystem. */
   async loadAudio(pad: number, bytes: ArrayBuffer) {
+    // A pad keeps six seconds, but decoding happens first and at full
+    // length: an hour of MP3 is over a gigabyte of floats and takes the tab
+    // down. No drum break worth loading is anywhere near this.
+    if (bytes.byteLength > MAX_FILE_BYTES) throw new FileTooLargeError();
     const decoded = await this.ctx.decodeAudioData(bytes);
     const frames = decoded.length;
     const mono = new Float32Array(frames);
@@ -195,6 +270,7 @@ export class SamplerEngine {
   /** Drops the microphone entirely, which is what turns the browser's
    * recording indicator off. */
   releaseMic() {
+    this.micGen++;
     this.micSource?.disconnect();
     this.micSource = null;
     this.mic?.getTracks().forEach((t) => t.stop());
@@ -206,38 +282,18 @@ export class SamplerEngine {
   }
 
   /** Renders the pattern faster than real time through the same DSP. */
-  bounce(frames: number): Promise<{ samples: Float32Array; rate: number }> {
-    return new Promise((resolve) => {
-      const port = this.node.port;
-      const prev = port.onmessage;
-      port.onmessage = (e) => {
-        if (e.data?.type === "bounced") {
-          port.onmessage = prev;
-          resolve({ samples: e.data.samples, rate: e.data.rate });
-          return;
-        }
-        prev?.call(port, e);
-      };
-      port.postMessage({ type: "bounce", frames });
+  async bounce(frames: number): Promise<{ samples: Float32Array; rate: number }> {
+    const m = await this.ask<{ samples: Float32Array; rate: number }>("bounced", {
+      type: "bounce",
+      frames,
     });
+    return { samples: m.samples, rate: m.rate };
   }
 
   /** How many blocks the audio thread completed since the last call. Used by
    * the benchmark to show it kept running while the main thread was stuck. */
   stats(): Promise<Stats> {
-    return new Promise((resolve) => {
-      const port = this.node.port;
-      const prev = port.onmessage;
-      port.onmessage = (e) => {
-        if (e.data?.type === "stats") {
-          port.onmessage = prev;
-          resolve(e.data as Stats);
-          return;
-        }
-        prev?.call(port, e);
-      };
-      port.postMessage({ type: "stats" });
-    });
+    return this.ask<Stats>("stats", { type: "stats" });
   }
 
   close() {

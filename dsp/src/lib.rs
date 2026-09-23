@@ -273,7 +273,14 @@ pub extern "C" fn set_param(id: u32, value: f32) {
 
 #[no_mangle]
 pub extern "C" fn note_on(pad: u32, velocity: f32, semitones: f32) {
-    let s = state();
+    start_voice(state(), pad, velocity, semitones);
+}
+
+// The body of note_on, taking the state it is given. The sequencer calls
+// this from inside render(), which already holds the one `&mut State`;
+// going through note_on there would make a second live `&mut` to the same
+// static, which Rust does not allow even when it happens to work.
+fn start_voice(s: &mut State, pad: u32, velocity: f32, semitones: f32) {
     if !s.ready {
         return;
     }
@@ -482,7 +489,7 @@ fn render(s: &mut State, out: *mut f32, frames: usize) {
                 for pad in 0..PADS {
                     let v = s.pattern[step * PADS + pad];
                     if v > 0.0 {
-                        note_on(pad as u32, v, 0.0);
+                        start_voice(s, pad as u32, v, 0.0);
                     }
                 }
                 let base = step_frames(s.bpm, s.sample_rate);

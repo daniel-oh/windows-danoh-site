@@ -20,6 +20,15 @@ export function padForKey(key: string): number {
   return -1;
 }
 
+/** Where the key physically is, not what it types: on AZERTY or Dvorak the
+ * letters move but the grid should not. Falls back to the character for
+ * keys that report no code. */
+export function padForKeyEvent(e: { code?: string; key: string }): number {
+  const m = /^(?:Key([A-Z])|Digit([0-9]))$/.exec(e.code ?? "");
+  if (m) return padForKey((m[1] ?? m[2]).toLowerCase());
+  return e.code ? -1 : padForKey(e.key);
+}
+
 /** The key that plays a pad, for the labels in the corner of each pad. */
 export function keyForPad(pad: number): string {
   const row = Math.floor(pad / 4);

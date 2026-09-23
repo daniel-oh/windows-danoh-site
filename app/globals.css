@@ -224,6 +224,16 @@ figcaption {
     padding: 6px 8px;
     font-size: 16px; /* prevents iOS Safari zoom-on-focus */
   }
+  /* The same zoom happens on number fields and selects (Sampler's tempo
+   * and preset), which the rule above did not name. */
+  .window .window-body input[type="number"],
+  .window .window-body input[type="search"],
+  .window .window-body input[type="url"],
+  .window .window-body input[type="tel"],
+  .window .window-body select {
+    min-height: 32px;
+    font-size: 16px;
+  }
   /* Radios + checkboxes: expand the clickable area so the whole label
    * reads as the tap target. 98.css uses the sibling pattern
    * (input THEN label, the box drawn via `+ label::before`); the
