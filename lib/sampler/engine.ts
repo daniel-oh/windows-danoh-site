@@ -117,6 +117,18 @@ export class SamplerEngine {
     });
   }
 
+  // The context being built or running, so a gesture that ends before
+  // create() has finished can still start it.
+  private static latest: AudioContext | null = null;
+
+  /** Call from touchend / click / keydown: the gestures iOS accepts. */
+  static unlockAudio() {
+    const ctx = SamplerEngine.latest;
+    if (ctx && ctx.state !== "running" && ctx.state !== "closed") {
+      void ctx.resume().catch(() => {});
+    }
+  }
+
   static supported(): boolean {
     return (
       typeof window !== "undefined" &&
@@ -145,8 +157,14 @@ export class SamplerEngine {
       }
     }
     const ctx = new Ctor({ latencyHint: "interactive" });
-    // Safari hands back a suspended context even inside a gesture.
-    if (ctx.state === "suspended") await ctx.resume();
+    SamplerEngine.latest = ctx;
+    // Safari hands back a suspended context, and iOS only lets it start
+    // from a gesture that has ENDED (touchend, click), not the pointerdown
+    // that got us here. Awaiting resume() here never returned on an
+    // iPhone, so the engine never finished starting and no pad made a
+    // sound. Ask now (desktop browsers say yes), don't wait, and
+    // unlockAudio() asks again on the touch's end.
+    if (ctx.state !== "running") void ctx.resume().catch(() => {});
 
     // The worklet module and the wasm bytes load in parallel. The bytes are
     // sent across as bytes: a worklet has no fetch, and a compiled

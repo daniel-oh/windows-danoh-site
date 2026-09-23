@@ -216,6 +216,19 @@ export function Sampler({ id }: { id: string }) {
     };
   }, []);
 
+  // iOS starts audio only from a gesture that has ended. Pads play on
+  // pointerdown for feel, so the release is what actually unlocks the
+  // sound; listened for on the whole window, capture phase, so no handler
+  // can swallow it.
+  useEffect(() => {
+    const unlock = () => SamplerEngine.unlockAudio();
+    const events = ["touchend", "pointerup", "click", "keydown"] as const;
+    for (const ev of events) window.addEventListener(ev, unlock, { capture: true, passive: true });
+    return () => {
+      for (const ev of events) window.removeEventListener(ev, unlock, { capture: true });
+    };
+  }, []);
+
   const minimized = win.status === "minimized";
   useEffect(() => {
     if (!minimized) return;

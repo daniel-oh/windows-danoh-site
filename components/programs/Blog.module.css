@@ -30,6 +30,11 @@
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #808080;
+    /* Stacked on a phone, the list grew to all twelve posts, pushed the
+     * post below the window and could not scroll (nothing bounded its
+     * height). It keeps a share of the window and scrolls; the post gets
+     * the rest and scrolls on its own. */
+    max-height: 40dvh;
   }
 }
 
