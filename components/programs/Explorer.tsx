@@ -25,6 +25,10 @@ import { createWindow } from "@/lib/createWindow";
 import { PROGRAMS } from "@/lib/programs";
 import { alert } from "@/lib/alert";
 
+// Shared by every Explorer window, like the real clipboard: copy in one
+// window, paste in another.
+let explorerClipboard: { action: "copy" | "cut"; path: string } | null = null;
+
 export function Explorer({ id }: { id: string }) {
   const createContextMenu = useCreateContextMenu();
   const [state, dispatch] = useAtom(windowAtomFamily(id));
@@ -133,13 +137,19 @@ export function Explorer({ id }: { id: string }) {
     setNewFileName(e.target.value);
   };
 
-  const handleFileSave = () => {
+  const handleFileSave = async () => {
     if (newFileName.trim() === "") {
       alert({ message: "File name cannot be empty", icon: "x" });
       return;
     }
-    action!(`${currentPath}/${newFileName}`);
-    // Close this window
+    // Awaited, and the dialog stays open if it fails: it used to close
+    // straight away whether or not the file was written.
+    try {
+      await action!(`${currentPath}/${newFileName}`);
+    } catch {
+      alert({ message: "Could not save the file. Try again.", icon: "x" });
+      return;
+    }
     windowListDispatch({
       type: "REMOVE",
       payload: id,
@@ -190,6 +200,11 @@ export function Explorer({ id }: { id: string }) {
       const oldPath = selectedItem!;
       const newPath = `${currentPath}/${newFileName}`;
       const fs = await getFsManager();
+      // Renaming onto an existing name used to replace that file.
+      if (await fs.getItem(newPath, "shallow")) {
+        alert({ message: `There is already an item named ${newFileName}.`, icon: "x" });
+        return;
+      }
       await fs.move(oldPath, newPath);
       setIsRenaming(false);
       setSelectedItem(newPath);
@@ -198,63 +213,57 @@ export function Explorer({ id }: { id: string }) {
     }
   };
 
-  const handleCopy = useCallback(async (path: string) => {
-    try {
-      const fs = await getFsManager();
-      const item = await fs.getItem(path, "deep");
-      if (item) {
-        await navigator.clipboard.writeText(
-          JSON.stringify({ action: "copy", item })
-        );
-      }
-    } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-    }
+  // Copy and Cut remember a path; nothing is read or removed until Paste.
+  // They used to put the item, as text, on the system clipboard, and Cut
+  // deleted it at once: the clipboard was then the only copy (the next
+  // Ctrl+C anywhere lost it) and anything that was not text came back
+  // corrupted.
+  const handleCopy = useCallback((path: string) => {
+    explorerClipboard = { action: "copy", path };
   }, []);
 
-  const handleCut = useCallback(async (path: string) => {
-    try {
-      const fs = await getFsManager();
-      const item = await fs.getItem(path, "deep");
-      if (item) {
-        await navigator.clipboard.writeText(
-          JSON.stringify({ action: "cut", item })
-        );
-        await fs.delete(path);
-      }
-    } catch (error) {
-      console.error("Failed to cut to clipboard:", error);
-    }
+  const handleCut = useCallback((path: string) => {
+    explorerClipboard = { action: "cut", path };
   }, []);
 
   const handlePaste = useCallback(async () => {
+    const clip = explorerClipboard;
+    if (!clip) return;
     try {
-      const clipboardContent = await navigator.clipboard.readText();
-      const { action, item } = JSON.parse(clipboardContent);
-
-      let newPath = `${currentPath}/${item.name}`;
-      let counter = 1;
-
       const fs = await getFsManager();
+      if (!(await fs.getItem(clip.path, "shallow"))) {
+        explorerClipboard = null;
+        alert({ message: "The item you copied is no longer there.", icon: "x" });
+        return;
+      }
+      const name = clip.path.split("/").pop() || "item";
+      if (currentPath === clip.path || currentPath.startsWith(`${clip.path}/`)) {
+        alert({ message: "A folder cannot be pasted inside itself.", icon: "x" });
+        return;
+      }
 
+      let newPath = `${currentPath}/${name}`;
+      let counter = 1;
       while (await fs.getItem(newPath, "shallow")) {
-        const nameParts = item.name.split(".");
+        const nameParts = name.split(".");
         if (nameParts.length > 1) {
           const extension = nameParts.pop();
-          newPath = `${currentPath}/${nameParts.join(
-            "."
-          )}_${counter}.${extension}`;
+          newPath = `${currentPath}/${nameParts.join(".")}_${counter}.${extension}`;
         } else {
-          newPath = `${currentPath}/${item.name}_${counter}`;
+          newPath = `${currentPath}/${name}_${counter}`;
         }
         counter++;
       }
 
-      if (action === "copy" || action === "cut") {
-        await fs.insert(newPath, item);
+      await fs.copy(clip.path, newPath);
+      // A cut is only removed once the paste has landed.
+      if (clip.action === "cut") {
+        await fs.delete(clip.path);
+        explorerClipboard = null;
       }
+      setSelectedItem(newPath);
     } catch (error) {
-      console.error("Failed to paste from clipboard:", error);
+      console.error("Failed to paste:", error);
       alert({ message: "Failed to paste item", icon: "x" });
     }
   }, [currentPath]);

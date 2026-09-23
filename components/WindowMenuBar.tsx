@@ -6,6 +6,10 @@ import { createWindow } from "@/lib/createWindow";
 import { getParentPath, lastVisitedPathAtom } from "@/state/lastVisitedPath";
 import { getFsManager } from "@/state/fsManager";
 
+// The Save listener waiting on each window's app, so a second click
+// replaces the first instead of stacking beside it.
+const pendingSaves = new Map<string, (event: MessageEvent) => void>();
+
 export function WindowMenuBar({ id }: { id: string }) {
   const [state] = useAtom(windowAtomFamily(id));
   const windowsDispatch = useSetAtom(windowsListAtom);
@@ -43,6 +47,7 @@ export function WindowMenuBar({ id }: { id: string }) {
                           "message",
                           handleSaveComplete
                         );
+                        pendingSaves.delete(id);
 
                         const content = event.data.content;
                         const lastVisitedPath = store.get(lastVisitedPathAtom);
@@ -70,6 +75,12 @@ export function WindowMenuBar({ id }: { id: string }) {
                       }
                     };
 
+                    // One pending Save per window. Each click used to add
+                    // another listener, and the app's one reply then opened
+                    // a Save dialog per click.
+                    const previous = pendingSaves.get(id);
+                    if (previous) window.removeEventListener("message", previous);
+                    pendingSaves.set(id, handleSaveComplete);
                     window.addEventListener("message", handleSaveComplete);
 
                     // "*" because the saved-program iframe is srcDoc-

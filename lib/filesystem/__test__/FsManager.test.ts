@@ -387,3 +387,48 @@ describe("FsManager", () => {
     });
   });
 });
+
+describe("FsManager copy and move keep bytes exact", () => {
+  let fs: FsManager;
+  // Every byte value, including ones that are not valid UTF-8: a WAV is
+  // full of them, and a text round trip mangles them.
+  const bytes = () => new Uint8Array(Array.from({ length: 256 }, (_, i) => i)).buffer;
+  const same = async (path: string) => {
+    const got = await fs.readBytes(path);
+    expect(got && new Uint8Array(got)).toEqual(new Uint8Array(bytes()));
+  };
+
+  beforeEach(async () => {
+    fs = new FsManager(await getNodeDirectoryHandle());
+  });
+
+  it("copies a binary file and leaves the original", async () => {
+    await fs.writeFile("a.wav", bytes());
+    await fs.copy("a.wav", "b.wav");
+    await same("a.wav");
+    await same("b.wav");
+  });
+
+  it("renames a folder without corrupting the audio in it", async () => {
+    await fs.createFolder("Samples");
+    await fs.createFolder("Samples/kicks");
+    await fs.writeFile("Samples/kicks/k.wav", bytes());
+    await fs.move("Samples", "Loops");
+    await same("Loops/kicks/k.wav");
+    expect(await fs.getItem("Samples", "shallow")).toBeNull();
+  });
+
+  it("moves between a mounted drive and the desktop's own", async () => {
+    // The memory adapter hands back one shared root, so mount a folder
+    // inside it to keep the two drives apart.
+    const root = await getNodeDirectoryHandle();
+    const mounted = await root.getDirectoryHandle("elsewhere", { create: true });
+    fs = new FsManager(root, { usb: mounted });
+    await fs.writeFile("/mnt/usb/x.wav", bytes());
+    // Really on the mount, not the desktop's root.
+    expect(await fs.getItem("/x.wav", "shallow")).toBeNull();
+    await fs.move("/mnt/usb/x.wav", "/x.wav");
+    await same("/x.wav");
+    expect(await fs.getItem("/mnt/usb/x.wav", "shallow")).toBeNull();
+  });
+});

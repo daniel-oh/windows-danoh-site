@@ -151,7 +151,11 @@ export class FsManager {
       this.mountedDrives[name] = new Drive(new RealFs(handle));
     }
 
-    this.setupDefaultDirectories();
+    // Not awaited (a constructor cannot), so its failure has to be caught
+    // here or it surfaces as an unhandled rejection.
+    this.setupDefaultDirectories().catch((err) =>
+      console.error("[fs] could not create the default folders:", err)
+    );
   }
 
   public async setupDefaultDirectories(): Promise<void> {
@@ -284,6 +288,23 @@ export class FsManager {
     return this.rootDrive.readBytes(path);
   }
 
+  /** Byte-exact copy of a file or a folder, across mounted drives too.
+   * Built on readBytes rather than getFolder(deep), which decodes every
+   * file as text and so corrupted anything that is not (a Sampler WAV). */
+  async copy(from: string, to: string): Promise<void> {
+    const bytes = await this.readBytes(from);
+    if (bytes) {
+      await this.writeFile(to, bytes);
+      return;
+    }
+    const folder = await this.getFolder(from, "shallow");
+    if (!folder) throw new Error(`Nothing at ${from}`);
+    await this.createFolder(to);
+    for (const name of Object.keys(folder.items)) {
+      await this.copy(`${from}/${name}`, `${to}/${name}`);
+    }
+  }
+
   async insert(path: string, item: DeepFolder | DeepFile): Promise<void> {
     const mountedDrive = this.getMountedDriveForPath(path);
     if (mountedDrive) {
@@ -295,16 +316,12 @@ export class FsManager {
   }
 
   async move(oldPath: string, newPath: string): Promise<void> {
-    const mountedDrive = this.getMountedDriveForPath(oldPath);
-    if (mountedDrive) {
-      await mountedDrive.move(
-        this.getRelativePath(oldPath),
-        this.getRelativePath(newPath)
-      );
-    } else {
-      await this.rootDrive.move(oldPath, newPath);
-    }
-    this.notifyWrite();
+    // Copy then delete, byte for byte. Drive.move rebuilt folders from
+    // getFolder(deep), which reads every file as text, so renaming a folder
+    // corrupted the audio in it; it also used one drive for both paths, so
+    // a move between a mounted folder and the desktop's own went wrong.
+    await this.copy(oldPath, newPath);
+    await this.delete(oldPath);
   }
 
   getFolderAtom(

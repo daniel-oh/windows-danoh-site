@@ -37,7 +37,12 @@ export class RealFs {
     try {
       await writable.write(content);
     } catch (e) {
-      console.error(e);
+      // abort() discards the swap file and leaves the old contents in
+      // place. Logging and then close() used to commit an empty file, so a
+      // failed write (a full disk) silently blanked registry.json or a
+      // program's index.html.
+      await writable.abort().catch(() => {});
+      throw e;
     }
     await writable.close();
   }

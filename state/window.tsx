@@ -16,7 +16,7 @@ export type Program =
   | {
       type: "explorer";
       currentPath?: string;
-      action?: (path: string) => void;
+      action?: (path: string) => void | Promise<void>;
       actionText?: string;
     }
   | {
@@ -69,6 +69,8 @@ export type WindowAction =
   // instead of collapsing to the minimum. No-op once height is numeric.
   | { type: "MATERIALIZE_HEIGHT"; payload: number }
   | { type: "TOGGLE_MAXIMIZE" }
+  // The viewport changed (rotation, a narrower browser): see FIT_VIEWPORT.
+  | { type: "FIT_VIEWPORT"; payload: { width: number; height: number; phone: boolean } }
   | { type: "TOGGLE_MINIMIZE" }
   | { type: "RESTORE" }
   | { type: "MOVE"; payload: { dx: number; dy: number } }
@@ -178,6 +180,21 @@ function windowReducerInner(
         ...state,
         status: state.status === "maximized" ? "normal" : "maximized",
       };
+    case "FIT_VIEWPORT": {
+      // Positions were only checked when a window moved, so rotating a
+      // phone or narrowing the browser could leave a window's controls
+      // off the right edge. On a phone a window is maximized, as it would
+      // have been had it opened there; otherwise the whole window comes
+      // back into view where it fits.
+      const { width, height, phone } = action.payload;
+      if (state.status !== "normal") return state;
+      if (phone) return { ...state, status: "maximized" };
+      const w = state.size.width;
+      const h = state.size.height === "auto" ? 0 : state.size.height;
+      const x = Math.min(state.pos.x, Math.max(0, width - w));
+      const y = Math.min(state.pos.y, Math.max(0, height - 40 - Math.min(h, height - 40)));
+      return x === state.pos.x && y === state.pos.y ? state : { ...state, pos: { x: Math.max(0, x), y: Math.max(0, y) } };
+    }
     case "TOGGLE_MINIMIZE":
       if (state.status === "minimized") {
         return { ...state, status: state.restoreStatus ?? "normal" };
