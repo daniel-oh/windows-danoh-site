@@ -129,7 +129,10 @@ select:focus-visible {
    3-4px offsets, which looks centred at 16x14 and lopsided at 24x20, so
    the glyphs are re-centred the same way the phone rules do. */
 .window .title-bar-controls button {
-  min-width: 24px;
+  /* 26 wide, flush: WCAG 2.5.8 needs 24px of clear space around a target
+   * under 24x24, and 26px-wide neighbours give it without a gap that
+   * detaches Close from the group. */
+  min-width: 26px;
   min-height: 20px;
 }
 .window .title-bar-controls button[aria-label="Minimize"] {
@@ -146,11 +149,10 @@ select:focus-visible {
   touch-action: none;
 }
 
-/* 98.css's 2px gap left Close 22px of clear space from Maximize, under the
- * 24px WCAG 2.5.8 asks for at 24x20. Two more pixels, same look. (Phones
- * get 26px buttons below and pass on size alone.) */
+/* Close sits flush with Maximize, one group of three. A gap (98.css's 2px,
+ * or the 4px tried here) read as a stray button, worst on a phone. */
 .window .title-bar-controls button[aria-label="Close"] {
-  margin-left: 4px;
+  margin-left: 0;
 }
 
 /* Figures / captions — used by RichMarkdown's <img> override. */

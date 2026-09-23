@@ -24,7 +24,8 @@
 
   @media (max-width: 768px) {
     flex-direction: column;
-    gap: 10px;
+    flex: none;
+    gap: 16px;
   }
 }
 
@@ -143,11 +144,35 @@
   @media (max-width: 768px), (pointer: coarse) {
     font-size: 14px;
   }
+
+  /* Stacked on a phone, the window scrolls as one page. This column used
+   * to scroll on its own under the Contents list, so the photo slid under
+   * its top edge and the buttons were cut off at the bottom. */
+  @media (max-width: 768px) {
+    flex: none;
+    overflow: visible;
+  }
 }
 
 .buttonGroup {
   display: flex;
   gap: 10px;
+
+  /* On a phone the row spans the text column exactly, however many
+   * buttons it holds, in equal columns, instead of 75px buttons stopping
+   * short of the edge. */
+  @media (max-width: 768px) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    gap: 8px;
+
+    & > * {
+      min-width: 0;
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+  }
 }
 
 /* Read by screen readers, not drawn. */
@@ -167,6 +192,12 @@
   display: block;
   margin: 0 auto;
   cursor: pointer;
+
+  /* The logo is desktop-only (.sidebarLogo hides on phones); without this
+   * the empty button still took 52px under the Contents list. */
+  @media (max-width: 768px) {
+    display: none;
+  }
 }
 .logoButton:focus-visible {
   outline: 2px solid #000080;
