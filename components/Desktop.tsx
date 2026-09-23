@@ -14,6 +14,7 @@ import { alert } from "@/lib/alert";
 import { useEffect, useRef, useState, useCallback } from "react";
 import cx from "classnames";
 import { useIsMobile } from "@/lib/useIsMobile";
+import { MOBILE_QUERY } from "@/lib/isMobile";
 
 const GRID = 96;
 const GRID_MOBILE = 88;
@@ -21,9 +22,17 @@ const PADDING = 12;
 const DRAG_THRESHOLD = 8;
 const DOUBLE_CLICK_MS = 400;
 
+// Same test as useIsMobile and the --icon-grid media query in
+// Desktop.module.css, so placement, drawing and dragging share one grid.
 function getGridSize() {
   if (typeof window === "undefined") return GRID;
-  return window.innerWidth < 768 ? GRID_MOBILE : GRID;
+  return window.matchMedia(MOBILE_QUERY).matches ? GRID_MOBILE : GRID;
+}
+
+// How many rows of icons fit above the taskbar, never fewer than one.
+function rowsThatFit() {
+  if (typeof window === "undefined") return 6;
+  return Math.max(1, Math.floor((window.innerHeight - 80) / getGridSize()));
 }
 
 function snapToGrid(x: number, y: number, gridSize: number) {
@@ -65,9 +74,7 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   const occupied = new Set(
     Object.values(positions).map((p) => `${p.col},${p.row}`)
   );
-  const maxRows = typeof window !== "undefined"
-    ? Math.floor((window.innerHeight - 80) / getGridSize())
-    : 6;
+  const maxRows = rowsThatFit();
 
   const placeInFirstFree = (id: string) => {
     for (let col = 0; col < 20; col++) {
@@ -87,10 +94,15 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
   // asynchronously, so "after the programs" would race them and end
   // up above Snake.exe. Placed before the program loop so the slot is
   // reserved in the occupied set.
+  // The bottom is the last row that fits: it used to be row 6 at least,
+  // which on a short phone or in landscape is under the taskbar.
   if (!positions[RECYCLE_ICON_ID]) {
-    const bottomRow = Math.max(6, maxRows - 1);
-    positions[RECYCLE_ICON_ID] = { col: 0, row: bottomRow };
-    occupied.add(`0,${bottomRow}`);
+    const bottomRow = maxRows - 1;
+    if (occupied.has(`0,${bottomRow}`)) placeInFirstFree(RECYCLE_ICON_ID);
+    else {
+      positions[RECYCLE_ICON_ID] = { col: 0, row: bottomRow };
+      occupied.add(`0,${bottomRow}`);
+    }
   }
 
   // Glass arrived after layouts were already stored, so it takes the
@@ -185,37 +197,35 @@ export const Desktop = () => {
   // Bin anchored to the bottom, same shape as getDefaultPositions but
   // forced rather than fill-the-gaps.
   const arrangeIcons = useCallback(() => {
-    const gridSize = getGridSize();
-    const maxRows = Math.max(
-      6,
-      Math.floor((window.innerHeight - 80) / gridSize)
-    );
-    const positions: IconPositions = {
-      [BLOG_ICON_ID]: { col: 0, row: 0 },
-      [RESUME_ICON_ID]: { col: 0, row: 1 },
-      [MINESWEEPER_ICON_ID]: { col: 0, row: 2 },
-      [GLASS_ICON_ID]: { col: 0, row: 3 },
-      [CAMERA_ICON_ID]: { col: 0, row: 4 },
-      [SAMPLER_ICON_ID]: { col: 0, row: 5 },
-      [RECYCLE_ICON_ID]: { col: 0, row: Math.max(6, maxRows - 1) },
-    };
-    const occupied = new Set(
-      Object.values(positions).map((p) => `${p.col},${p.row}`)
-    );
-    for (const program of programs) {
-      let placed = false;
-      for (let col = 0; col < 20 && !placed; col++) {
+    const maxRows = rowsThatFit();
+    // Recycle Bin at the bottom of the first column, the built-ins down
+    // from the top, and everything wraps to the next column when a short
+    // screen runs out of rows.
+    const bottom = `0,${maxRows - 1}`;
+    const positions: IconPositions = { [RECYCLE_ICON_ID]: { col: 0, row: maxRows - 1 } };
+    const occupied = new Set([bottom]);
+    const place = (id: string) => {
+      for (let col = 0; col < 20; col++) {
         for (let row = 0; row < maxRows; row++) {
           const k = `${col},${row}`;
           if (!occupied.has(k)) {
-            positions[program.id] = { col, row };
+            positions[id] = { col, row };
             occupied.add(k);
-            placed = true;
-            break;
+            return;
           }
         }
       }
-    }
+    };
+    for (const id of [
+      BLOG_ICON_ID,
+      RESUME_ICON_ID,
+      MINESWEEPER_ICON_ID,
+      GLASS_ICON_ID,
+      CAMERA_ICON_ID,
+      SAMPLER_ICON_ID,
+    ])
+      place(id);
+    for (const program of programs) place(program.id);
     // Replace the whole map (not merge): drops stale entries for
     // deleted programs and guarantees no two icons share a cell.
     setIconPositions(positions);
@@ -308,6 +318,7 @@ export const Desktop = () => {
         isSelected={selectedIcon === BLOG_ICON_ID}
         onSelect={() => setSelectedIcon(BLOG_ICON_ID)}
         position={iconPositions[BLOG_ICON_ID] || { col: 0, row: 0 }}
+        placed={!!iconPositions[BLOG_ICON_ID]}
         onMove={(col, row) => moveIcon(BLOG_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -319,6 +330,7 @@ export const Desktop = () => {
         isSelected={selectedIcon === RESUME_ICON_ID}
         onSelect={() => setSelectedIcon(RESUME_ICON_ID)}
         position={iconPositions[RESUME_ICON_ID] || { col: 0, row: 1 }}
+        placed={!!iconPositions[RESUME_ICON_ID]}
         onMove={(col, row) => moveIcon(RESUME_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -330,6 +342,7 @@ export const Desktop = () => {
         isSelected={selectedIcon === MINESWEEPER_ICON_ID}
         onSelect={() => setSelectedIcon(MINESWEEPER_ICON_ID)}
         position={iconPositions[MINESWEEPER_ICON_ID] || { col: 0, row: 2 }}
+        placed={!!iconPositions[MINESWEEPER_ICON_ID]}
         onMove={(col, row) => moveIcon(MINESWEEPER_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -341,6 +354,7 @@ export const Desktop = () => {
         isSelected={selectedIcon === GLASS_ICON_ID}
         onSelect={() => setSelectedIcon(GLASS_ICON_ID)}
         position={iconPositions[GLASS_ICON_ID] || { col: 0, row: 3 }}
+        placed={!!iconPositions[GLASS_ICON_ID]}
         onMove={(col, row) => moveIcon(GLASS_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -352,6 +366,7 @@ export const Desktop = () => {
         isSelected={selectedIcon === CAMERA_ICON_ID}
         onSelect={() => setSelectedIcon(CAMERA_ICON_ID)}
         position={iconPositions[CAMERA_ICON_ID] || { col: 0, row: 4 }}
+        placed={!!iconPositions[CAMERA_ICON_ID]}
         onMove={(col, row) => moveIcon(CAMERA_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -363,6 +378,7 @@ export const Desktop = () => {
         isSelected={selectedIcon === SAMPLER_ICON_ID}
         onSelect={() => setSelectedIcon(SAMPLER_ICON_ID)}
         position={iconPositions[SAMPLER_ICON_ID] || { col: 0, row: 5 }}
+        placed={!!iconPositions[SAMPLER_ICON_ID]}
         onMove={(col, row) => moveIcon(SAMPLER_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -374,6 +390,7 @@ export const Desktop = () => {
         isSelected={selectedIcon === RECYCLE_ICON_ID}
         onSelect={() => setSelectedIcon(RECYCLE_ICON_ID)}
         position={iconPositions[RECYCLE_ICON_ID] || { col: 0, row: 3 }}
+        placed={!!iconPositions[RECYCLE_ICON_ID]}
         onMove={(col, row) => moveIcon(RECYCLE_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -384,6 +401,7 @@ export const Desktop = () => {
           isSelected={selectedIcon === program.id}
           onSelect={() => setSelectedIcon(program.id)}
           position={iconPositions[program.id] || { col: 0, row: 0 }}
+          placed={!!iconPositions[program.id]}
           onMove={(col, row) => moveIcon(program.id, col, row)}
           mobile={mobile}
         />
@@ -407,6 +425,7 @@ function DesktopIcon({
   isSelected,
   onSelect,
   position,
+  placed,
   onMove: onMoveIcon,
   mobile,
   contextItems,
@@ -418,6 +437,9 @@ function DesktopIcon({
   isSelected: boolean;
   onSelect: () => void;
   position: IconPosition;
+  /** False until the layout has given this icon a cell: drawn hidden
+   * until then, so it appears in place instead of jumping there. */
+  placed: boolean;
   onMove: (col: number, row: number) => void;
   mobile: boolean;
   contextItems: ContextItem[];
@@ -562,12 +584,18 @@ function DesktopIcon({
         [styles.selected]: isSelected,
         [styles.dragging]: dragging,
       })}
+      // At rest the geometry comes from --icon-grid, a CSS variable the
+      // same media query sets, so the server's HTML already sits on the
+      // phone's grid. Only a drag uses JS pixels. (It used to be JS
+      // pixels always: 96px from the server, 88px after hydration on a
+      // phone, and every icon slid on load.)
       style={{
         position: "absolute",
-        left: pixelPos.x,
-        top: pixelPos.y,
-        width: gridSize,
-        height: gridSize,
+        left: dragging && dragOffset ? pixelPos.x : `calc(${PADDING}px + ${position.col} * var(--icon-grid))`,
+        top: dragging && dragOffset ? pixelPos.y : `calc(${PADDING}px + ${position.row} * var(--icon-grid))`,
+        width: "var(--icon-grid)",
+        height: "var(--icon-grid)",
+        visibility: placed ? undefined : "hidden",
       }}
       aria-label={`Open ${name}`}
       onClick={handleClick}
@@ -614,6 +642,7 @@ function ProgramIcon({
   isSelected,
   onSelect,
   position,
+  placed,
   onMove,
   mobile,
 }: {
@@ -621,6 +650,9 @@ function ProgramIcon({
   isSelected: boolean;
   onSelect: () => void;
   position: IconPosition;
+  /** False until the layout has given this icon a cell: drawn hidden
+   * until then, so it appears in place instead of jumping there. */
+  placed: boolean;
   onMove: (col: number, row: number) => void;
   mobile: boolean;
 }) {
@@ -644,6 +676,7 @@ function ProgramIcon({
       isSelected={isSelected}
       onSelect={onSelect}
       position={position}
+      placed={placed}
       onMove={onMove}
       mobile={mobile}
       contextItems={[
@@ -688,6 +721,7 @@ function BuiltInIcon({
   isSelected,
   onSelect,
   position,
+  placed,
   onMove,
   mobile,
 }: {
@@ -698,6 +732,9 @@ function BuiltInIcon({
   isSelected: boolean;
   onSelect: () => void;
   position: IconPosition;
+  /** False until the layout has given this icon a cell: drawn hidden
+   * until then, so it appears in place instead of jumping there. */
+  placed: boolean;
   onMove: (col: number, row: number) => void;
   mobile: boolean;
 }) {
@@ -710,6 +747,7 @@ function BuiltInIcon({
       isSelected={isSelected}
       onSelect={onSelect}
       position={position}
+      placed={placed}
       onMove={onMove}
       mobile={mobile}
       contextItems={[{ label: "Open", onClick: onOpen }]}

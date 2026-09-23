@@ -343,46 +343,51 @@ function TaskBar() {
   };
 
   return (
-    <div
-      className={cx("window", styles.taskbar)}
-      role="toolbar"
-      aria-label="Taskbar"
-      data-taskbar
-      onKeyDown={onTaskbarKeyDown}
-    >
-      <button
-        // Stay visually pressed while the menu is open, like the real
-        // Win98 Start button (it only looked pressed on mousedown before).
-        className={cx(styles.startButton, { [styles.active]: startMenuOpen })}
-        aria-label="Start menu"
-        aria-haspopup="menu"
-        aria-expanded={startMenuOpen}
-        aria-controls="start-menu"
-        data-start-button
-        onClick={(e) => {
-          e.stopPropagation();
-          setStartMenuOpen((v) => !v);
-        }}
+    // The nav is the landmark, so the taskbar is not content outside any
+    // region; the toolbar inside keeps its arrow-key semantics. The bar is
+    // absolutely positioned, so this wrapper takes no space.
+    <nav aria-label="Taskbar">
+      <div
+        className={cx("window", styles.taskbar)}
+        role="toolbar"
+        aria-label="Taskbar controls"
+        data-taskbar
+        onKeyDown={onTaskbarKeyDown}
       >
-        {/* The Win98 flag, like the original Start button. Decorative
-         * (the button's aria-label already says "Start menu"). */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/win98-start.png" alt="" className={styles.startLogo} />
-        Start
-      </button>
-      {startMenuOpen && <StartMenu />}
-      <div className={styles.divider}></div>
-      {/* Own strip (not bare flex children): with many windows open the
-       * buttons would otherwise shove the clock and logo off the tray.
-       * Buttons shrink to a readable floor, then the strip scrolls. */}
-      <div className={styles.windowStrip}>
-        {windows.map((id) => (
-          <WindowTaskBarItem key={id} id={id} />
-        ))}
+        <button
+          // Stay visually pressed while the menu is open, like the real
+          // Win98 Start button (it only looked pressed on mousedown before).
+          className={cx(styles.startButton, { [styles.active]: startMenuOpen })}
+          aria-label="Start menu"
+          aria-haspopup="menu"
+          aria-expanded={startMenuOpen}
+          aria-controls="start-menu"
+          data-start-button
+          onClick={(e) => {
+            e.stopPropagation();
+            setStartMenuOpen((v) => !v);
+          }}
+        >
+          {/* The Win98 flag, like the original Start button. Decorative
+           * (the button's aria-label already says "Start menu"). */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/win98-start.png" alt="" className={styles.startLogo} />
+          Start
+        </button>
+        {startMenuOpen && <StartMenu />}
+        <div className={styles.divider}></div>
+        {/* Own strip (not bare flex children): with many windows open the
+         * buttons would otherwise shove the clock and logo off the tray.
+         * Buttons shrink to a readable floor, then the strip scrolls. */}
+        <div className={styles.windowStrip}>
+          {windows.map((id) => (
+            <WindowTaskBarItem key={id} id={id} />
+          ))}
+        </div>
+        <TaskbarClock />
+        <LogoEasterEgg />
       </div>
-      <TaskbarClock />
-      <LogoEasterEgg />
-    </div>
+    </nav>
   );
 }
 

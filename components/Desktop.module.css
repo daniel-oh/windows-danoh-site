@@ -2,6 +2,15 @@
   width: 100%;
   height: 100%;
   position: relative;
+  /* Icon cell size. GRID / GRID_MOBILE in Desktop.tsx, and the same test
+   * as MOBILE_QUERY in lib/isMobile.ts. */
+  --icon-grid: 96px;
+}
+
+@media (max-width: 768px), (pointer: coarse) {
+  .desktop {
+    --icon-grid: 88px;
+  }
 }
 
 .programIcon {

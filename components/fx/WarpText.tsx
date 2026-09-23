@@ -196,11 +196,17 @@ export function WarpText(props: WarpTextProps) {
       setFailed(true);
       return;
     }
+    // Hand the context back when giving up, rather than holding one of the
+    // browser's few WebGL slots for a canvas that will never draw.
+    const giveUp = () => {
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      setFailed(true);
+    };
     const vs = compile(gl, gl.VERTEX_SHADER, VERT);
     const fs = compile(gl, gl.FRAGMENT_SHADER, FRAG);
     const program = gl.createProgram();
     if (!vs || !fs || !program) {
-      setFailed(true);
+      giveUp();
       return;
     }
     gl.attachShader(program, vs);
@@ -208,7 +214,7 @@ export function WarpText(props: WarpTextProps) {
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       console.warn("WarpText link:", gl.getProgramInfoLog(program));
-      setFailed(true);
+      giveUp();
       return;
     }
     gl.useProgram(program);
@@ -349,10 +355,12 @@ export function WarpText(props: WarpTextProps) {
     const onLeave = () => {
       pointer.target = 0;
     };
-    const onLost = (e: Event) => {
-      e.preventDefault();
+    // Nothing here restores a lost context, so fall back to the plain text
+    // rather than leaving an aria-hidden canvas where the headline was.
+    const onLost = () => {
       lost = true;
       stop();
+      setFailed(true);
     };
     const onVisibility = () => {
       pageVisible = !document.hidden;

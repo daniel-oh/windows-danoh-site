@@ -78,6 +78,7 @@ export function BootScreen() {
       const splash = root.querySelector("[data-splash]");
       const bios = root.querySelector("[data-bios]");
       const bar = root.querySelector("[data-loadbar]");
+      const hint = root.querySelector("[data-hint]");
 
       // The classic boot bar: a blue block sliding across a track,
       // looping for as long as the splash is up.
@@ -110,6 +111,9 @@ export function BootScreen() {
         // ~3s; it's still skippable (any key/click/tap) and only ever
         // plays once per browser session, so the dwell can't become a tax.
         .to(splash, { opacity: 1, duration: 1.5 }) // hold
+        // The hint goes the instant the curtain starts to lift: faded
+        // halfway over the desktop it is grey on grey, unreadable text.
+        .set(hint, { visibility: "hidden" })
         .to(root, { opacity: 0, duration: 0.35 });
 
       // Desktop assembly plays under the lifting curtain.
@@ -270,11 +274,14 @@ export function BootScreen() {
         </div>
 
         <div
+          data-hint
           style={{
             position: "absolute",
             bottom: 18,
             fontSize: 11,
-            color: "#5a5a5a",
+            // 6.1:1 on the black. It was #5a5a5a, 2.9:1, which failed at
+            // any size, let alone 11px.
+            color: "#8a8a8a",
             fontFamily: "'Courier New', Menlo, monospace",
           }}
         >
