@@ -1,4 +1,4 @@
-import { AT_REST, dodgeOffset, isAtRest } from "../dodge";
+import { AT_REST, dodgeOffset, isAtRest, pointerDistance } from "../dodge";
 
 const rect = { left: 100, top: 100, width: 100, height: 20 };
 const base = {
@@ -60,5 +60,39 @@ describe("dodge geometry", () => {
   test("a zero radius or reach means it never moves", () => {
     expect(dodgeOffset({ ...base, radius: 0, pointer: centre })).toEqual(AT_REST);
     expect(dodgeOffset({ ...base, reach: 0, pointer: centre })).toEqual(AT_REST);
+  });
+});
+
+describe("measuring from the edge (long lines of text)", () => {
+  // A 400px line, 16px tall, well inside a big viewport.
+  const line = { left: 300, top: 200, width: 400, height: 16 };
+  const edge = {
+    rect: line,
+    reach: 20,
+    radius: 60,
+    falloff: 2,
+    axis: "x" as const,
+    wall: "clamp" as const,
+    viewport: { width: 1400, height: 900 },
+    measure: "edge" as const,
+  };
+
+  test("reacts over the ends of the line, not only its middle", () => {
+    const overLeftEnd = { x: 320, y: 208 };
+    // From the centre this point is 180px away, outside the radius.
+    expect(pointerDistance(overLeftEnd, line, "center")).toBeGreaterThan(60);
+    expect(isAtRest(dodgeOffset({ ...edge, pointer: overLeftEnd }))).toBe(false);
+  });
+
+  test("slides away from the pointer along the line", () => {
+    expect(dodgeOffset({ ...edge, pointer: { x: 320, y: 208 } }).x).toBeGreaterThan(0);
+    expect(dodgeOffset({ ...edge, pointer: { x: 680, y: 208 } }).x).toBeLessThan(0);
+    expect(dodgeOffset({ ...edge, pointer: { x: 320, y: 208 } }).y).toBe(0);
+  });
+
+  test("distance is to the nearest edge", () => {
+    expect(pointerDistance({ x: 500, y: 180 }, line, "edge")).toBe(20);
+    expect(pointerDistance({ x: 500, y: 208 }, line, "edge")).toBe(0);
+    expect(isAtRest(dodgeOffset({ ...edge, pointer: { x: 500, y: 100 } }))).toBe(true);
   });
 });

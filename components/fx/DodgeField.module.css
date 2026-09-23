@@ -6,7 +6,10 @@
 }
 
 .runner {
-  display: block;
+  /* Hugs its content, so the box the pointer is measured against is the
+   * text itself, not the full width of whatever column it sits in. */
+  display: inline-block;
+  max-width: 100%;
   /* Hinted, because this element is about to be translated on a pointer
    * move and nothing else on the page is. */
   will-change: transform;

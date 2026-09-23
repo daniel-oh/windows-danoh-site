@@ -112,15 +112,19 @@ export default function BlogIndex() {
             <div className={styles.taglineLine1}>
               Curator + Creative Technologist
             </div>
-            {/* The one accent on this page: the line steps aside when the
-                cursor comes for it, three times, then gives up. Touch and
-                reduced motion get a line that simply sits there. */}
+            {/* The one accent on this page: the line slides aside when the
+                cursor comes for it, four times, then lets you read it, and
+                plays again once the cursor has been away a moment. Touch
+                and reduced motion get a line that simply sits there. */}
             <DodgeField
               className={styles.taglineLine2}
-              reach={22}
-              radius={96}
-              falloff={2.2}
-              patience={3}
+              measure="edge"
+              axis="x"
+              reach={26}
+              radius={64}
+              falloff={1.6}
+              patience={4}
+              rearmAfter={2500}
             >
               Focused on design, craft, and the work of building things that
               last.
