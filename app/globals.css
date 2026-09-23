@@ -140,6 +140,12 @@ select:focus-visible {
 .window .title-bar-controls button[aria-label="Close"] {
   background-position: center center;
 }
+/* 98.css's 2px gap left Close 22px of clear space from Maximize, under the
+ * 24px WCAG 2.5.8 asks for at 24x20. Two more pixels, same look. (Phones
+ * get 26px buttons below and pass on size alone.) */
+.window .title-bar-controls button[aria-label="Close"] {
+  margin-left: 4px;
+}
 
 /* Figures / captions — used by RichMarkdown's <img> override. */
 figure {

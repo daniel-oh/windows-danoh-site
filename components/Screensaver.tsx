@@ -94,12 +94,19 @@ export function Screensaver() {
     });
 
     const dismiss = () => setActive(false);
+    // The key that wakes the screen is spent on waking it: without this,
+    // Esc also closed the focused window and Enter pressed its button.
+    const dismissKey = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      dismiss();
+    };
     // A breath of delay so the same mouse twitch that has been idle
     // for a minute doesn't dismiss the saver the frame it appears.
     const t = setTimeout(() => {
       window.addEventListener("pointermove", dismiss, { passive: true });
       window.addEventListener("pointerdown", dismiss);
-      window.addEventListener("keydown", dismiss);
+      window.addEventListener("keydown", dismissKey, true);
       window.addEventListener("touchstart", dismiss, { passive: true });
     }, 700);
 
@@ -108,7 +115,7 @@ export function Screensaver() {
       clearTimeout(t);
       window.removeEventListener("pointermove", dismiss);
       window.removeEventListener("pointerdown", dismiss);
-      window.removeEventListener("keydown", dismiss);
+      window.removeEventListener("keydown", dismissKey, true);
       window.removeEventListener("touchstart", dismiss);
       disposeRef.current?.();
       disposeRef.current = null;

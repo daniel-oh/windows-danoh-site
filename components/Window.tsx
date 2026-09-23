@@ -417,11 +417,10 @@ function WindowInner({ id }: { id: string }) {
             aria-label={state.status === "maximized" ? "Restore" : "Maximize"}
             onClick={() => dispatch({ type: "TOGGLE_MAXIMIZE" })}
           ></button>
+          {/* No inline margin: globals.css gives Close the gap WCAG 2.5.8
+              needs from Maximize. This used to zero it. */}
           <button
             aria-label="Close"
-            style={{
-              marginLeft: 0,
-            }}
             onClick={() => windowsDispatch({ type: "REMOVE", payload: id })}
           ></button>
         </div>

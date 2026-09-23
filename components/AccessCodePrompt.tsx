@@ -35,7 +35,18 @@ export function AccessCodePrompt({
       if (res.ok) {
         onSuccess();
       } else {
-        setError("Incorrect code. Please try again.");
+        // The server says which: locked out, used up, expired. Each needs
+        // a different next step, and "Incorrect code" for all of them sent
+        // people retyping a code that was fine.
+        const body = await res.json().catch(() => null);
+        const said = typeof body?.error === "string" ? body.error : "";
+        setError(
+          res.status === 403 && /^Invalid code$/i.test(said)
+            ? "Incorrect code. Please try again."
+            : said && res.status < 500
+              ? said
+              : "Something went wrong on our side. Try again in a moment."
+        );
       }
     } catch {
       setError("Couldn't connect. Check your internet and try again.");

@@ -37,7 +37,11 @@ const GATE_SCRIPT = `(function(){try{
   if (sessionStorage.getItem("${BOOT_KEY}")) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   var el = document.getElementById("danoh-boot");
-  if (el) el.style.display = "flex";
+  if (!el) return;
+  el.style.display = "flex";
+  // If the page never hydrates (a script failed to load), React cannot
+  // take the curtain down, so this does. Hydrated, the element is gone.
+  setTimeout(function(){ if (el.isConnected) el.style.display = "none"; }, 12000);
 }catch(e){}})();`;
 
 const BIOS_LINES = [
@@ -67,8 +71,42 @@ export function BootScreen() {
     sessionStorage.setItem(BOOT_KEY, "1");
 
     let killed = false;
-    let cleanupInput = () => {};
+    let finished = false;
     let tl: { progress: (n: number) => void; kill: () => void } | null = null;
+
+    // Everything that ends the boot is wired before GSAP loads. It used to
+    // live inside the import's then(), so a chunk that failed to load (a
+    // stale deploy, a flaky network, a blocker) left a black screen over
+    // the whole site with no way past it.
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cleanupInput();
+      clearTimeout(safety);
+      setDone(true);
+    };
+    const skip = () => {
+      // Jump the show to its end; the onComplete handler tears down.
+      if (tl) tl.progress(1);
+      else finish();
+    };
+    // The key that skips the boot is spent on skipping it. It used to
+    // carry on into the page: Enter typed a newline into Run's prompt or
+    // pressed Welcome's focused button, Esc closed Welcome.
+    const skipKey = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      skip();
+    };
+    window.addEventListener("pointerdown", skip);
+    window.addEventListener("keydown", skipKey, true);
+    const cleanupInput = () => {
+      window.removeEventListener("pointerdown", skip);
+      window.removeEventListener("keydown", skipKey, true);
+    };
+    // The show runs about three and a half seconds; past eight, something
+    // went wrong and the desktop matters more than the curtain.
+    const safety = setTimeout(finish, 8000);
 
     void import("gsap").then(({ gsap }) => {
       if (killed) return;
@@ -133,26 +171,11 @@ export function BootScreen() {
           clearProps: "transform",
         });
       }, "-=0.25");
-
-      const finish = () => {
-        cleanupInput();
-        setDone(true);
-      };
-
-      const skip = () => {
-        // Jump the show to its end; the onComplete handler tears down.
-        timeline.progress(1);
-      };
-      window.addEventListener("pointerdown", skip);
-      window.addEventListener("keydown", skip);
-      cleanupInput = () => {
-        window.removeEventListener("pointerdown", skip);
-        window.removeEventListener("keydown", skip);
-      };
-    });
+    }).catch(finish);
 
     return () => {
       killed = true;
+      clearTimeout(safety);
       cleanupInput();
       tl?.kill();
     };
