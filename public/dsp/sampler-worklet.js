@@ -38,7 +38,14 @@ class SamplerProcessor extends AudioWorkletProcessor {
           const module = new WebAssembly.Module(msg.bytes);
           this.wasm = new WebAssembly.Instance(module, {}).exports;
           this.wasm.init(sampleRate);
-          this.port.postMessage({ type: "ready", names: this.readNames(), rate: sampleRate });
+          this.port.postMessage({
+            type: "ready",
+            names: this.readNames(),
+            rate: sampleRate,
+            // Frames per pad. The UI turns it into seconds at this rate:
+            // the same pad is 6 s at 48 kHz but 3 s at 96 kHz.
+            capacity: this.wasm.pad_capacity(),
+          });
         } catch (err) {
           this.port.postMessage({ type: "failed", message: String(err) });
         }

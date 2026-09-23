@@ -70,3 +70,10 @@ export function stepForHit(progress: number, quantize: boolean): number {
 export function loopFrames(bpm: number, sampleRate: number): number {
   return Math.round((60 / bpm / 4) * STEPS * sampleRate);
 }
+
+/** A pad's length for a sentence: whole seconds when it is whole, else one
+ * decimal (6 at 48 kHz, 6.5 at 44.1 kHz, 3 at 96 kHz). */
+export function secondsLabel(seconds: number): string {
+  const tenths = Math.round(seconds * 10) / 10;
+  return Number.isInteger(tenths) ? String(tenths) : tenths.toFixed(1);
+}

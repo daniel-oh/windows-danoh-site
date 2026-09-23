@@ -20,6 +20,7 @@ import {
   loopFrames,
   padAtGrid,
   padForKeyEvent,
+  secondsLabel,
   stepForHit,
   velocityFromPoint,
 } from "@/lib/sampler/pads";
@@ -52,7 +53,6 @@ function Speaker({ muted }: { muted: boolean }) {
 }
 
 const SAMPLES_DIR = "/user/My Samples";
-const MAX_SECONDS = 6;
 
 export function Sampler({ id }: { id: string }) {
   const win = useAtomValue(windowAtomFamily(id));
@@ -184,7 +184,7 @@ export function Sampler({ id }: { id: string }) {
         },
         onRecordFull: (pad) => {
           endTake(false);
-          setSay(`Pad ${pad + 1} is full at ${MAX_SECONDS} seconds.`);
+          setSay(`Pad ${pad + 1} is full at ${secondsLabel(engine.padSeconds)} seconds.`);
         },
       });
       engineRef.current = engine;
@@ -450,15 +450,16 @@ export function Sampler({ id }: { id: string }) {
     try {
       const { seconds } = await engine.loadFile(pad, file);
       setSelected(pad);
-      const capped = seconds > MAX_SECONDS;
+      const limit = secondsLabel(engine.padSeconds);
+      const capped = seconds > engine.padSeconds;
       setSay(
         `${file.name} on pad ${pad + 1}` +
-          (capped ? `, first ${MAX_SECONDS} seconds` : "")
+          (capped ? `, first ${limit} seconds` : "")
       );
     } catch (err) {
       setSay(
         err instanceof FileTooLargeError
-          ? `${file.name} is too large. Pads hold ${MAX_SECONDS} seconds, so trim it to a short clip first.`
+          ? `${file.name} is too large. Pads hold ${secondsLabel(engine.padSeconds)} seconds, so trim it to a short clip first.`
           : `${file.name} could not be decoded. Try a WAV, MP3 or M4A.`
       );
     }
@@ -516,7 +517,7 @@ export function Sampler({ id }: { id: string }) {
       } catch (err) {
         setSay(
           err instanceof FileTooLargeError
-            ? `${name} is too large for a pad. Pads hold ${MAX_SECONDS} seconds.`
+            ? `${name} is too large for a pad. Pads hold ${secondsLabel(engine.padSeconds)} seconds.`
             : `${name} could not be opened.`
         );
       }

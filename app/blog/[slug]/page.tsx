@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // over anything set here — so no openGraph.images entry. Twitter and
   // JSON-LD are hand-built absolute strings without metadataBase
   // resolution, so they reference the same route explicitly.
-  const cardImage = `https://danoh.com/blog/${post.slug}/opengraph-image`;
+  const cardImage = `https://danoh.com/blog/${post.slug}/opengraph-image/card`;
   return {
     // Google cuts titles off around 60 characters. The byline suffix is
     // nice to have, so it is dropped rather than letting it push the
@@ -69,7 +69,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       creator: "@danohstudio",
       title: post.title,
       description: post.summary,
-      images: [{ url: cardImage, alt: `${post.title}, a post by Daniel Oh` }],
+      images: [
+        { url: cardImage, alt: `${post.title}, a post by Daniel Oh, on a Windows 98 style title card` },
+      ],
     },
   };
 }
@@ -108,7 +110,7 @@ export default async function Post({ params }: Props) {
     dateModified: post.updated ?? post.date,
     // Always provide an image — required for Discover/article rich
     // treatment. The generated per-post card (opengraph-image.tsx).
-    image: [`https://danoh.com/blog/${post.slug}/opengraph-image`],
+    image: [`https://danoh.com/blog/${post.slug}/opengraph-image/card`],
     author: authorPerson,
     keywords: post.tags.join(", "),
     url: `https://danoh.com/blog/${post.slug}`,

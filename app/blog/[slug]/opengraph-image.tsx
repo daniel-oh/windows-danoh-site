@@ -7,9 +7,33 @@ import { sortedPosts } from "@/content/blog/posts";
 // with the post title in the real 98.css pixel font, so every post —
 // including future ones — gets a distinct share preview for free.
 
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
-export const alt = "Blog post preview styled as a Windows 98 window";
+const size = { width: 1200, height: 630 };
+
+// Per-post metadata rather than a static `alt` export, so Facebook,
+// LinkedIn and anything else reading og:image:alt hears which post the
+// card is for. Using this moves the card to /opengraph-image/card; the
+// old path redirects there (next.config.mjs) so links already shared keep
+// their preview.
+const CARD_ID = "card";
+
+export async function generateImageMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }> | { slug: string };
+}) {
+  const { slug } = await params;
+  const post = sortedPosts.find((p) => p.slug === slug);
+  return [
+    {
+      id: CARD_ID,
+      size,
+      contentType: "image/png",
+      alt: post
+        ? `${post.title}, a post by Daniel Oh, on a Windows 98 style title card`
+        : "danoh.com blog post card styled as a Windows 98 window",
+    },
+  ];
+}
 
 // Read from public/vendor, not node_modules: this route renders at
 // runtime, and the standalone Docker image ships public/ but only

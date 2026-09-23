@@ -51,6 +51,14 @@ const nextConfig = {
         destination: "https://danoh.com/:path*",
         permanent: true,
       },
+      // Post cards moved under /card when they gained per-post alt text
+      // (generateImageMetadata). Previews shared before that still point
+      // at the old path.
+      {
+        source: "/blog/:slug/opengraph-image",
+        destination: "/blog/:slug/opengraph-image/card",
+        permanent: true,
+      },
     ];
   },
   async headers() {

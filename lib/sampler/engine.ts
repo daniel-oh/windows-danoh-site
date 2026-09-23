@@ -54,6 +54,10 @@ export class SamplerEngine {
   readonly node: AudioWorkletNode;
   readonly names: string[];
   readonly sampleRate: number;
+  /** How long a pad can hold at this context's rate. The engine's pads are
+   * a fixed number of frames, so this is 6 s at 48 kHz, 6.5 s at 44.1 kHz
+   * and 3 s at 96 kHz. */
+  readonly padSeconds: number;
   private handlers: Handlers = {};
   private mic: MediaStream | null = null;
   private micSource: MediaStreamAudioSourceNode | null = null;
@@ -69,11 +73,17 @@ export class SamplerEngine {
   // once cannot unhook each other.
   private waiting = new Map<string, (data: never) => void>();
 
-  private constructor(ctx: AudioContext, node: AudioWorkletNode, names: string[]) {
+  private constructor(
+    ctx: AudioContext,
+    node: AudioWorkletNode,
+    names: string[],
+    capacity: number
+  ) {
     this.ctx = ctx;
     this.node = node;
     this.names = names;
     this.sampleRate = ctx.sampleRate;
+    this.padSeconds = capacity / ctx.sampleRate;
     node.port.onmessage = (e) => {
       const m = e.data;
       if (m.type === "tick") this.handlers.onTick?.(m.step, m.peak);
@@ -153,12 +163,12 @@ export class SamplerEngine {
     });
     node.connect(ctx.destination);
 
-    const names = await new Promise<string[]>((resolve, reject) => {
+    const ready = await new Promise<{ names: string[]; capacity: number }>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error("sampler worklet did not start")), 5000);
       node.port.onmessage = (e) => {
         if (e.data?.type === "ready") {
           clearTimeout(timer);
-          resolve(e.data.names as string[]);
+          resolve({ names: e.data.names as string[], capacity: e.data.capacity as number });
         } else if (e.data?.type === "failed") {
           clearTimeout(timer);
           reject(new Error(e.data.message));
@@ -167,7 +177,7 @@ export class SamplerEngine {
       node.port.postMessage({ type: "init", bytes }, [bytes]);
     });
 
-    return new SamplerEngine(ctx, node, names);
+    return new SamplerEngine(ctx, node, ready.names, ready.capacity);
   }
 
   on(handlers: Handlers) {
