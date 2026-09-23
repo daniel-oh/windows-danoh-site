@@ -369,3 +369,13 @@
     animation: none;
   }
 }
+
+.belowTaskbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 100dvh;
+  height: 50vh;
+  background: #c0c0c0;
+  pointer-events: none;
+}

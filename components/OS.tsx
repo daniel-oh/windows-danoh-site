@@ -56,20 +56,6 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
   useAtom(fsManagerAtom);
   const [windows] = useAtom(windowsListAtom);
 
-  // Whatever shows below the desktop (a sliver under the taskbar as
-  // Safari's toolbar settles) is the page canvas, which is teal for the
-  // first paint. While the desktop is up it matches the taskbar instead,
-  // so there is no blue-green streak under it.
-  useEffect(() => {
-    // html and body both carry the teal (globals.css), so both switch.
-    const els = [document.documentElement, document.body];
-    const before = els.map((el) => el.style.backgroundColor);
-    for (const el of els) el.style.backgroundColor = "#c0c0c0";
-    return () => {
-      els.forEach((el, i) => (el.style.backgroundColor = before[i]));
-    };
-  }, []);
-
   // Rotation or a narrower browser: bring every window back on screen
   // (maximized on a phone). Debounced, because a drag-resize of the
   // browser fires this continuously.
@@ -370,6 +356,15 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
       {crt && <div className={styles.crtOverlay} aria-hidden="true" />}
       <Screensaver />
       <BootScreen />
+      {/* The taskbar, continued to the bottom edge of the screen. The
+          desktop is 100dvh tall, and iOS Safari shows a sliver of page
+          below that, above and under its toolbar, which read as a teal
+          streak under the taskbar. On the real thing the taskbar meets
+          the edge of the screen, so this carries its grey from the
+          desktop's bottom edge down. Nothing is drawn where there is no
+          sliver (every desktop browser). Fixed, so the desktop's own
+          overflow clip does not cut it off. */}
+      <div aria-hidden="true" className={styles.belowTaskbar} />
     </div>
   );
 }
