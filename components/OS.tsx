@@ -356,14 +356,9 @@ export function OS({ staticIntro }: { staticIntro?: React.ReactNode }) {
       {crt && <div className={styles.crtOverlay} aria-hidden="true" />}
       <Screensaver />
       <BootScreen />
-      {/* The taskbar, continued to the bottom edge of the screen. The
-          desktop is 100dvh tall, and iOS Safari shows a sliver of page
-          below that, above and under its toolbar, which read as a teal
-          streak under the taskbar. On the real thing the taskbar meets
-          the edge of the screen, so this carries its grey from the
-          desktop's bottom edge down. Nothing is drawn where there is no
-          sliver (every desktop browser). Fixed, so the desktop's own
-          overflow clip does not cut it off. */}
+      {/* Taskbar grey at the screen's bottom edge, for iOS Safari to
+          sample for its toolbar (see .belowTaskbar). Behind the taskbar,
+          so nothing new is visible anywhere else. */}
       <div aria-hidden="true" className={styles.belowTaskbar} />
     </div>
   );

@@ -371,11 +371,18 @@
 }
 
 .belowTaskbar {
+  /* Taskbar grey pinned to the screen's bottom edge, behind the taskbar
+   * (so it is never seen above it) and continuing past the edge. iOS
+   * Safari 26 colours its toolbar from fixed elements touching the screen
+   * edge and otherwise falls back to the page background, which is teal:
+   * the line under the taskbar. The taskbar itself stays absolute:
+   * fixed, its boot slide-in counted as layout shift (0.24 on a phone). */
   position: fixed;
   left: 0;
   right: 0;
-  top: 100dvh;
-  height: 50vh;
+  bottom: -50vh;
+  height: calc(var(--taskbar-height) + 50vh);
   background: #c0c0c0;
   pointer-events: none;
+  z-index: 999;
 }

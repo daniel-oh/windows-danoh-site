@@ -30,11 +30,15 @@
     width: 100%;
     border-right: none;
     border-bottom: 1px solid #808080;
-    /* Stacked on a phone, the list grew to all twelve posts, pushed the
-     * post below the window and could not scroll (nothing bounded its
-     * height). It keeps a share of the window and scrolls; the post gets
-     * the rest and scrolls on its own. */
-    max-height: 40dvh;
+    /* On a phone the list and the post take turns (Blog.tsx), so the
+     * list fills the window and scrolls inside it. It used to grow to all
+     * twelve posts with nothing bounding it, so it ran off the bottom and
+     * could not scroll; a 40dvh cap then left the rest of the window
+     * empty. */
+    flex: 1 1 auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 }
 

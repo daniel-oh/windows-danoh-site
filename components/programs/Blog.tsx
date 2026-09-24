@@ -29,6 +29,12 @@ export function Blog({ id }: { id: string }) {
   // Landing on a specific post (clicked in Welcome) skips the list
   // view on mobile and goes straight to reading.
   const [showingPost, setShowingPost] = useState(!!initialSlug);
+  // On a phone the list is its own screen, so highlighting the default
+  // post there said "you are reading this" before anything was open. It
+  // is highlighted once a post has been opened (then Back shows where
+  // you were). Desktop shows the post beside the list, so it always is.
+  const [opened, setOpened] = useState(!!initialSlug);
+  const marked = (slug: string) => selectedSlug === slug && (!mobile || opened);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // Scroll back to the top when the selected post changes.
@@ -40,6 +46,7 @@ export function Blog({ id }: { id: string }) {
 
   const selectPost = (slug: string) => {
     setSelectedSlug(slug);
+    setOpened(true);
     if (mobile) setShowingPost(true);
   };
 
@@ -62,10 +69,8 @@ export function Blog({ id }: { id: string }) {
               {sortedPosts.map((post) => (
                 <li
                   key={post.slug}
-                  className={
-                    selectedSlug === post.slug ? styles.selectedPost : ""
-                  }
-                  aria-current={selectedSlug === post.slug ? "true" : undefined}
+                  className={marked(post.slug) ? styles.selectedPost : ""}
+                  aria-current={marked(post.slug) ? "true" : undefined}
                 >
                   <button
                     className={styles.postListButton}
