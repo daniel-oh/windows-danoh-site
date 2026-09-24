@@ -11,7 +11,7 @@ import { openProgram } from "@/lib/programs";
 import { useCreateContextMenu } from "@/state/contextMenu";
 import { useServerPrograms } from "@/lib/useServerPrograms";
 import { alert } from "@/lib/alert";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useSyncExternalStore } from "react";
 import cx from "classnames";
 import { useIsMobile } from "@/lib/useIsMobile";
 import { MOBILE_QUERY } from "@/lib/isMobile";
@@ -123,6 +123,9 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
 // Persisted: an OS whose whole bit is statefulness shouldn't forget
 // where you put your icons on refresh. getOnInit so the first
 // drag of a session doesn't clobber the stored layout.
+const NO_POSITIONS: IconPositions = {};
+const noSubscribe = () => () => {};
+
 const iconPositionsAtom = atomWithStorage<IconPositions>(
   // v2: key bumped when the default order changed (Recycle Bin last)
   // so recently-stored layouts pick up the new arrangement.
@@ -140,6 +143,16 @@ export const Desktop = () => {
   const [selectedIcon, setSelectedIcon] = useState<string | null>(null);
   const [iconPositions, setIconPositions] = useAtom(iconPositionsAtom);
   const mobile = useIsMobile();
+
+  // Stored positions only after hydration. The server has none, so it
+  // renders every icon hidden; a browser with saved positions rendered
+  // them visible on its first pass, and React does not patch attribute
+  // mismatches while hydrating, so Safari kept the server's
+  // visibility: hidden and a returning visitor saw no icons at all.
+  // Rendering the server's view first and the stored one right after
+  // makes the change an ordinary update, which React does apply.
+  const hydrated = useSyncExternalStore(noSubscribe, () => true, () => false);
+  const shownPositions: IconPositions = hydrated ? iconPositions : NO_POSITIONS;
 
   useEffect(() => {
     if (didSync.current) return;
@@ -318,8 +331,8 @@ export const Desktop = () => {
         onOpen={openBlog}
         isSelected={selectedIcon === BLOG_ICON_ID}
         onSelect={() => setSelectedIcon(BLOG_ICON_ID)}
-        position={iconPositions[BLOG_ICON_ID] || { col: 0, row: 0 }}
-        placed={!!iconPositions[BLOG_ICON_ID]}
+        position={shownPositions[BLOG_ICON_ID] || { col: 0, row: 0 }}
+        placed={!!shownPositions[BLOG_ICON_ID]}
         onMove={(col, row) => moveIcon(BLOG_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -330,8 +343,8 @@ export const Desktop = () => {
         onOpen={openResume}
         isSelected={selectedIcon === RESUME_ICON_ID}
         onSelect={() => setSelectedIcon(RESUME_ICON_ID)}
-        position={iconPositions[RESUME_ICON_ID] || { col: 0, row: 1 }}
-        placed={!!iconPositions[RESUME_ICON_ID]}
+        position={shownPositions[RESUME_ICON_ID] || { col: 0, row: 1 }}
+        placed={!!shownPositions[RESUME_ICON_ID]}
         onMove={(col, row) => moveIcon(RESUME_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -342,8 +355,8 @@ export const Desktop = () => {
         onOpen={openMinesweeper}
         isSelected={selectedIcon === MINESWEEPER_ICON_ID}
         onSelect={() => setSelectedIcon(MINESWEEPER_ICON_ID)}
-        position={iconPositions[MINESWEEPER_ICON_ID] || { col: 0, row: 2 }}
-        placed={!!iconPositions[MINESWEEPER_ICON_ID]}
+        position={shownPositions[MINESWEEPER_ICON_ID] || { col: 0, row: 2 }}
+        placed={!!shownPositions[MINESWEEPER_ICON_ID]}
         onMove={(col, row) => moveIcon(MINESWEEPER_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -354,8 +367,8 @@ export const Desktop = () => {
         onOpen={openGlass}
         isSelected={selectedIcon === GLASS_ICON_ID}
         onSelect={() => setSelectedIcon(GLASS_ICON_ID)}
-        position={iconPositions[GLASS_ICON_ID] || { col: 0, row: 3 }}
-        placed={!!iconPositions[GLASS_ICON_ID]}
+        position={shownPositions[GLASS_ICON_ID] || { col: 0, row: 3 }}
+        placed={!!shownPositions[GLASS_ICON_ID]}
         onMove={(col, row) => moveIcon(GLASS_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -366,8 +379,8 @@ export const Desktop = () => {
         onOpen={openCamera}
         isSelected={selectedIcon === CAMERA_ICON_ID}
         onSelect={() => setSelectedIcon(CAMERA_ICON_ID)}
-        position={iconPositions[CAMERA_ICON_ID] || { col: 0, row: 4 }}
-        placed={!!iconPositions[CAMERA_ICON_ID]}
+        position={shownPositions[CAMERA_ICON_ID] || { col: 0, row: 4 }}
+        placed={!!shownPositions[CAMERA_ICON_ID]}
         onMove={(col, row) => moveIcon(CAMERA_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -378,8 +391,8 @@ export const Desktop = () => {
         onOpen={openSampler}
         isSelected={selectedIcon === SAMPLER_ICON_ID}
         onSelect={() => setSelectedIcon(SAMPLER_ICON_ID)}
-        position={iconPositions[SAMPLER_ICON_ID] || { col: 0, row: 5 }}
-        placed={!!iconPositions[SAMPLER_ICON_ID]}
+        position={shownPositions[SAMPLER_ICON_ID] || { col: 0, row: 5 }}
+        placed={!!shownPositions[SAMPLER_ICON_ID]}
         onMove={(col, row) => moveIcon(SAMPLER_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -390,8 +403,8 @@ export const Desktop = () => {
         onOpen={openRecycle}
         isSelected={selectedIcon === RECYCLE_ICON_ID}
         onSelect={() => setSelectedIcon(RECYCLE_ICON_ID)}
-        position={iconPositions[RECYCLE_ICON_ID] || { col: 0, row: 3 }}
-        placed={!!iconPositions[RECYCLE_ICON_ID]}
+        position={shownPositions[RECYCLE_ICON_ID] || { col: 0, row: 3 }}
+        placed={!!shownPositions[RECYCLE_ICON_ID]}
         onMove={(col, row) => moveIcon(RECYCLE_ICON_ID, col, row)}
         mobile={mobile}
       />
@@ -401,8 +414,8 @@ export const Desktop = () => {
           program={program}
           isSelected={selectedIcon === program.id}
           onSelect={() => setSelectedIcon(program.id)}
-          position={iconPositions[program.id] || { col: 0, row: 0 }}
-          placed={!!iconPositions[program.id]}
+          position={shownPositions[program.id] || { col: 0, row: 0 }}
+          placed={!!shownPositions[program.id]}
           onMove={(col, row) => moveIcon(program.id, col, row)}
           mobile={mobile}
         />
