@@ -819,31 +819,27 @@ export function Sampler({ id }: { id: string }) {
             }}
           />
         </div>
-        <div className={styles.sideRow}>
-          <div className={`field-row ${styles.check}`}>
-            <input
-              id={`${uid}-vintage`}
-              type="checkbox"
-              checked={vintage}
-              onChange={(e) => {
-                setVintage(e.target.checked);
-                engineRef.current?.setParam(PARAM.vintage, e.target.checked ? 1 : 0);
-              }}
-            />
-            <label htmlFor={`${uid}-vintage`}>12-bit</label>
-          </div>
-          <div className={`field-row ${styles.check}`}>
-            <input
-              id={`${uid}-vinyl`}
-              type="checkbox"
-              checked={vinyl}
-              onChange={(e) => {
-                setVinyl(e.target.checked);
-                engineRef.current?.setParam(PARAM.vinyl, e.target.checked ? 1 : 0);
-              }}
-            />
-            <label htmlFor={`${uid}-vinyl`}>Vinyl</label>
-          </div>
+        <div className={`${styles.sideRow} ${styles.tipRow}`}>
+          <ToggleTip
+            id={`${uid}-vintage`}
+            label="12-bit"
+            checked={vintage}
+            onChange={(on) => {
+              setVintage(on);
+              engineRef.current?.setParam(PARAM.vintage, on ? 1 : 0);
+            }}
+            tip="Plays through a late-80s sampler: 12-bit steps and a lower sample rate, for grit and softer highs."
+          />
+          <ToggleTip
+            id={`${uid}-vinyl`}
+            label="Vinyl"
+            checked={vinyl}
+            onChange={(on) => {
+              setVinyl(on);
+              engineRef.current?.setParam(PARAM.vinyl, on ? 1 : 0);
+            }}
+            tip="Adds record hiss, the odd crackle and a little warmth, as if the loop were playing off a record."
+          />
         </div>
         <div className={styles.sideRow}>
           <button type="button" onClick={clearPattern}>
@@ -893,3 +889,73 @@ export function Sampler({ id }: { id: string }) {
     </div>
   );
 }
+
+// A toggle with a Win98 tooltip saying what it does. Hover shows it on a
+// pointer, keyboard focus shows it too, and the "?" shows it on a phone,
+// where nothing hovers. The text is the checkbox's description either
+// way, so a screen reader hears it with the toggle.
+function ToggleTip({
+  id,
+  label,
+  checked,
+  onChange,
+  tip,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onChange: (on: boolean) => void;
+  tip: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const hostRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (!hostRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    // Capture, and spent here: Escape would otherwise also close the window.
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setOpen(false);
+    };
+    window.addEventListener("pointerdown", away);
+    window.addEventListener("keydown", esc, true);
+    return () => {
+      window.removeEventListener("pointerdown", away);
+      window.removeEventListener("keydown", esc, true);
+    };
+  }, [open]);
+  const tipId = `${id}-tip`;
+  return (
+    <div
+      ref={hostRef}
+      className={`field-row ${styles.check} ${styles.tipHost}`}
+      data-open={open ? "" : undefined}
+    >
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        aria-describedby={tipId}
+      />
+      <label htmlFor={id}>{label}</label>
+      <button
+        type="button"
+        className={styles.tipButton}
+        aria-label={`What ${label} does`}
+        aria-expanded={open}
+        aria-controls={tipId}
+        onClick={() => setOpen((o) => !o)}
+      >
+        ?
+      </button>
+      <span id={tipId} role="tooltip" className={styles.tip}>
+        <strong>{label}</strong> {tip}
+      </span>
+    </div>
+  );
+}
+

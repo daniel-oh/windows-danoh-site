@@ -394,3 +394,86 @@
     transition: none;
   }
 }
+
+/* ------------------------------------------------------------- tooltips */
+/* The row is the anchor, so a tip spans the side column whichever toggle
+ * it belongs to, and cannot run off the window at any width. */
+.tipRow {
+  position: relative;
+}
+
+/* 98.css draws every button at least 75x23; this is a 16px square "?"
+ * (with a 24px hit area around it), bigger under a finger. */
+.tipButton {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin-left: 4px;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+  color: #000;
+  text-shadow: none;
+}
+.tipButton::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+}
+.sideRow .tipButton {
+  flex: none;
+}
+@media (max-width: 768px), (pointer: coarse) {
+  /* A 28px square under a finger. Four classes deep to beat the global
+   * phone rule that makes every field-row button 40px tall and 14px
+   * padded, which stretched this into a slab. */
+  .tipRow .tipHost > .tipButton.tipButton {
+    width: 28px;
+    height: 28px;
+    min-height: 28px;
+    padding: 0;
+    font-size: 13px;
+  }
+  /* The two toggles share the row, each with its "?" beside it, instead
+   * of bunching at the left edge. */
+  .tipRow > .tipHost {
+    flex: 1;
+  }
+}
+
+/* The Win98 tooltip: pale yellow, a black hairline, small type. */
+.tip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  padding: 4px 6px;
+  background: #ffffe1;
+  color: #000;
+  border: 1px solid #000;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+  font-size: 11px;
+  line-height: 1.4;
+  text-align: left;
+  pointer-events: none;
+}
+@media (max-width: 768px), (pointer: coarse) {
+  .tip {
+    font-size: 13px;
+  }
+}
+
+.tipHost[data-open] .tip,
+.tipHost:has(:focus-visible) .tip {
+  display: block;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tipHost:hover .tip {
+    display: block;
+  }
+}
