@@ -100,7 +100,7 @@ With the analytics fixed, I checked every other app on that server against GitHu
 
 The infrastructure came back clean. Nine live websites did not. They were running Next.js versions covered by a critical advisory published on 8 September, three days before the date on the miner's binary: remote code execution through Next.js's image optimizer, triggered by a crafted AVIF file. The fix is Next.js 16.3.3.
 
-None of the nine showed any sign of being used: no stray processes, no dropped files. I started upgrading them to 16.3.6 the same afternoon.
+None of the nine showed any sign of being used: no stray processes, no dropped files. The same check on my other server found seven more sites in the same range, also untouched. By the end of the day all of them, and every other Next.js app I run, were on 16.3.6.
 
 Same week, same kind of bug, a different piece of the stack.
 
