@@ -1,0 +1,115 @@
+{/* Metadata is the `meta` export below — one file, one source. */}
+
+export const meta = {
+  slug: "miner-in-the-analytics",
+  title: "The miner in the analytics",
+  date: "2026-09-28",
+  author: "Daniel Oh",
+  summary:
+    "A crypto miner lived inside my self-hosted analytics for two weeks. Nothing alerted me. I found it by deleting four backup files.",
+  tags: ["engineering", "security", "infrastructure"],
+  readingTime: "5 min",
+};
+
+On Monday I was doing a boring job. Four old backup files were sitting on the server that runs my website analytics, and one of them held old secrets. I deleted them.
+
+Then the SSH connection dropped, and every site on that machine stopped answering.
+
+<Reel
+  src="/blog/miner-in-the-analytics/miner-reel.mp4"
+  poster="/blog/miner-in-the-analytics/miner-reel-poster.jpg"
+  title="the-miner.mp4"
+  alt="A 65 second vertical video. Large text reads I got hacked, with CPU load at 5,825 percent. A terminal lists four backup files being deleted, then a status check where every site times out. The kernel log shows it killed a process called syslog-ng inside the analytics container, docker diff lists hidden files the attacker dropped, and the analytics log shows a miner starting. A comparison shows the fix, v3.2.1, released on 15 May, against v3.2.0 still running on 28 September. The container is stopped, CPU falls to 18 percent, the image is upgraded and /storybook returns 404. An audit then finds nine more sites with a critical hole and no signs of use. It ends on 136 days: the time the fix was out before I installed it."
+  caption="The crash, the clue, the fix, and the second hole I found while I was looking."
+/>
+
+## The process the kernel killed was not mine
+
+The server had run out of memory. When it came back three minutes later, the kernel's log said what it had killed to survive: a process called `syslog-ng-9a18f`, holding 2.1 GB of memory. The load average at the time was 233, on a machine with four cores. Swap was 5.9 of 6.1 GB full.
+
+`syslog-ng` is a real logging tool, and that is the point of the name. The log also said which container the process lived in, and it was the analytics container. A web analytics app has no reason to run a logging daemon.
+
+It was a crypto miner.
+
+## It came in through a door that had been closed since May
+
+The analytics is Plausible, the privacy-friendly alternative to Google Analytics, which I host myself. One instance counts visits for about 17 of my projects, nine of them live sites, this one included.
+
+I was running Plausible Community Edition v3.2.0, pinned to that exact version. On 15 May, Plausible released v3.2.1 under the title "Security related update". It fixed CVE-2026-8467, a critical flaw in a component Plausible bundled: a `/storybook` page, meant for developers previewing interface pieces, that let anyone on the internet run code on the server.
+
+My server never picked it up, because it was pinned. The fix had been out for 136 days.
+
+| When (UTC) | What happened |
+|---|---|
+| 26 Jan | Plausible v3.2.0 ships. My server runs it. |
+| 15 May | v3.2.1 ships and closes `/storybook`. My server stays on v3.2.0. |
+| 11 Sep | The date on the miner's binary. |
+| 17 Sep | A loader appears inside the analytics container. |
+| 25 Sep | The miner reinstalls itself, and Plausible's own log records it. |
+| 28 Sep, 14:30 | Out of memory. The kernel kills the miner. Every site on the box is down for about three minutes. |
+| 28 Sep, 14:46 | The container is stopped and the load average is 0.71. |
+
+## It hid in plain sight, with a loader to bring it back
+
+The attacker never touched the rest of the server. Everything happened inside the analytics container, in its temporary folders, hidden in dot-folders that `ls` does not show by default: `/var/tmp/.bin`, `/var/tmp/.syslog-2241479d` and `/tmp/.ICEi-unix`. That last one imitates `.ICE-unix`, a real system folder, one letter apart.
+
+Plausible runs on Erlang's virtual machine, and a small file called `/tmp/beampatch.beam` had been loaded into the running app itself. It was a loader. If the miner died, the app downloaded it and started it again. On 25 September it did exactly that, and Plausible's log kept the output word for word:
+
+```sh
+sh: curl: not found
+Using wget
+Auto-selected pool port: 443 (based on 4 cores)
+TLS enabled for port 443
+Starting miner in /var/tmp/.syslog-2241479d...
+```
+
+It talked to its mining pool over port 443, the same port as ordinary web traffic.
+
+I had noticed the symptom. The box had been swapping heavily for weeks, and I had even written that down when choosing where to host something else. I read it as "this server is busy". It was busy for someone else.
+
+## Nothing warned me. A cleanup did.
+
+No alert fired. What gave it away was where the killed process lived, and then three quick checks:
+
+- `docker diff` shows which files changed inside a container since it started. It listed four paths that a clean Plausible never creates.
+- Plausible's own log had the miner's install output in it.
+- The version check. I was one patch release behind a fix titled "Security related update".
+
+## The fix took one version bump
+
+I did it in this order:
+
+1. **Preserve.** Copy the dropped files, the config and the old secrets file somewhere locked, before changing anything. They tell you how someone got in, and that tells you what else to check.
+2. **Contain.** Stop the analytics container. The load average fell from 233 to 0.71 in about fifteen minutes, and free memory went from 1.3 GB to 3.4 GB.
+3. **Sweep.** Check the other containers on the box, about 60 of them, for the same files. Check the server itself for planted jobs, services, SSH keys and unusual outbound connections. Nothing.
+4. **Patch.** Upgrade to v3.2.1 and rebuild the container from a clean image, which also erases everything the attacker left.
+5. **Verify.** `/storybook` returns 404. The tracker loads and visits are recording again.
+6. **Rotate.** A new session signing key, so any stolen login session is dead.
+
+Analytics was offline for about 25 minutes.
+
+## What it cost
+
+About two weeks of one server's processor and memory, mining for someone else. About three minutes of downtime for every site on the box. About 25 minutes without analytics.
+
+As far as the evidence shows, nothing was taken. The container held analytics data and its own settings: no email, payment or API credentials.
+
+## Then I checked everything else
+
+With the analytics fixed, I checked every other app on that server against GitHub's security advisory database.
+
+The infrastructure came back clean. Nine live websites did not. They were running Next.js versions covered by a critical advisory published on 8 September, three days before the date on the miner's binary: remote code execution through Next.js's image optimizer, triggered by a crafted AVIF file. The fix is Next.js 16.3.3.
+
+None of the nine showed any sign of being used: no stray processes, no dropped files. I started upgrading them to 16.3.6 the same afternoon.
+
+Same week, same kind of bug, a different piece of the stack.
+
+## What I'd tell myself in May
+
+- **Self-hosting means you own the patches.** Pinning a version is a promise to check for security releases yourself.
+- **A server that is always busy is a question.** Find out who it is busy for.
+- **Check where a process lives, not only what it is called.** A logging tool inside a web app's container was the whole tell.
+- **`docker diff` is a cheap lie detector.** A clean container rarely writes hidden folders in `/var/tmp`.
+- **Shared infrastructure has a wide blast radius.** One analytics box, 17 projects.
+
+If you run your own server, updating it is your job.

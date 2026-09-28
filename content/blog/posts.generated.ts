@@ -21,6 +21,17 @@ export const posts = [
     imageCaption:
       "Sixteen pads, a step sequencer, and a 12-bit switch for roughing things up.",
   },
+  // miner-in-the-analytics.mdx
+  {
+    slug: "miner-in-the-analytics",
+    title: "The miner in the analytics",
+    date: "2026-09-28",
+    author: "Daniel Oh",
+    summary:
+      "A crypto miner lived inside my self-hosted analytics for two weeks. Nothing alerted me. I found it by deleting four backup files.",
+    tags: ["engineering", "security", "infrastructure"],
+    readingTime: "5 min",
+  },
   // camera.mdx
   {
     slug: "camera",

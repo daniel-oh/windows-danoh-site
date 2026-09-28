@@ -371,6 +371,15 @@
   padding: 5px 12px 5px 8px;
   border-bottom: 1px solid #e4e4e4;
   vertical-align: top;
+  /* 98.css sets nowrap on every table, so a sentence in a cell ran past
+   * the column and the table looked cut off. Prose wraps; the first
+   * column (dates, labels) stays on one line. The table still hugs its
+   * content and only wraps when it does not fit. */
+  white-space: normal;
+}
+
+.markdown td:first-child {
+  white-space: nowrap;
 }
 
 .markdown tr:last-child td {
