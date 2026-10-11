@@ -320,6 +320,11 @@ function WindowInner({ id }: { id: string }) {
         >
           {state.program.type !== "iframe" ? null : (
             <button
+              // 98.css draws its "?" for aria-label="Help" or the help
+              // class. The label became "Fix & Iterate" (673f95e), which
+              // left a blank button on every generated app; the class keeps
+              // the glyph and the clearer name.
+              className="help"
               aria-label="Fix & Iterate"
               title="Fix & Iterate"
               style={{

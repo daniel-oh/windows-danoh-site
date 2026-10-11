@@ -140,7 +140,8 @@ select:focus-visible {
 }
 .window .title-bar-controls button[aria-label="Maximize"],
 .window .title-bar-controls button[aria-label="Restore"],
-.window .title-bar-controls button[aria-label="Close"] {
+.window .title-bar-controls button[aria-label="Close"],
+.window .title-bar-controls button.help {
   background-position: center center;
 }
 /* A drag on a title bar moves the window; it must not also scroll the page
@@ -216,6 +217,10 @@ figcaption {
   }
   .window .title-bar-controls button[aria-label="Close"] {
     background-size: 11px 10px !important;
+    background-position: center center !important;
+  }
+  .window .title-bar-controls button.help {
+    background-size: 8px 12px !important;
     background-position: center center !important;
   }
   /* Form action buttons inside window bodies (Submit, OK, Cancel, Copy
