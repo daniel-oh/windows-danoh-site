@@ -79,8 +79,12 @@ export function LikeButton({ slug, framed = false }: { slug: string; framed?: bo
       className={styles.button}
       aria-pressed={liked}
       // No count until it has loaded: "0 likes" read out first is wrong.
+      // With a count, the name starts with what the button shows
+      // ("Like 2"), so voice control can say what it sees (WCAG 2.5.3).
       aria-label={
-        loaded ? `Like this post, ${count} ${count === 1 ? "like" : "likes"}` : "Like this post"
+        loaded && count > 0
+          ? `Like ${count}, this post has ${count} ${count === 1 ? "like" : "likes"}`
+          : "Like this post"
       }
       data-liked={liked ? "" : undefined}
       onClick={onClick}
