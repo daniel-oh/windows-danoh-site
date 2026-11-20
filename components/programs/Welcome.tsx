@@ -228,6 +228,32 @@ const openBlog = (slug?: string) => {
 
 const openResume = () => openProgram("resume");
 
+// Cards sit between the intro and the "Poke around" paragraph. Each one
+// is a real link so keyboard and screen-reader users can open the site.
+const NOW_BUILDING = [
+  {
+    name: "Floeberg",
+    line: "Takes an idea to research, a script, and scenes",
+    href: "https://floeberg.com",
+    image: "/now/floeberg.jpg",
+    alt: "Screenshot of the Floeberg homepage, an iceberg above a dark sea",
+  },
+  {
+    name: "Kayrage",
+    line: "Side project for brand systems with AI",
+    href: "https://kayrage.com",
+    image: "/now/kayrage.jpg",
+    alt: "Screenshot of the Kayrage homepage, a moth over a neon city at night",
+  },
+  {
+    name: "FindMyFeels",
+    line: "Find words for what you're feeling",
+    href: "https://findmyfeels.com",
+    image: "/now/findmyfeels.jpg",
+    alt: "Screenshot of the FindMyFeels homepage, feeling words beside a pale green card",
+  },
+];
+
 const contentByKey = {
   welcome: () => {
     return (
@@ -260,6 +286,32 @@ const contentByKey = {
             </p>
           </div>
         </div>
+        <fieldset className={styles.nowField}>
+          <legend>Now building</legend>
+          <div className={styles.nowBuilding}>
+            {NOW_BUILDING.map((item) => (
+              <a
+                key={item.name}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <figure>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={item.image} alt={item.alt} />
+                  <figcaption>
+                    <b>{item.name}</b>
+                    <br />
+                    {item.line}
+                    <span className={styles.srOnly}>
+                      {`, ${item.href.replace("https://", "")}, opens in a new tab`}
+                    </span>
+                  </figcaption>
+                </figure>
+              </a>
+            ))}
+          </div>
+        </fieldset>
         <p>
           Poke around the desktop. My{" "}
           <a href="/Daniel_Oh_Resume.pdf" onClick={(e) => { e.preventDefault(); openResume(); }} style={{ color: "#000080" }}><strong>Resume</strong></a> and{" "}

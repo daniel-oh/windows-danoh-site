@@ -203,3 +203,55 @@
   outline: 2px solid #000080;
   outline-offset: 2px;
 }
+
+/* Now building cards. New UI only: nothing above this block changes.
+   minmax(0, 1fr) plus min-width: 0 keeps the three cards inside the
+   window at 375px. A fieldset's default min-width is min-content, and
+   this group is also a flex item, so either one would scroll sideways. */
+.nowField {
+  min-width: 0;
+  max-width: 100%;
+  margin-bottom: 8px;
+}
+.nowBuilding {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.nowBuilding a {
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.nowBuilding a:focus-visible {
+  outline: 2px solid #000080;
+  outline-offset: 2px;
+}
+.nowBuilding figure {
+  margin: 0;
+  min-width: 0;
+  background: #c0c0c0;
+  padding: 2px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+}
+.nowBuilding img {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  display: block;
+}
+.nowBuilding figcaption {
+  font-family: Tahoma, sans-serif;
+  font-size: 12px;
+  padding: 4px 3px;
+  line-height: 1.35;
+  text-align: left;
+  font-style: normal;
+  overflow-wrap: break-word;
+}
+@media (max-width: 640px) {
+  .nowBuilding figcaption { font-size: 11px; }
+}
