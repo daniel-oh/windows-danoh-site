@@ -203,3 +203,84 @@
   outline: 2px solid #000080;
   outline-offset: 2px;
 }
+
+/* Now building cards. New UI only: nothing above this block changes.
+   minmax(0, 1fr) plus min-width: 0 keeps the three cards inside the
+   window at 375px. A fieldset's default min-width is min-content, and
+   this group is also a flex item, so either one would scroll sideways. */
+.nowField {
+  min-width: 0;
+  max-width: 100%;
+  margin-bottom: 8px;
+}
+.nowBuilding {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+.nowBuilding a {
+  /* Flex, so the three cards are one height whatever their captions wrap to. */
+  display: flex;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.nowBuilding a:focus-visible {
+  outline: 2px solid #000080;
+  outline-offset: 2px;
+}
+.nowBuilding figure {
+  flex: 1;
+  margin: 0;
+  min-width: 0;
+  background: #c0c0c0;
+  padding: 2px;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px #808080, inset 2px 2px #dfdfdf;
+}
+.nowBuilding img {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  display: block;
+}
+.nowBuilding figcaption {
+  /* The window's own pixel font: Tahoma here was the one line of smooth
+   * type in a pixel-font window. */
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 3px;
+  line-height: 1.35;
+  text-align: left;
+  font-style: normal;
+  overflow-wrap: break-word;
+}
+@media (max-width: 640px) {
+  .nowBuilding figcaption { font-size: 11px; }
+}
+
+/* The cards are links, so they answer like the buttons beside them: the
+ * name underlines under a pointer, and the bevel presses in on click. */
+@media (hover: hover) {
+  .nowBuilding a:hover b {
+    text-decoration: underline;
+  }
+}
+.nowBuilding a:active figure {
+  box-shadow: inset 1px 1px #0a0a0a, inset -1px -1px #fff, inset 2px 2px #808080, inset -2px -2px #dfdfdf;
+}
+
+/* The narrowest phones (320px): tighter gaps so "FindMyFeels" stays one
+ * word instead of breaking mid-name. */
+@media (max-width: 360px) {
+  .nowBuilding {
+    gap: 4px;
+  }
+  .nowBuilding figcaption {
+    padding: 4px 2px;
+  }
+  .nowBuilding b {
+    font-size: 10px;
+  }
+}
