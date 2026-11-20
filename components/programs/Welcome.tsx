@@ -455,7 +455,7 @@ const contentByKey = {
           </div>
         </div>
         <p>
-          Currently designing enterprise security strategy across 50+ AWS accounts at Nike.
+          Currently designing enterprise security strategy across 500+ AWS accounts at Nike.
           Before that, I built private network architectures at a fintech startup in New York,
           led cloud migrations for Fortune 100 clients, and deployed production
           systems at Allstate.
