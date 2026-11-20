@@ -185,7 +185,9 @@
 }
 
 .padName {
-  opacity: 0.75;
+  /* A solid grey, 6:1 on the pad face. It was #222 at 75% opacity, which
+   * blends to 4.47:1, a hair under the 4.5 small text needs. */
+  color: #333;
   line-height: 1;
   max-width: 100%;
   overflow: hidden;

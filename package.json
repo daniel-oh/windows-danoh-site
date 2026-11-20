@@ -57,11 +57,14 @@
     "@types/react-dom": "^19.3.0",
     "@types/three": "^0.184.1",
     "eslint": "^9.39.4",
-    "eslint-config-next": "^16.3.6",
+    "eslint-config-next": "~16.3.6",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "ts-node": "^10.9.2",
     "typescript": "^5"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "eslint-plugin-react-hooks": "7.0.1"
+  }
 }

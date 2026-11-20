@@ -36,6 +36,8 @@ const withMDX = createMDX({
 const nextConfig = {
   env: { NEXT_PUBLIC_DSP_VERSION: DSP_VERSION },
   output: "standalone",
+  // No "X-Powered-By: Next.js": it only tells scanners what to try.
+  poweredByHeader: false,
   images: {
     remotePatterns: [{ hostname: "localhost" }],
     // Only these same-origin paths go through the optimizer. Without an

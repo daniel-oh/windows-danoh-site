@@ -741,15 +741,16 @@ export function Sampler({ id }: { id: string }) {
                   setSelected(pad);
                   engineRef.current?.requestWave(pad);
                 }}
-                aria-label={`Pad ${pad + 1}, ${padName(pad)}${
-                  recorded[pad] ? ", sampled" : ""
-                }${selected === pad ? ", selected" : ""}, key ${keyForPad(pad)}`}
               >
-                <span className={styles.padKey} aria-hidden="true">
-                  {keyForPad(pad)}
-                </span>
-                <span className={styles.padName} aria-hidden="true">
-                  {padName(pad)}
+                {/* The name is the pad's own text ("Z kick") plus a hidden
+                    tail, so what voice control sees is what it can say
+                    (WCAG 2.5.3) and a screen reader still hears the rest. */}
+                <span className={styles.padKey}>{keyForPad(pad)}</span>{" "}
+                <span className={styles.padName}>{padName(pad)}</span>
+                <span className={styles.sr}>
+                  {`, pad ${pad + 1}${recorded[pad] ? ", sampled" : ""}${
+                    selected === pad ? ", selected" : ""
+                  }`}
                 </span>
                 {recorded[pad] && <span className={styles.padDot} aria-hidden="true" />}
               </button>

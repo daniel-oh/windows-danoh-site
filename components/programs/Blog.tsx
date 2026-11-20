@@ -74,7 +74,6 @@ export function Blog({ id }: { id: string }) {
                 >
                   <button
                     className={styles.postListButton}
-                    aria-label={`Read post: ${post.title}`}
                     onClick={() => selectPost(post.slug)}
                   >
                     <div className={styles.postTitle}>
