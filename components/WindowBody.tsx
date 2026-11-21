@@ -27,6 +27,10 @@ import { Welcome } from "./programs/Welcome";
 // the already-painted window chrome.
 const loading = () => null;
 const Run = dynamic(() => import("./programs/Run").then((m) => m.Run), { loading });
+const PictureViewer = dynamic(
+  () => import("./programs/PictureViewer").then((m) => m.PictureViewer),
+  { loading }
+);
 const Help = dynamic(() => import("./programs/Help").then((m) => m.Help), { loading });
 const Explorer = dynamic(
   () => import("./programs/Explorer").then((m) => m.Explorer),
@@ -154,6 +158,8 @@ export const WindowBody = memo(function WindowBody({
       return <Camera id={id} />;
     case "sampler":
       return <Sampler id={id} />;
+    case "picture":
+      return <PictureViewer path={program.path} />;
     default:
       assertNever(program);
   }

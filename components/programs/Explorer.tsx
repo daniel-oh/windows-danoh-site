@@ -22,6 +22,7 @@ import { mountDirectory } from "@/lib/filesystem/directoryMapping";
 import { supportsDirectoryPicker } from "@/lib/supportsDirectoryPicker";
 import { runProgramFromPath } from "@/lib/runProgramFromPath";
 import { createWindow } from "@/lib/createWindow";
+import { PICTURE_FILE, seedPictures } from "@/lib/seedPictures";
 import { PROGRAMS } from "@/lib/programs";
 import { alert } from "@/lib/alert";
 
@@ -36,6 +37,11 @@ export function Explorer({ id }: { id: string }) {
   const fs = useAtomValue(fsManagerAtom);
 
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
+
+  // The photo in My Pictures arrives the first time Explorer opens.
+  useEffect(() => {
+    void seedPictures();
+  }, []);
   const [newFileName, setNewFileName] = useState<string>("");
   const [isCreatingFolder, setIsCreatingFolder] = useState<boolean>(false);
   const [isRenaming, setIsRenaming] = useState<boolean>(false);
@@ -86,6 +92,12 @@ export function Explorer({ id }: { id: string }) {
         });
       } else if (item.name.endsWith(".exe")) {
         runProgramFromPath(path);
+      } else if (PICTURE_FILE.test(item.name)) {
+        createWindow({
+          title: `${item.name} - Picture Viewer`,
+          program: { type: "picture", path },
+          size: { width: 600, height: 460 },
+        });
       } else if (/\.(wav|mp3|m4a|ogg|flac|aac)$/i.test(item.name)) {
         // Audio opens in the Sampler, on a pad, the way a .exe opens as a
         // program. This is also the other half of the Sampler's Export.

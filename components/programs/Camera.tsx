@@ -4,6 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useAtomValue } from "jotai";
 import { windowAtomFamily } from "@/state/window";
 import { getFsManager } from "@/state/fsManager";
+import { PICTURES_DIR } from "@/lib/seedPictures";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
 import { applyEffect, EFFECTS, frameSize, snapFilename, type Effect } from "@/lib/camera/effects";
 import { LatticeLoader } from "../fx/LatticeLoader";
@@ -19,7 +20,6 @@ import styles from "./Camera.module.css";
 // the button, never on open, and stops when the window closes, is
 // minimised, or the tab is hidden.
 
-const PICTURES_DIR = "/user/My Pictures";
 // A snap is drawn at twice the preview's size. Glass is smooth, so the
 // extra pixels are real detail; the blocky effects gain nothing from them.
 const SNAP_SCALE = { glass: 2, pixel: 1 };
