@@ -70,12 +70,6 @@
   }
 }
 
-.filterDefs {
-  position: absolute;
-  width: 0;
-  height: 0;
-}
-
 .privacy {
   margin: 0;
   font-size: 11px;
@@ -111,6 +105,10 @@
   box-shadow:
     inset -1px -1px #fff,
     inset 1px 1px grey;
+}
+
+.snap[data-glass] {
+  image-rendering: auto;
 }
 
 .saved {

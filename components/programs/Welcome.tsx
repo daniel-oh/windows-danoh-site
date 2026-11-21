@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import styles from "./Welcome.module.css";
@@ -585,6 +585,25 @@ function VisitorBadge() {
   );
 }
 
+// Read once per page load, then remembered: the first read also marks the
+// visit, so asking again (Strict Mode's second effect, Welcome reopened
+// later) would call a first visit a return.
+let returningVisitor: boolean | undefined;
+function isReturningVisitor(): boolean {
+  if (returningVisitor !== undefined) return returningVisitor;
+  // Storage can throw (Safari "Block all cookies", some private modes).
+  try {
+    returningVisitor = !!localStorage.getItem("onboarded");
+    if (!returningVisitor) localStorage.setItem("onboarded", "true");
+  } catch {
+    returningVisitor = false;
+  }
+  return returningVisitor;
+}
+
+const noSubscribe = () => () => {};
+const notReturning = () => false;
+
 export function Welcome({ id: _id }: { id: string }) {
   const tableOfContentsEntries: TableOfContentsEntry[] = [
     { title: "Welcome", key: "welcome" },
@@ -594,23 +613,15 @@ export function Welcome({ id: _id }: { id: string }) {
     { title: "Advanced", key: "advanced" },
   ];
 
-  // Storage can throw (Safari "Block all cookies", some private modes);
-  // Welcome opens at boot, so an unguarded read here broke the desktop.
-  const [selectedEntry, setSelectedEntry] = useState(() => {
-    try {
-      return localStorage.getItem("onboarded") ? "blog" : "welcome";
-    } catch {
-      return "welcome";
-    }
-  });
-
-  useEffect(() => {
-    try {
-      if (!localStorage.getItem("onboarded")) localStorage.setItem("onboarded", "true");
-    } catch {
-      // Not remembering the first visit is fine.
-    }
-  }, []);
+  // Returning visitors open on the Blog tab, but only after hydration: the
+  // home page is prerendered on the Welcome tab, and choosing Blog in the
+  // first render made every return visit a hydration error (React #418),
+  // which threw the page away and rendered it again from scratch.
+  // The server snapshot is false, so hydration renders the Welcome tab and
+  // React switches to Blog straight after, without a mismatch.
+  const returning = useSyncExternalStore(noSubscribe, isReturningVisitor, notReturning);
+  const [picked, setSelectedEntry] = useState<string | null>(null);
+  const selectedEntry = picked ?? (returning ? "blog" : "welcome");
 
   const handleEntrySelect = (key: string) => {
     setSelectedEntry(key);

@@ -1,5 +1,9 @@
 import {
   PALETTE,
+  applyEffect,
+  frameSize,
+  glass,
+  glassMap,
   nearestPaletteIndex,
   oneBit,
   phosphor,
@@ -76,6 +80,52 @@ describe("camera effects", () => {
     for (let i = 0; i < d.length; i += 4) {
       expect([d[i], d[i + 1], d[i + 2]]).toEqual([100, 50, 0]);
     }
+  });
+
+  // Glass used to be an SVG filter on the preview only, so saved pictures
+  // came out without it. It must change the pixels themselves.
+  test("glass is in the pixels: bent, lit, and opaque", () => {
+    const { width, height } = frameSize("glass");
+    const d = frame(width, height, (x, y) => [(x * 7) & 255, (y * 5) & 255, 128]);
+    const before = d.slice();
+    applyEffect("glass", d, width, height);
+    let changed = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      if (d[i] !== before[i] || d[i + 1] !== before[i + 1] || d[i + 2] !== before[i + 2]) changed++;
+      expect(d[i + 3]).toBe(255);
+    }
+    expect(changed / (width * height)).toBeGreaterThan(0.9);
+  });
+
+  test("glass only adds light: a flat grey never gets darker inside the frame", () => {
+    const d = frame(360, 270, () => [100, 100, 100]);
+    glass(d, 360, 270);
+    const { from } = glassMap(360, 270);
+    for (let p = 0; p < from.length; p++) if (from[p] >= 0) expect(d[p * 4]).toBeGreaterThanOrEqual(100);
+  });
+
+  test("glass looks the same at preview and snap size", () => {
+    // The snap is drawn at twice the size: the same spot should be bent by
+    // twice the pixels and lit about the same.
+    const a = glassMap(360, 270);
+    const b = glassMap(720, 540);
+    let bend = 0;
+    let shine = 0;
+    let n = 0;
+    for (let y = 20; y < 250; y += 10) {
+      for (let x = 20; x < 340; x += 10) {
+        const pa = y * 360 + x;
+        const pb = 2 * y * 720 + 2 * x;
+        if (a.from[pa] < 0 || b.from[pb] < 0) continue;
+        const ax = (a.from[pa] % 360) - x;
+        const bx = (b.from[pb] % 720) - 2 * x;
+        bend += Math.abs(bx - 2 * ax);
+        shine += Math.abs(a.shine[pa] - b.shine[pb]);
+        n++;
+      }
+    }
+    expect(bend / n).toBeLessThan(1.5);
+    expect(shine / n).toBeLessThan(12);
   });
 
   test("snapFilename is zero padded and sortable", () => {

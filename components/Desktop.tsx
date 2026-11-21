@@ -124,6 +124,7 @@ function getDefaultPositions(programs: ProgramEntry[], existing: IconPositions):
 // where you put your icons on refresh. getOnInit so the first
 // drag of a session doesn't clobber the stored layout.
 const NO_POSITIONS: IconPositions = {};
+const NO_PROGRAMS: ProgramEntry[] = [];
 const noSubscribe = () => () => {};
 
 const iconPositionsAtom = atomWithStorage<IconPositions>(
@@ -153,6 +154,13 @@ export const Desktop = () => {
   // makes the change an ordinary update, which React does apply.
   const hydrated = useSyncExternalStore(noSubscribe, () => true, () => false);
   const shownPositions: IconPositions = hydrated ? iconPositions : NO_POSITIONS;
+  // The same for the visitor's own programs, which live in the browser's
+  // file system: the server never has them. On a warm return visit the
+  // file system loaded before hydration reached the desktop, so the first
+  // pass drew icons the HTML did not have (React #418) and React threw the
+  // whole page away to render it again. Only the icons wait; the effects
+  // below see the real list, so saved positions are never pruned.
+  const shownPrograms = hydrated ? programs : NO_PROGRAMS;
 
   useEffect(() => {
     if (didSync.current) return;
@@ -408,7 +416,7 @@ export const Desktop = () => {
         onMove={(col, row) => moveIcon(RECYCLE_ICON_ID, col, row)}
         mobile={mobile}
       />
-      {programs.map((program) => (
+      {shownPrograms.map((program) => (
         <ProgramIcon
           key={program.id}
           program={program}

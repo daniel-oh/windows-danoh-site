@@ -5,15 +5,14 @@ import { useAtomValue } from "jotai";
 import { windowAtomFamily } from "@/state/window";
 import { getFsManager } from "@/state/fsManager";
 import { useMotionAllowed } from "@/lib/useMotionAllowed";
-import { applyEffect, EFFECTS, snapFilename, type Effect } from "@/lib/camera/effects";
+import { applyEffect, EFFECTS, frameSize, snapFilename, type Effect } from "@/lib/camera/effects";
 import { LatticeLoader } from "../fx/LatticeLoader";
 import styles from "./Camera.module.css";
 
 // A 1998 webcam. The feed is drawn small and scaled up with pixelated
-// rendering, through one of four period effects, or through "Glass",
-// the one modern one: an SVG turbulence and lighting filter after React
-// Bits' ReflectiveCard (github.com/DavidHDev/react-bits, MIT + Commons
-// Clause), minus the pointer tilt.
+// rendering, through one of four period effects, or through "Glass", the
+// one modern one (lib/camera/effects.ts). Every effect is in the pixels,
+// so a saved picture is the one on screen.
 //
 // The camera runs in the browser only. Nothing is uploaded, nothing is
 // kept unless you press Snap and then Save. The stream is asked for on
@@ -21,15 +20,39 @@ import styles from "./Camera.module.css";
 // minimised, or the tab is hidden.
 
 const PICTURES_DIR = "/user/My Pictures";
-const FRAME_W = 160;
-const FRAME_H = 120;
+// A snap is drawn at twice the preview's size. Glass is smooth, so the
+// extra pixels are real detail; the blocky effects gain nothing from them.
+const SNAP_SCALE = { glass: 2, pixel: 1 };
+// A saved picture is scaled up with hard edges first. At 160x120 a phone's
+// photo viewer smoothed it to full screen, which blends a dither back into
+// something close to the plain photo: the effect seemed not to be saved.
+const SAVE_SCALE = 8;
+
+/** Draw the current video frame, cover-fit to 4:3, through an effect. */
+function renderFrame(
+  video: HTMLVideoElement,
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  effect: Effect
+) {
+  const vw = video.videoWidth || 4;
+  const vh = video.videoHeight || 3;
+  const scale = Math.max(width / vw, height / vh);
+  const dw = vw * scale;
+  const dh = vh * scale;
+  ctx.drawImage(video, (width - dw) / 2, (height - dh) / 2, dw, dh);
+  const frame = ctx.getImageData(0, 0, width, height);
+  applyEffect(effect, frame.data, width, height);
+  ctx.putImageData(frame, 0, 0);
+}
 
 type Phase = "off" | "starting" | "on";
 
 export function Camera({ id }: { id: string }) {
   const win = useAtomValue(windowAtomFamily(id));
   const motion = useMotionAllowed();
-  const filterId = `cam-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const idBase = `cam-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const snapRef = useRef<HTMLCanvasElement>(null);
@@ -39,7 +62,8 @@ export function Camera({ id }: { id: string }) {
   const [effect, setEffect] = useState<Effect>("colours");
   const [error, setError] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
-  const [snapped, setSnapped] = useState(false);
+  // The effect the current snap was taken with, or null before the first.
+  const [snapped, setSnapped] = useState<Effect | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   // The draw loop reads the effect through a ref so changing it does not
   // restart the loop.
@@ -120,16 +144,13 @@ export function Camera({ id }: { id: string }) {
     const draw = () => {
       raf = requestAnimationFrame(draw);
       if (video.readyState < 2) return;
-      // Cover-fit the feed into 4:3 so nothing is stretched.
-      const vw = video.videoWidth || 4;
-      const vh = video.videoHeight || 3;
-      const scale = Math.max(FRAME_W / vw, FRAME_H / vh);
-      const dw = vw * scale;
-      const dh = vh * scale;
-      ctx.drawImage(video, (FRAME_W - dw) / 2, (FRAME_H - dh) / 2, dw, dh);
-      const frame = ctx.getImageData(0, 0, FRAME_W, FRAME_H);
-      applyEffect(effectRef.current, frame.data, FRAME_W, FRAME_H);
-      ctx.putImageData(frame, 0, 0);
+      const effect = effectRef.current;
+      const { width, height } = frameSize(effect);
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      renderFrame(video, ctx, width, height, effect);
     };
     draw();
     return () => cancelAnimationFrame(raf);
@@ -153,15 +174,20 @@ export function Camera({ id }: { id: string }) {
   }, [stop]);
 
   const snap = () => {
-    const src = canvasRef.current;
+    const video = videoRef.current;
     const dst = snapRef.current;
-    if (!src || !dst) return;
-    dst.width = FRAME_W;
-    dst.height = FRAME_H;
-    // The preview is mirrored so it behaves like a mirror; the picture
-    // is not, so it reads like a photo.
-    dst.getContext("2d")?.drawImage(src, 0, 0);
-    setSnapped(true);
+    const ctx = dst?.getContext("2d", { willReadFrequently: true });
+    if (!video || !dst || !ctx || video.readyState < 2) return;
+    // The frame on screen, drawn again through the same effect at snap
+    // size. The preview is mirrored so it behaves like a mirror; the
+    // picture is not, so it reads like a photo.
+    const effect = effectRef.current;
+    const { width, height } = frameSize(effect);
+    const k = effect === "glass" ? SNAP_SCALE.glass : SNAP_SCALE.pixel;
+    dst.width = width * k;
+    dst.height = height * k;
+    renderFrame(video, ctx, dst.width, dst.height, effect);
+    setSnapped(effect);
     setSaved(null);
     if (motion) {
       setFlash(true);
@@ -170,10 +196,20 @@ export function Camera({ id }: { id: string }) {
   };
 
   const save = async () => {
-    const dst = snapRef.current;
-    if (!dst) return;
+    const snap = snapRef.current;
+    if (!snap || !snapped) return;
     const name = snapFilename();
-    const blob = await new Promise<Blob | null>((r) => dst.toBlob(r, "image/png"));
+    let out = snap;
+    if (snapped !== "glass") {
+      out = document.createElement("canvas");
+      out.width = snap.width * SAVE_SCALE;
+      out.height = snap.height * SAVE_SCALE;
+      const ctx = out.getContext("2d");
+      if (!ctx) return;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(snap, 0, 0, out.width, out.height);
+    }
+    const blob = await new Promise<Blob | null>((r) => out.toBlob(r, "image/png"));
     if (!blob) return;
     // Two copies: a real download, and one in the site's own filesystem
     // so it shows up in Explorer under My Pictures.
@@ -201,11 +237,10 @@ export function Camera({ id }: { id: string }) {
         <video ref={videoRef} className={styles.video} playsInline muted aria-hidden="true" />
         <canvas
           ref={canvasRef}
-          width={FRAME_W}
-          height={FRAME_H}
+          width={160}
+          height={120}
           className={styles.canvas}
           data-glass={glass ? "" : undefined}
-          style={glass ? { filter: `url(#${filterId})` } : undefined}
           hidden={phase !== "on"}
           aria-label="Camera preview"
           role="img"
@@ -226,19 +261,6 @@ export function Camera({ id }: { id: string }) {
           <div className={styles.notice}>{error ?? "The camera is off."}</div>
         )}
         {flash && <div className={styles.flash} aria-hidden="true" />}
-        {glass && (
-          <svg className={styles.filterDefs} aria-hidden="true">
-            <filter id={filterId} x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
-              <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="7" result="noise" />
-              <feDisplacementMap in="SourceGraphic" in2="noise" scale="14" xChannelSelector="R" yChannelSelector="G" result="bent" />
-              <feSpecularLighting in="noise" surfaceScale="3" specularConstant="0.9" specularExponent="22" lightingColor="#ffffff" result="spec">
-                <feDistantLight azimuth="235" elevation="55" />
-              </feSpecularLighting>
-              <feComposite in="spec" in2="bent" operator="in" result="specIn" />
-              <feBlend in="bent" in2="specIn" mode="screen" />
-            </filter>
-          </svg>
-        )}
       </div>
 
       <p className={styles.privacy}>Runs in your browser only. Nothing is uploaded or stored.</p>
@@ -250,12 +272,12 @@ export function Camera({ id }: { id: string }) {
             <div className="field-row" key={e.id}>
               <input
                 type="radio"
-                id={`${filterId}-${e.id}`}
-                name={`${filterId}-effect`}
+                id={`${idBase}-${e.id}`}
+                name={`${idBase}-effect`}
                 checked={effect === e.id}
                 onChange={() => setEffect(e.id)}
               />
-              <label htmlFor={`${filterId}-${e.id}`}>{e.label}</label>
+              <label htmlFor={`${idBase}-${e.id}`}>{e.label}</label>
             </div>
           ))}
         </div>
@@ -286,6 +308,7 @@ export function Camera({ id }: { id: string }) {
         <canvas
           ref={snapRef}
           className={styles.snap}
+          data-glass={snapped === "glass" ? "" : undefined}
           aria-label="Snapped picture"
           role="img"
           hidden={!snapped}
