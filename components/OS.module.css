@@ -227,12 +227,11 @@
    maximized windows with desktop-sized 16px controls and 11px inputs
    (the iOS zoom-on-focus bug back through the side door). */
 @media (max-width: 768px), (pointer: coarse) {
-  .taskbar {
-    /* Taskbar height is driven by --taskbar-height (40px on mobile)
-     * for all dependents (start menu anchor, OS layout). */
-    height: var(--taskbar-height);
-    padding: 2px 0;
-  }
+  /* No padding override here: the base rule's 3px inset (and the
+   * safe-area bottom) is what keeps the Start button and the clock off
+   * the bevel's dark bottom edge. A "padding: 2px 0" here used to win
+   * on phones, so the items sat on that edge and drew a doubled black
+   * line under them, and a home-screen install lost its safe area. */
 
   .startMenu {
     /* Wider than the old 170px to keep the items column readable now
