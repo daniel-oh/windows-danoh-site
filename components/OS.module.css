@@ -146,10 +146,12 @@
   transform: scale(0.95);
 }
 
+/* An etched groove (grey then white), the way Win98 separates taskbar
+ * sections. It was black + 2px grey + white, a 4px bar that read as a
+ * dark gap beside the Start button, heaviest on a phone. */
 .divider {
-  width: 2px;
-  background: gray;
-  border-left: 1px solid #0a0a0a;
+  width: 0;
+  border-left: 1px solid gray;
   border-right: 1px solid #fff;
 }
 
